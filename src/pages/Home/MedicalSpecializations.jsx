@@ -14,9 +14,9 @@ const specializations = [
 
 const MedicalSpecializations = () => {
   return (
-    <section className="py-20 bg-gray-50/50">
+    <section className="py-10 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h2 className="text-2xl md:text-[32px] font-poppins font-bold text-gray-900 mb-3">
             Medical Specializations
           </h2>

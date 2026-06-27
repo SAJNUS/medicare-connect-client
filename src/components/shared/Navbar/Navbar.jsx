@@ -1,7 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
-import logo from "../../../assets/logo.png";
+import logo from "../../../assets/logo2.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,8 +21,8 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-24">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link to="/">
-              <img className="h-10 w-auto" src={logo} alt="MediCare Connect Logo" />
+            <Link to="/" className="-ml-4 inline-block">
+              <img className="h-20 md:h-[85px] w-auto object-contain object-left" src={logo} alt="MediCare Connect Logo" />
             </Link>
           </div>
 
@@ -33,8 +33,7 @@ const Navbar = () => {
                 key={link.name}
                 to={link.path}
                 className={({ isActive }) =>
-                  `text-[15px] font-medium transition-colors duration-300 ${
-                    isActive ? "text-primary font-semibold" : "text-gray-700 hover:text-primary"
+                  `text-[15px] font-medium transition-colors duration-300 ${isActive ? "text-primary font-semibold" : "text-gray-700 hover:text-primary"
                   }`
                 }
               >
@@ -42,7 +41,7 @@ const Navbar = () => {
               </NavLink>
             ))}
           </div>
-          
+
           <div className="hidden md:flex items-center space-x-4">
             <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white rounded-md px-6 py-2 min-h-0 h-10 font-inter font-medium text-[15px]">
               Login
@@ -71,8 +70,7 @@ const Navbar = () => {
                 to={link.path}
                 onClick={() => setIsOpen(false)}
                 className={({ isActive }) =>
-                  `block px-4 py-3 rounded-lg text-base font-medium ${
-                    isActive ? "text-primary bg-teal-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"
+                  `block px-4 py-3 rounded-lg text-base font-medium ${isActive ? "text-primary bg-teal-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"
                   }`
                 }
               >

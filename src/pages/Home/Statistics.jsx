@@ -10,26 +10,26 @@ const stats = [
 
 const Statistics = () => {
   return (
-    <section className="py-12 bg-white">
+    <section className="py-10 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.id}
-              className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-50 flex items-center gap-5"
+              className="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 flex items-center gap-6 hover:shadow-xl transition-shadow duration-300"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <div className={`w-16 h-16 rounded-2xl ${stat.bg} flex items-center justify-center flex-shrink-0`}>
+              <div className={`w-20 h-20 rounded-[20px] ${stat.bg} flex items-center justify-center flex-shrink-0`}>
                 {stat.icon}
               </div>
               <div>
-                <h3 className="text-2xl font-poppins font-bold text-gray-900 mb-1 leading-none">
+                <h3 className="text-[28px] font-poppins font-extrabold text-gray-900 mb-1 leading-none">
                   {stat.value}
                 </h3>
-                <p className="text-gray-500 font-inter text-sm font-medium">
+                <p className="text-gray-500 font-inter text-[13px] md:text-[14px] font-medium whitespace-nowrap">
                   {stat.label}
                 </p>
               </div>

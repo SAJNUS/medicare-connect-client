@@ -1,18 +1,18 @@
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
-import logo from "../../../assets/logo.png";
+import footerLogo from "../../../assets/footer-logo.png";
 
 const Footer = () => {
   return (
     <footer className="bg-[#073A36] text-white pt-16 pb-8 font-inter">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-12">
-          
+
           {/* Brand Info */}
           <div className="lg:col-span-2">
-            <div className="bg-white inline-block p-1.5 rounded-lg mb-6">
-              <img src={logo} alt="MediCare Connect Logo" className="h-8 w-auto" />
-            </div>
+            <Link to="/" className="mb-6 inline-block -ml-4">
+              <img src={footerLogo} alt="MediCare Connect Logo" className="h-20 md:h-[85px] w-auto object-contain object-left" />
+            </Link>
             <p className="text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">
               Your trusted healthcare partner. Connecting patients with the best healthcare.
             </p>
