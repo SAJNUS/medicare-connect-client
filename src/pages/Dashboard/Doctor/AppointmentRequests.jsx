@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheck, FaTimes, FaInbox, FaUserInjured, FaNotesMedical, FaCheckCircle, FaBan, FaClock as FaClockReg } from "react-icons/fa";
 
@@ -48,6 +50,7 @@ const initialRequests = [
 const AppointmentRequests = () => {
   const [requests, setRequests] = useState(initialRequests);
   const [filter, setFilter] = useState("All");
+  const navigate = useNavigate();
 
   const filteredRequests = requests.filter(req => filter === "All" || req.status === filter);
 
@@ -59,6 +62,23 @@ const AppointmentRequests = () => {
     if (window.confirm("Are you sure you want to reject this appointment request?")) {
       setRequests(requests.map(req => req.id === id ? { ...req, status: "Rejected" } : req));
     }
+  };
+
+  const handleMarkCompleted = (req) => {
+    // 1. Update state
+    setRequests(requests.map(r => r.id === req.id ? { ...r, status: "Completed" } : r));
+    
+    // 2. Show toast
+    toast.success("Appointment marked as completed!", {
+      style: {
+        borderRadius: '10px',
+        background: '#333',
+        color: '#fff',
+      }
+    });
+
+    // 3. Navigate with state
+    navigate("/dashboard/doctor/prescriptions", { state: { appointmentData: req } });
   };
 
   const getStatusBadge = (status) => {
@@ -207,9 +227,15 @@ const AppointmentRequests = () => {
                     )}
 
                     {req.status === "Approved" && (
-                      <div className="pt-2">
-                        <button className="w-full py-2.5 px-4 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 font-bold rounded-xl transition-colors text-sm">
-                          View Patient Profile
+                      <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                        <button 
+                          onClick={() => handleMarkCompleted(req)}
+                          className="flex-1 py-2.5 px-4 bg-teal-500 text-white hover:bg-teal-600 font-bold rounded-xl transition-colors shadow-sm shadow-teal-500/20 text-sm"
+                        >
+                          Mark Completed
+                        </button>
+                        <button className="flex-1 py-2.5 px-4 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 font-bold rounded-xl transition-colors text-sm">
+                          View Profile
                         </button>
                       </div>
                     )}
