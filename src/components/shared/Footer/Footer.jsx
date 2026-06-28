@@ -1,8 +1,17 @@
-import { Link } from "react-router-dom";
-import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
+import { Link, useLocation } from "react-router-dom";
+import { FaFacebookF, FaLinkedinIn, FaInstagram, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import footerLogo from "../../../assets/footer-logo.png";
 
 const Footer = () => {
+  const { pathname } = useLocation();
+
+  const handleHomeClick = () => {
+    if (pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <footer className="bg-[#073A36] text-white pt-16 pb-8 font-inter">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -10,23 +19,23 @@ const Footer = () => {
 
           {/* Brand Info */}
           <div className="lg:col-span-2">
-            <Link to="/" className="mb-6 inline-block -ml-4">
+            <Link to="/" onClick={handleHomeClick} className="mb-6 inline-block -ml-4">
               <img src={footerLogo} alt="MediCare Connect Logo" className="h-20 md:h-[85px] w-auto object-contain object-left" />
             </Link>
             <p className="text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">
               Your trusted healthcare partner. Connecting patients with the best healthcare.
             </p>
             <div className="flex space-x-3">
-              <a href="#" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                 <FaFacebookF size={14} />
               </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
-                <FaTwitter size={14} />
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                <FaXTwitter size={14} />
               </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                 <FaLinkedinIn size={14} />
               </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white text-[#073A36] flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
                 <FaInstagram size={14} />
               </a>
             </div>
@@ -36,7 +45,7 @@ const Footer = () => {
           <div>
             <h3 className="text-base font-poppins font-semibold mb-5">Quick Links</h3>
             <ul className="space-y-3">
-              <li><Link to="/" className="text-gray-300 text-sm hover:text-white transition-colors">Home</Link></li>
+              <li><Link to="/" onClick={handleHomeClick} className="text-gray-300 text-sm hover:text-white transition-colors">Home</Link></li>
               <li><Link to="/doctors" className="text-gray-300 text-sm hover:text-white transition-colors">Find Doctors</Link></li>
               <li><Link to="/about" className="text-gray-300 text-sm hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/contact" className="text-gray-300 text-sm hover:text-white transition-colors">Contact Us</Link></li>

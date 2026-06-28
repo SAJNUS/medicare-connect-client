@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import logo from "../../../assets/logo2.png";
@@ -6,6 +6,13 @@ import logo from "../../../assets/logo2.png";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
+  const { pathname } = useLocation();
+
+  const handleHomeClick = () => {
+    if (pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -21,7 +28,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-24">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="-ml-4 inline-block">
+            <Link to="/" onClick={handleHomeClick} className="-ml-4 inline-block">
               <img className="h-20 md:h-[85px] w-auto object-contain object-left" src={logo} alt="MediCare Connect Logo" />
             </Link>
           </div>
@@ -32,6 +39,7 @@ const Navbar = () => {
               <NavLink
                 key={link.name}
                 to={link.path}
+                onClick={link.path === "/" ? handleHomeClick : undefined}
                 className={({ isActive }) =>
                   `text-[15px] font-medium transition-colors duration-300 ${isActive ? "text-primary font-semibold" : "text-gray-700 hover:text-primary"
                   }`
@@ -72,7 +80,10 @@ const Navbar = () => {
               <NavLink
                 key={link.name}
                 to={link.path}
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  if (link.path === "/") handleHomeClick();
+                }}
                 className={({ isActive }) =>
                   `block px-4 py-3 rounded-lg text-base font-medium ${isActive ? "text-primary bg-teal-50" : "text-gray-700 hover:text-primary hover:bg-gray-50"
                   }`
