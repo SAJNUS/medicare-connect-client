@@ -99,9 +99,8 @@ const DoctorDashboard = () => {
             <div className="space-y-4">
               {todaysAppointments.map((apt, idx) => (
                 <div key={apt.id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-primary/30 transition-colors bg-gray-50/30">
-                  <div className="w-16 h-16 rounded-xl bg-teal-50 flex flex-col items-center justify-center text-primary flex-shrink-0">
-                    <span className="text-sm font-bold">{apt.time.split(' ')[0]}</span>
-                    <span className="text-xs font-medium">{apt.time.split(' ')[1]}</span>
+                  <div className="px-4 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-primary flex-shrink-0">
+                    <span className="text-sm font-bold">{apt.time.split(' - ')[0]}</span>
                   </div>
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-900">{apt.patient}</h4>

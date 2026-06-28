@@ -24,11 +24,11 @@ const initialPrescriptions = [
 const PrescriptionManagement = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const [formData, setFormData] = useState({
     patientName: "",
     date: new Date().toISOString().split('T')[0],
@@ -42,16 +42,16 @@ const PrescriptionManagement = () => {
   useEffect(() => {
     if (location.state && location.state.appointmentData) {
       const { patientName, issue, date } = location.state.appointmentData;
-      
+
       setFormData(prev => ({
         ...prev,
         patientName: patientName || "",
         diagnosis: issue || "",
         date: date || new Date().toISOString().split('T')[0]
       }));
-      
+
       setIsModalOpen(true);
-      
+
       // Clear the state so it doesn't trigger again on refresh
       window.history.replaceState({}, document.title);
     }
@@ -59,7 +59,7 @@ const PrescriptionManagement = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const newRx = {
       id: prescriptions.length + 1,
       patientName: formData.patientName,
@@ -70,7 +70,7 @@ const PrescriptionManagement = () => {
 
     setPrescriptions([newRx, ...prescriptions]);
     setIsModalOpen(false);
-    
+
     toast.success("Prescription created successfully!", {
       style: {
         borderRadius: '10px',
@@ -89,13 +89,13 @@ const PrescriptionManagement = () => {
     });
   };
 
-  const filteredPrescriptions = prescriptions.filter(rx => 
+  const filteredPrescriptions = prescriptions.filter(rx =>
     rx.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     rx.diagnosis.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -107,12 +107,12 @@ const PrescriptionManagement = () => {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Rx Management</h1>
           <p className="text-sm font-medium text-gray-500">Create and manage digital prescriptions.</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
           <div className="relative w-full sm:w-auto">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Search patients..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -120,7 +120,7 @@ const PrescriptionManagement = () => {
             />
           </div>
 
-          <button 
+          <button
             onClick={() => setIsModalOpen(true)}
             className="w-full sm:w-auto flex justify-center items-center gap-2 px-5 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-bold shadow-sm shadow-teal-500/20 hover:bg-teal-600 transition-colors"
           >
@@ -156,7 +156,7 @@ const PrescriptionManagement = () => {
                   </motion.tr>
                 ) : (
                   filteredPrescriptions.map((rx) => (
-                    <motion.tr 
+                    <motion.tr
                       key={rx.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -167,9 +167,8 @@ const PrescriptionManagement = () => {
                       <td className="p-4 font-medium">{rx.date}</td>
                       <td className="p-4">{rx.diagnosis}</td>
                       <td className="p-4">
-                        <span className={`inline-flex px-2.5 py-1 rounded-md text-xs font-bold ${
-                          rx.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <span className={`inline-flex justify-center items-center w-24 px-2.5 py-1 rounded-md text-xs font-bold ${rx.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                          }`}>
                           {rx.status}
                         </span>
                       </td>
@@ -199,14 +198,14 @@ const PrescriptionManagement = () => {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
               className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -223,7 +222,7 @@ const PrescriptionManagement = () => {
                     <p className="text-xs font-semibold text-gray-500">Issue a new digital Rx</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsModalOpen(false)}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors"
                 >
@@ -236,22 +235,22 @@ const PrescriptionManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Patient Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       value={formData.patientName}
-                      onChange={(e) => setFormData({...formData, patientName: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-gray-900"
                       placeholder="e.g. Alice Smith"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       required
                       value={formData.date}
-                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-gray-900"
                     />
                   </div>
@@ -259,11 +258,11 @@ const PrescriptionManagement = () => {
 
                 <div className="space-y-1.5 mb-6">
                   <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Diagnosis / Issue</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     value={formData.diagnosis}
-                    onChange={(e) => setFormData({...formData, diagnosis: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, diagnosis: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-gray-900"
                     placeholder="e.g. Blood Pressure, Viral Fever"
                   />
@@ -271,38 +270,38 @@ const PrescriptionManagement = () => {
 
                 <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 mb-6 space-y-4">
                   <h3 className="text-sm font-bold text-gray-800 border-b border-gray-200 pb-2">Medication Details</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-600">Medicine Name</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         required
                         value={formData.medication}
-                        onChange={(e) => setFormData({...formData, medication: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, medication: e.target.value })}
                         className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition-all"
                         placeholder="e.g. Amoxicillin"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-gray-600">Dosage</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         required
                         value={formData.dosage}
-                        onChange={(e) => setFormData({...formData, dosage: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
                         className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition-all"
                         placeholder="e.g. 500mg, Twice a day"
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-600">Special Instructions</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={formData.instructions}
-                      onChange={(e) => setFormData({...formData, instructions: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
                       className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition-all"
                       placeholder="e.g. Take after meals"
                     />
@@ -311,14 +310,14 @@ const PrescriptionManagement = () => {
 
                 {/* Modal Footer */}
                 <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
                     className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition-colors"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     type="submit"
                     className="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-500 text-white hover:bg-teal-600 shadow-sm shadow-teal-500/20 transition-colors flex items-center gap-2"
                   >
