@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaPlus, FaTimes, FaPencilAlt, FaTrash, FaCheckCircle, FaBan, FaToggleOn, FaToggleOff } from "react-icons/fa";
 
 const initialSlots = [
@@ -116,7 +117,7 @@ const ManageSchedule = () => {
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case "Available":
         return <span className="inline-flex items-center justify-center w-28 gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-100"><FaCheckCircle /> Available</span>;
       case "Booked":
@@ -134,31 +135,35 @@ const ManageSchedule = () => {
     let h = parseInt(hour, 10);
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12;
-    h = h ? h : 12; 
+    h = h ? h : 12;
     return `${h}:${minute} ${ampm}`;
   };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
-      
+
       {/* Header & Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+      >
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Manage Schedule</h1>
           <p className="text-sm font-medium text-gray-500">Create and manage your availability slots.</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
           {/* Date Picker Filter */}
           <div className="relative w-full sm:w-auto">
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               className="w-full sm:w-48 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-gray-700"
             />
             {dateFilter && (
-              <button 
+              <button
                 onClick={() => setDateFilter("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
                 title="Clear date filter"
@@ -168,34 +173,43 @@ const ManageSchedule = () => {
             )}
           </div>
 
-          <button 
+          <button
             onClick={handleAddNew}
             className="w-full sm:w-auto flex justify-center items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-sm shadow-primary/20 hover:bg-primary-focus transition-colors"
           >
             <FaPlus /> Add Slot
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filter Pills */}
-      <div className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2"
+      >
         {["All", "Available", "Booked", "Unavailable"].map((f) => (
           <button
             key={f}
             onClick={() => setStatusFilter(f)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-              statusFilter === f
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${statusFilter === f
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
-            }`}
+              }`}
           >
             {f}
           </button>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Slots Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Schedule Grid */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         {filteredSlots.length === 0 ? (
           <div className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100">
             <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
@@ -212,25 +226,25 @@ const ManageSchedule = () => {
             >
               <div className="flex justify-between items-start mb-4">
                 {getStatusBadge(slot.status)}
-                
+
                 <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleToggleStatus(slot.id)} 
+                  <button
+                    onClick={() => handleToggleStatus(slot.id)}
                     disabled={slot.status === "Booked"}
                     title={slot.status === "Available" ? "Mark Unavailable" : "Mark Available"}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${slot.status === "Booked" ? 'text-gray-300 cursor-not-allowed' : slot.status === 'Available' ? 'text-green-500 hover:bg-green-50' : 'text-gray-500 hover:bg-gray-100'}`}
                   >
                     {slot.status === 'Available' ? <FaToggleOn className="text-xl" /> : <FaToggleOff className="text-xl" />}
                   </button>
-                  <button 
-                    onClick={() => handleEdit(slot)} 
+                  <button
+                    onClick={() => handleEdit(slot)}
                     disabled={slot.status === "Booked"}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${slot.status === "Booked" ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-primary hover:bg-teal-50'}`}
                   >
                     <FaPencilAlt />
                   </button>
-                  <button 
-                    onClick={() => handleDelete(slot.id)} 
+                  <button
+                    onClick={() => handleDelete(slot.id)}
                     disabled={slot.status === "Booked"}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${slot.status === "Booked" ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
                   >
@@ -260,7 +274,7 @@ const ManageSchedule = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-5 pt-4 border-t border-gray-50">
                 <div className={`flex items-center justify-center gap-2 text-xs font-bold py-2 rounded-xl ${slot.type === 'Video Consult' ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>
                   {slot.type === 'Video Consult' ? <FaVideo /> : <FaMapMarkerAlt />}
@@ -270,12 +284,12 @@ const ManageSchedule = () => {
             </div>
           ))
         )}
-      </div>
+      </motion.div>
 
       {/* Add / Edit Slot Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div 
+          <div
             onClick={() => setIsModalOpen(false)}
             className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
           />
@@ -284,7 +298,7 @@ const ManageSchedule = () => {
               <h3 className="text-lg font-bold text-gray-900">
                 {editingId ? "Edit Slot" : "Add New Slot"}
               </h3>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
               >
@@ -295,11 +309,11 @@ const ManageSchedule = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Date</label>
-                <input 
+                <input
                   type="date"
                   required
                   value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
                 />
               </div>
@@ -307,21 +321,21 @@ const ManageSchedule = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Start Time</label>
-                  <input 
+                  <input
                     type="time"
                     required
                     value={formData.startTime}
-                    onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">End Time</label>
-                  <input 
+                  <input
                     type="time"
                     required
                     value={formData.endTime}
-                    onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
                   />
                 </div>
@@ -329,9 +343,9 @@ const ManageSchedule = () => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Consultation Type</label>
-                <select 
+                <select
                   value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium appearance-none"
                 >
                   <option value="Video Consult">Video Consult</option>
@@ -340,7 +354,7 @@ const ManageSchedule = () => {
               </div>
 
               <div className="pt-2">
-                <button 
+                <button
                   type="submit"
                   className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-focus transition-colors shadow-sm shadow-primary/20"
                 >

@@ -58,14 +58,13 @@ const ProfileManagement = () => {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="max-w-4xl mx-auto space-y-8 pb-8"
-    >
+    <div className="max-w-4xl mx-auto space-y-8 pb-8">
       {/* Header */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5"
+      >
         <div className="w-16 h-16 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center text-3xl shrink-0">
           <FaUserMd />
         </div>
@@ -73,9 +72,14 @@ const ProfileManagement = () => {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Profile Management</h1>
           <p className="text-sm font-medium text-gray-500">Update your public profile and consultation details.</p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+      >
         <div className="p-6 border-b border-gray-100 bg-gray-50/50">
           <h2 className="text-lg font-bold text-gray-800">Professional Information</h2>
           <p className="text-xs text-gray-500 mt-1">This information will be displayed to patients booking an appointment.</p>
@@ -191,8 +195,8 @@ const ProfileManagement = () => {
             </button>
           </div>
         </form>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 
