@@ -66,6 +66,23 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* DEV TOOL: Role Switcher */}
+            <div className="hidden md:flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-3 py-1 rounded-lg mr-2">
+              <span className="text-[10px] font-bold text-yellow-700 uppercase tracking-wide">Dev Tool:</span>
+              <select 
+                className="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none cursor-pointer"
+                defaultValue={localStorage.getItem("test_userRole") || "patient"}
+                onChange={(e) => {
+                  localStorage.setItem("test_userRole", e.target.value);
+                  window.location.reload();
+                }}
+              >
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
             <button className="relative p-2 text-gray-500 hover:text-primary transition-colors">
               <FaBell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
