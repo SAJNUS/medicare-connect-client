@@ -7,6 +7,7 @@ import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import DashboardLayout from "../layouts/DashboardLayout";
 import DashboardOverview from "../pages/Dashboard/DashboardOverview";
+import NotFound from "../pages/NotFound/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +57,18 @@ export const router = createBrowserRouter([
         path: "settings",
         element: <div className="p-8 text-center text-gray-500">Settings coming soon...</div>,
       },
+      {
+        path: "verify",
+        element: <div className="p-8 text-center text-gray-500">Doctor Verification coming soon...</div>,
+      },
+      {
+        path: "reports",
+        element: <div className="p-8 text-center text-gray-500">Reports coming soon...</div>,
+      }
     ],
   },
+  {
+    path: "*",
+    element: <NotFound />,
+  }
 ]);

@@ -4,7 +4,7 @@ import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCir
 const PatientDashboard = () => {
   // Mock Data
   const stats = [
-    { title: "Upcoming Appointments", value: "2", icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
+    { title: "Upcoming Visits", value: "2", icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
     { title: "Total Consultations", value: "14", icon: <FaUserMd className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Total Payments", value: "$450", fullValue: "$450.00", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
     { title: "Favorite Doctors", value: "4", icon: <FaStar className="text-orange-500" />, bg: "bg-orange-100/50" },
@@ -72,13 +72,13 @@ const PatientDashboard = () => {
             transition={{ delay: index * 0.1 }}
             className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col justify-between"
           >
-            <div className="flex items-center gap-4">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${stat.bg}`}>
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 ${stat.bg}`}>
                 {stat.icon}
               </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900 leading-tight mb-1" title={stat.fullValue || stat.value}>{stat.value}</p>
-                <p className="text-[13px] font-semibold text-gray-500 whitespace-nowrap">{stat.title}</p>
+              <div className="min-w-0">
+                <p className="text-2xl font-bold text-gray-900 leading-tight mb-0.5" title={stat.fullValue || stat.value}>{stat.value}</p>
+                <p className="text-xs font-semibold text-gray-500 leading-tight">{stat.title}</p>
               </div>
             </div>
             {stat.footerText && (
