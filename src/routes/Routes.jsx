@@ -3,6 +3,7 @@ import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home/Home";
 import FindDoctors from "../pages/FindDoctors/FindDoctors";
 import DoctorDetails from "../pages/DoctorDetails/DoctorDetails";
+import About from "../pages/About/About";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
       {
         path: "/doctors/:id",
         element: <DoctorDetails />,
+      },
+      {
+        path: "/about",
+        element: <About />,
       },
       {
         path: "/login",

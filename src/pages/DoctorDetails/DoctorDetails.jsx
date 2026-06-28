@@ -47,11 +47,13 @@ const DoctorDetails = () => {
             </div>
           </div>
           <div className="w-full md:w-3/4 flex flex-col justify-center">
-            <div className="flex justify-between items-start mb-2">
-              <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 pr-4">{doctor.name}</h1>
-              <div className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center shadow-sm whitespace-nowrap mt-1">
+            <div className="mb-3 flex">
+              <div className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center shadow-sm whitespace-nowrap">
                 <FaCheckCircle className="mr-1.5" /> Available
               </div>
+            </div>
+            <div className="mb-2">
+              <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 pr-4">{doctor.name}</h1>
             </div>
             <p className="text-primary font-medium text-lg mb-4">{doctor.specialty}</p>
 
