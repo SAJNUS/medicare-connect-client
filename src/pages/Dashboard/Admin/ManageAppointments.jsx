@@ -113,7 +113,7 @@ const ManageAppointments = () => {
       >
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Manage Appointments</h1>
-          <p className="text-sm font-medium text-gray-500">Monitor all platform appointments and manage schedules.</p>
+          <p className="text-sm font-medium text-gray-500">Monitor all platform appointments.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
@@ -158,7 +158,7 @@ const ManageAppointments = () => {
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="p-4 font-bold text-gray-600 text-sm">Patient</th>
-                <th className="p-4 font-bold text-gray-600 text-sm text-center">Doctor</th>
+                <th className="p-4 font-bold text-gray-600 text-sm">Doctor</th>
                 <th className="p-4 font-bold text-gray-600 text-sm text-center">Date & Time</th>
                 <th className="p-4 font-bold text-gray-600 text-sm text-center">Type</th>
                 <th className="p-4 font-bold text-gray-600 text-sm text-center">Status</th>
@@ -186,7 +186,7 @@ const ManageAppointments = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 text-center">
+                  <td className="p-4">
                     <p className="font-bold text-gray-900 text-sm">{apt.doctorName}</p>
                   </td>
                   <td className="p-4 text-center">
