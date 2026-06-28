@@ -44,7 +44,7 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center space-x-4">
             <Link to="/login">
-              <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white rounded-md px-6 py-2 min-h-0 h-10 font-inter font-medium text-[15px]">
+              <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white hover:border-primary rounded-md px-6 py-2 min-h-0 h-10 font-inter font-medium text-[15px]">
                 Login
               </button>
             </Link>

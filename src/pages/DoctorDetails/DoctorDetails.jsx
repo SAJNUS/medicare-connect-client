@@ -42,15 +42,17 @@ const DoctorDetails = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="w-full md:w-1/4 flex-shrink-0">
-            <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] relative">
+            <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] w-full">
               <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
             </div>
           </div>
           <div className="w-full md:w-3/4 flex flex-col justify-center">
-            <div className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-sm whitespace-nowrap mb-3 w-fit">
-              <FaCheckCircle className="mr-1.5" /> Available
+            <div className="flex justify-between items-start mb-2">
+              <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 pr-4">{doctor.name}</h1>
+              <div className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center shadow-sm whitespace-nowrap mt-1">
+                <FaCheckCircle className="mr-1.5" /> Available
+              </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 mb-2">{doctor.name}</h1>
             <p className="text-primary font-medium text-lg mb-4">{doctor.specialty}</p>
 
             <div className="flex flex-wrap gap-4 mb-6">
