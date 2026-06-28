@@ -1,8 +1,18 @@
 import { motion } from "framer-motion";
 import { FaPhoneAlt, FaArrowRight, FaUserMd, FaUsers, FaHeadset } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import bannerImg from "../../assets/banner.png";
 
 const HeroBanner = () => {
+  const navigate = useNavigate();
+
+  const scrollToEmergency = () => {
+    const element = document.getElementById("emergency-cta");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div
       className="relative bg-white overflow-hidden flex flex-col justify-center min-h-[calc(100vh-96px)] bg-no-repeat bg-cover bg-center"
@@ -29,10 +39,16 @@ const HeroBanner = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-10">
-              <button className="bg-primary hover:bg-primary-focus text-white px-8 py-3.5 rounded-lg flex items-center justify-center font-medium transition-all shadow-lg shadow-primary/30">
+              <button 
+                onClick={() => navigate("/doctors")}
+                className="bg-primary hover:bg-primary-focus text-white px-8 py-3.5 rounded-lg flex items-center justify-center font-medium transition-all shadow-lg shadow-primary/30"
+              >
                 Find Doctors <FaArrowRight className="ml-2 text-sm" />
               </button>
-              <button className="bg-white border-2 border-gray-200 text-gray-800 hover:border-primary hover:text-primary px-8 py-3.5 rounded-lg flex items-center justify-center font-medium transition-all shadow-sm">
+              <button 
+                onClick={scrollToEmergency}
+                className="bg-white border-2 border-gray-200 text-gray-800 hover:border-primary hover:text-primary px-8 py-3.5 rounded-lg flex items-center justify-center font-medium transition-all shadow-sm"
+              >
                 Emergency Help <FaPhoneAlt className="ml-2 text-sm" />
               </button>
             </div>

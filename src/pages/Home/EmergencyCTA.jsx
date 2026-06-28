@@ -3,24 +3,14 @@ import { FaPhoneAlt, FaArrowRight } from "react-icons/fa";
 
 const EmergencyCTA = () => {
   return (
-    <section className="py-10 bg-white">
+    <section id="emergency-cta" className="py-10 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#0b6e66] rounded-3xl overflow-hidden relative shadow-xl">
-          <div className="flex flex-col lg:flex-row items-center">
-
-            {/* Left Image Side */}
-            <div className="w-full lg:w-1/3 p-8 lg:p-0 flex justify-center lg:justify-start relative z-10">
-              <img
-                src="https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                alt="Ambulance"
-                className="w-full max-w-sm rounded-xl object-cover h-48 lg:h-full lg:rounded-none mix-blend-luminosity opacity-80"
-              />
-              <div className="absolute inset-0 bg-[#0b6e66]/40 lg:hidden"></div>
-            </div>
+        <div className="bg-[#0b6e66] rounded-3xl overflow-hidden relative shadow-xl min-h-[300px] flex items-center">
+          <div className="flex flex-col items-center justify-center w-full">
 
             {/* Content Side */}
-            <div className="w-full lg:w-2/3 p-8 lg:p-12 flex flex-col justify-center items-start z-10 relative">
-              <div className="text-left mb-8 w-full">
+            <div className="w-full p-10 lg:p-14 flex flex-col justify-center items-center text-center z-10 relative">
+              <div className="text-center mb-8 w-full">
                 <motion.h2
                   className="text-xl md:text-2xl lg:text-[26px] font-poppins font-bold text-white mb-3 leading-tight whitespace-nowrap"
                   initial={{ opacity: 0, y: 20 }}
@@ -30,7 +20,7 @@ const EmergencyCTA = () => {
                   Need Immediate Medical Assistance?
                 </motion.h2>
                 <motion.p
-                  className="text-teal-50 font-inter text-sm max-w-md mx-auto lg:mx-0"
+                  className="text-teal-50 font-inter text-sm max-w-md mx-auto"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -41,7 +31,7 @@ const EmergencyCTA = () => {
               </div>
 
               <motion.div
-                className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto"
+                className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full"
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
