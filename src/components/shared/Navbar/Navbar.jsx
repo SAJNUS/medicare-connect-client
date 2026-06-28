@@ -94,12 +94,12 @@ const Navbar = () => {
             ))}
             <div className="mt-4 flex flex-col gap-3 px-4">
               <Link to="/login" onClick={() => setIsOpen(false)}>
-                <button className="btn btn-outline border-primary text-primary w-full rounded-md h-12">
+                <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary focus:bg-primary focus:text-white focus:border-primary w-full rounded-md h-12 font-inter font-medium text-[15px]">
                   Login
                 </button>
               </Link>
               <Link to="/register" onClick={() => setIsOpen(false)}>
-                <button className="btn btn-primary bg-primary text-white w-full rounded-md h-12">
+                <button className="btn btn-primary bg-primary border-primary text-white hover:bg-primary-focus active:bg-primary-focus active:border-primary-focus focus:outline-none w-full rounded-md h-12 font-inter font-medium text-[15px]">
                   Register
                 </button>
               </Link>
