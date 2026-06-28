@@ -1,10 +1,14 @@
 import { motion } from "framer-motion";
 import { FaStar } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const DoctorCard = ({ doctor, index = 0 }) => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
-      className="bg-white rounded-2xl overflow-hidden shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 flex p-4 pb-5 flex-col h-full"
+      onClick={() => navigate(`/doctors/${doctor.id}`)}
+      className="bg-white rounded-2xl overflow-hidden shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 flex p-4 pb-5 flex-col h-full cursor-pointer transition-shadow"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
