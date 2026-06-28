@@ -150,10 +150,11 @@ const MyReviews = () => {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${filter === f
-              ? "bg-gray-900 text-white shadow-md"
-              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
-              }`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center justify-center gap-1.5 ${
+              filter === f
+                ? "bg-gray-900 text-white shadow-md"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
+            }`}
           >
             {f !== "All" && <FaStar className={filter === f ? "text-orange-400" : "text-gray-400"} />}
             {f === "All" ? "All Ratings" : `${f} Stars`}
@@ -162,29 +163,36 @@ const MyReviews = () => {
       </motion.div>
 
       {/* Reviews Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredReviews.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100"
-          >
-            <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-              <FaStar />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">No Reviews Found</h3>
-            <p className="text-gray-500">You haven't left any reviews matching this criteria.</p>
-          </motion.div>
-        ) : (
-          filteredReviews.map((rev, index) => (
-            <motion.div
-              key={rev.id}
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={filter}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]"
+        >
+          {filteredReviews.length === 0 ? (
+            <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + (index * 0.1) }}
-              className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
+              className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100"
             >
+              <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                <FaStar />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">No Reviews Found</h3>
+              <p className="text-gray-500">You haven't left any reviews matching this criteria.</p>
+            </motion.div>
+          ) : (
+            filteredReviews.map((rev, index) => (
+              <motion.div
+                key={rev.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
+              >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
@@ -215,10 +223,11 @@ const MyReviews = () => {
                 <span>Posted on {rev.date}</span>
                 <span className="bg-green-50 text-green-600 px-2 py-1 rounded-md">Published</span>
               </div>
-            </motion.div>
-          ))
-        )}
-      </div>
+              </motion.div>
+            ))
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Add / Edit Review Modal */}
       <AnimatePresence>

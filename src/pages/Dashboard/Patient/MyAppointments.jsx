@@ -170,13 +170,13 @@ const MyAppointments = () => {
                         <>
                           <button
                             onClick={() => handleReschedule(apt.id)}
-                            className="flex-1 py-2.5 px-4 bg-teal-50 text-teal-700 hover:bg-teal-100 font-bold rounded-xl transition-colors text-sm"
+                            className="flex-1 py-2.5 px-4 bg-green-100 text-green-700 hover:bg-green-200 font-bold rounded-xl transition-colors text-sm"
                           >
                             Reschedule
                           </button>
                           <button
                             onClick={() => handleCancel(apt.id)}
-                            className="flex-1 py-2.5 px-4 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl transition-colors text-sm"
+                            className="flex-1 py-2.5 px-4 bg-red-100 text-red-600 hover:bg-red-200 font-bold rounded-xl transition-colors text-sm"
                           >
                             Cancel
                           </button>
@@ -184,7 +184,7 @@ const MyAppointments = () => {
                       )}
 
                       {apt.status === "Completed" && (
-                        <button className="w-full py-2.5 px-4 bg-primary text-white hover:bg-primary-focus font-bold rounded-xl transition-colors shadow-sm shadow-primary/20 text-sm">
+                        <button className="w-full py-2.5 px-4 bg-teal-500 text-white hover:bg-teal-600 font-bold rounded-xl transition-colors shadow-sm shadow-teal-500/20 text-sm">
                           Book Follow-up
                         </button>
                       )}
