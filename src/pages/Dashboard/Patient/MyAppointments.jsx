@@ -68,11 +68,11 @@ const MyAppointments = () => {
   const getStatusBadge = (status) => {
     switch(status) {
       case "Upcoming":
-        return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold"><FaClock /> Upcoming</span>;
+        return <span className="flex items-center justify-center w-28 gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold"><FaClock /> Upcoming</span>;
       case "Completed":
-        return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-xs font-bold"><FaCheckCircle /> Completed</span>;
+        return <span className="flex items-center justify-center w-28 gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-xs font-bold"><FaCheckCircle /> Completed</span>;
       case "Cancelled":
-        return <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold"><FaTimesCircle /> Cancelled</span>;
+        return <span className="flex items-center justify-center w-28 gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold"><FaTimesCircle /> Cancelled</span>;
       default:
         return null;
     }
@@ -148,15 +148,15 @@ const MyAppointments = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-gray-50/50 rounded-xl border border-gray-100">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
                         <FaCalendarAlt className="text-teal-500" />
                         {apt.date}
                       </div>
-                      <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 whitespace-nowrap">
                         <FaClock className="text-orange-500" />
                         {apt.time}
                       </div>
-                      <div className="col-span-full flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <div className="col-span-full flex items-center gap-2 text-xs font-semibold text-gray-700">
                         {apt.type === 'Video Consult' ? <FaVideo className="text-blue-500" /> : <FaMapMarkerAlt className="text-red-500" />}
                         {apt.type}
                       </div>
@@ -168,7 +168,7 @@ const MyAppointments = () => {
                         <>
                           <button 
                             onClick={() => handleReschedule(apt.id)}
-                            className="flex-1 py-2.5 px-4 bg-white border-2 border-primary text-primary hover:bg-teal-50 font-bold rounded-xl transition-colors text-sm"
+                            className="flex-1 py-2.5 px-4 bg-green-50 text-green-600 hover:bg-green-100 font-bold rounded-xl transition-colors text-sm"
                           >
                             Reschedule
                           </button>
