@@ -103,28 +103,18 @@ const MyAppointments = () => {
 
       {/* Appointments Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <AnimatePresence>
           {filteredAppointments.length === 0 ? (
-             <motion.div
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100"
-             >
+             <div className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100">
                <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
                  <FaCalendarAlt />
                </div>
                <h3 className="text-lg font-bold text-gray-900 mb-2">No Appointments Found</h3>
                <p className="text-gray-500">You don't have any {filter.toLowerCase()} appointments at the moment.</p>
-             </motion.div>
+             </div>
           ) : (
             filteredAppointments.map((apt) => (
-              <motion.div
+              <div
                 key={apt.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                layout
                 className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col"
               >
                 {/* Status Badge */}
@@ -196,10 +186,9 @@ const MyAppointments = () => {
 
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))
           )}
-        </AnimatePresence>
       </div>
     </div>
   );

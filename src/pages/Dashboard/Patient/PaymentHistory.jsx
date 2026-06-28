@@ -156,7 +156,6 @@ const PaymentHistory = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              <AnimatePresence>
                 {filteredTransactions.length === 0 && (
                   <tr>
                     <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
@@ -167,12 +166,8 @@ const PaymentHistory = () => {
                   </tr>
                 )}
                 {filteredTransactions.map((txn) => (
-                  <motion.tr 
+                  <tr 
                     key={txn.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    layout
                     className="hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="px-6 py-4">
@@ -206,16 +201,14 @@ const PaymentHistory = () => {
                         <span className="text-gray-400 text-xs font-semibold">-</span>
                       )}
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
-              </AnimatePresence>
             </tbody>
           </table>
         </div>
 
         {/* Mobile Cards View (Hidden on desktop) */}
         <div className="md:hidden divide-y divide-gray-100">
-          <AnimatePresence>
             {filteredTransactions.length === 0 && (
               <div className="p-12 text-center text-gray-500">
                 <FaFileInvoiceDollar className="text-4xl text-gray-300 mx-auto mb-3" />
@@ -224,12 +217,8 @@ const PaymentHistory = () => {
               </div>
             )}
             {filteredTransactions.map((txn) => (
-              <motion.div 
+              <div 
                 key={txn.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                layout
                 className="p-5 space-y-4 hover:bg-gray-50/50 transition-colors"
               >
                 <div className="flex justify-between items-start gap-4">
@@ -262,9 +251,8 @@ const PaymentHistory = () => {
                     </button>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </AnimatePresence>
         </div>
 
       </div>
