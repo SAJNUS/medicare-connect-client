@@ -9,6 +9,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState("Patient");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -46,7 +47,7 @@ const Login = () => {
       // Simulate API call
       setTimeout(() => {
         setIsLoading(false);
-        toast.success("Successfully logged in!");
+        toast.success(`Successfully logged in as ${role}!`);
         navigate("/");
       }, 1500);
     } else {
@@ -59,7 +60,7 @@ const Login = () => {
     // Simulate Google Auth
     setTimeout(() => {
       setIsLoading(false);
-      toast.success("Successfully logged in with Google!");
+      toast.success(`Successfully logged in with Google as ${role}!`);
       navigate("/");
     }, 1500);
   };
@@ -91,6 +92,42 @@ const Login = () => {
           
           <form className="space-y-5" onSubmit={handleLogin}>
             
+            {/* Role Selector */}
+            <div className="flex bg-gray-100 p-1.5 rounded-xl mb-2 relative">
+              <button
+                type="button"
+                onClick={() => setRole("Patient")}
+                className={`relative z-10 flex-1 py-2 text-sm font-bold transition-colors duration-200 ${
+                  role === "Patient" ? "text-primary" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Patient
+                {role === "Patient" && (
+                  <motion.div
+                    layoutId="activeRoleLogin"
+                    className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("Doctor")}
+                className={`relative z-10 flex-1 py-2 text-sm font-bold transition-colors duration-200 ${
+                  role === "Doctor" ? "text-primary" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Doctor
+                {role === "Doctor" && (
+                  <motion.div
+                    layoutId="activeRoleLogin"
+                    className="absolute inset-0 bg-white rounded-lg shadow-sm -z-10"
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  />
+                )}
+              </button>
+            </div>
+
             {/* Email Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
