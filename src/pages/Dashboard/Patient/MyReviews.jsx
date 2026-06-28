@@ -107,7 +107,11 @@ const MyReviews = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header & Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+      >
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">My Reviews</h1>
           <p className="text-sm font-medium text-gray-500">Manage feedback you've left for your doctors.</p>
@@ -133,74 +137,87 @@ const MyReviews = () => {
             <FaPlus /> Write Review
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filter Pills */}
-      <div className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2"
+      >
         {["All", "5", "4", "3", "2", "1"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${filter === f
-                ? "bg-gray-900 text-white shadow-md"
-                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
+              ? "bg-gray-900 text-white shadow-md"
+              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
               }`}
           >
             {f !== "All" && <FaStar className={filter === f ? "text-orange-400" : "text-gray-400"} />}
             {f === "All" ? "All Ratings" : `${f} Stars`}
           </button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Reviews Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredReviews.length === 0 ? (
-            <div className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100">
-              <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-                <FaStar />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">No Reviews Found</h3>
-              <p className="text-gray-500">You haven't left any reviews matching this criteria.</p>
+        {filteredReviews.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100"
+          >
+            <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+              <FaStar />
             </div>
-          ) : (
-            filteredReviews.map((rev) => (
-              <div
-                key={rev.id}
-                className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                      <img src={rev.image} alt={rev.doctorName} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-gray-900">{rev.doctorName}</h3>
-                      <p className="text-xs font-semibold text-primary">{rev.specialty}</p>
-                    </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">No Reviews Found</h3>
+            <p className="text-gray-500">You haven't left any reviews matching this criteria.</p>
+          </motion.div>
+        ) : (
+          filteredReviews.map((rev, index) => (
+            <motion.div
+              key={rev.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + (index * 0.1) }}
+              className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                    <img src={rev.image} alt={rev.doctorName} className="w-full h-full object-cover" />
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEdit(rev)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-primary hover:bg-teal-50 transition-colors">
-                      <FaPencilAlt />
-                    </button>
-                    <button onClick={() => handleDelete(rev.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
-                      <FaTrash />
-                    </button>
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">{rev.doctorName}</h3>
+                    <p className="text-xs font-semibold text-primary">{rev.specialty}</p>
                   </div>
                 </div>
-
-                <div className="mb-3">
-                  {renderStars(rev.rating)}
-                </div>
-
-                <p className="text-gray-600 text-sm leading-relaxed flex-grow">"{rev.text}"</p>
-
-                <div className="mt-4 pt-4 border-t border-gray-50 text-xs font-semibold text-gray-400 flex justify-between items-center">
-                  <span>Posted on {rev.date}</span>
-                  <span className="bg-green-50 text-green-600 px-2 py-1 rounded-md">Published</span>
+                <div className="flex gap-2">
+                  <button onClick={() => handleEdit(rev)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-primary hover:bg-teal-50 transition-colors">
+                    <FaPencilAlt />
+                  </button>
+                  <button onClick={() => handleDelete(rev.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                    <FaTrash />
+                  </button>
                 </div>
               </div>
-            ))
-          )}
+
+              <div className="mb-3">
+                {renderStars(rev.rating)}
+              </div>
+
+              <p className="text-gray-600 text-sm leading-relaxed flex-grow">"{rev.text}"</p>
+
+              <div className="mt-4 pt-4 border-t border-gray-50 text-xs font-semibold text-gray-400 flex justify-between items-center">
+                <span>Posted on {rev.date}</span>
+                <span className="bg-green-50 text-green-600 px-2 py-1 rounded-md">Published</span>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
 
       {/* Add / Edit Review Modal */}

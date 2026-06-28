@@ -50,7 +50,7 @@ const MyAppointments = () => {
 
   const handleCancel = (id) => {
     if (window.confirm("Are you sure you want to cancel this appointment?")) {
-      setAppointments(appointments.map(apt => 
+      setAppointments(appointments.map(apt =>
         apt.id === id ? { ...apt, status: "Cancelled" } : apt
       ));
     }
@@ -66,7 +66,7 @@ const MyAppointments = () => {
   });
 
   const getStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case "Upcoming":
         return <span className="flex items-center justify-center w-28 gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold"><FaClock /> Upcoming</span>;
       case "Completed":
@@ -81,40 +81,52 @@ const MyAppointments = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header & Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
         <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
-        
+
         <div className="flex overflow-x-auto pb-2 md:pb-0 hide-scrollbar gap-2">
           {["All", "Upcoming", "Completed", "Cancelled"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-                filter === f
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === f
                   ? "bg-primary text-white shadow-md shadow-primary/20"
                   : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-              }`}
+                }`}
             >
               {f}
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Appointments Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <AnimatePresence mode="wait">
           {filteredAppointments.length === 0 ? (
-             <div className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100">
-               <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-                 <FaCalendarAlt />
-               </div>
-               <h3 className="text-lg font-bold text-gray-900 mb-2">No Appointments Found</h3>
-               <p className="text-gray-500">You don't have any {filter.toLowerCase()} appointments at the moment.</p>
-             </div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100"
+            >
+              <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                <FaCalendarAlt />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">No Appointments Found</h3>
+              <p className="text-gray-500">You don't have any {filter.toLowerCase()} appointments at the moment.</p>
+            </motion.div>
           ) : (
-            filteredAppointments.map((apt) => (
-              <div
+            filteredAppointments.map((apt, index) => (
+              <motion.div
                 key={apt.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
                 className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col"
               >
                 {/* Status Badge */}
@@ -151,18 +163,18 @@ const MyAppointments = () => {
                         {apt.type}
                       </div>
                     </div>
-                    
+
                     {/* Action Buttons */}
                     <div className="pt-2 flex flex-col sm:flex-row gap-3">
                       {apt.status === "Upcoming" && (
                         <>
-                          <button 
+                          <button
                             onClick={() => handleReschedule(apt.id)}
-                            className="flex-1 py-2.5 px-4 bg-green-50 text-green-600 hover:bg-green-100 font-bold rounded-xl transition-colors text-sm"
+                            className="flex-1 py-2.5 px-4 bg-teal-50 text-teal-700 hover:bg-teal-100 font-bold rounded-xl transition-colors text-sm"
                           >
                             Reschedule
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleCancel(apt.id)}
                             className="flex-1 py-2.5 px-4 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl transition-colors text-sm"
                           >
@@ -170,25 +182,25 @@ const MyAppointments = () => {
                           </button>
                         </>
                       )}
-                      
+
                       {apt.status === "Completed" && (
                         <button className="w-full py-2.5 px-4 bg-primary text-white hover:bg-primary-focus font-bold rounded-xl transition-colors shadow-sm shadow-primary/20 text-sm">
                           Book Follow-up
                         </button>
                       )}
-                      
+
                       {apt.status === "Cancelled" && (
                         <button className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold rounded-xl transition-colors text-sm">
                           Rebook Appointment
                         </button>
                       )}
                     </div>
-
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
+        </AnimatePresence>
       </div>
     </div>
   );

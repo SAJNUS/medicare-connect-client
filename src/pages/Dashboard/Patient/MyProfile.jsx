@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FaUserEdit, FaCamera, FaSave, FaTimes, FaUser, FaBirthdayCake, FaTint, FaVenusMars, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHeartbeat, FaAllergies, FaPills } from "react-icons/fa";
+import { motion } from "framer-motion";
+import { FaUserEdit, FaCamera, FaSave, FaTimes, FaUser, FaBirthdayCake, FaTint, FaVenusMars, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHeartbeat, FaAllergies, FaPills, FaBriefcase } from "react-icons/fa";
 
 const initialProfileData = {
   // Personal
@@ -8,6 +9,7 @@ const initialProfileData = {
   dateOfBirth: "1990-05-15",
   gender: "Male",
   bloodGroup: "O+",
+  occupation: "Software Engineer",
   // Contact
   email: "john.doe@example.com",
   phone: "+1 (555) 123-4567",
@@ -100,26 +102,33 @@ const MyProfile = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-8">
+    <form 
+      onSubmit={handleSubmit} 
+      className="max-w-5xl mx-auto space-y-8 pb-8"
+    >
       
       {/* Header & Global Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+      >
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">My Profile</h1>
           <p className="text-sm font-medium text-gray-500">Manage your personal and medical information.</p>
         </div>
-        
+
         <div className="flex gap-3">
           {isEditing ? (
             <>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleEditToggle}
                 className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors"
               >
                 <FaTimes /> Cancel
               </button>
-              <button 
+              <button
                 type="submit"
                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-focus transition-colors shadow-sm shadow-primary/20"
               >
@@ -127,8 +136,8 @@ const MyProfile = () => {
               </button>
             </>
           ) : (
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={handleEditToggle}
               className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-focus transition-colors shadow-sm shadow-primary/20"
             >
@@ -136,20 +145,25 @@ const MyProfile = () => {
             </button>
           )}
         </div>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Photo & Quick Info */}
         <div className="lg:col-span-1 space-y-8">
           {/* Profile Picture Card */}
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center"
+          >
             <div className="relative group mb-6">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-50 shadow-sm">
                 <img src={profileData.image} alt="Profile" className="w-full h-full object-cover" />
               </div>
               {isEditing && (
-                <button 
+                <button
                   type="button"
                   onClick={handleImageUpload}
                   className="absolute inset-0 bg-gray-900/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm"
@@ -163,10 +177,15 @@ const MyProfile = () => {
             <div className="w-full pt-4 border-t border-gray-100">
               <p className="text-xs text-gray-500 font-medium">Account created on Jan 10, 2026</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Emergency Contact Card */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+          >
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <FaHeartbeat className="text-red-500" /> Emergency Contact
             </h3>
@@ -175,14 +194,19 @@ const MyProfile = () => {
               {renderField(<FaUser />, "Relationship", "emergencyRelation", "text", ["Spouse", "Parent", "Sibling", "Child", "Friend", "Other"])}
               {renderField(<FaPhone />, "Phone Number", "emergencyPhone", "tel")}
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Right Column: Detailed Forms */}
         <div className="lg:col-span-2 space-y-8">
           
           {/* Personal Information */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100"
+          >
             <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-50 pb-4">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {renderField(<FaUser />, "First Name", "firstName")}
@@ -190,11 +214,17 @@ const MyProfile = () => {
               {renderField(<FaBirthdayCake />, "Date of Birth", "dateOfBirth", "date")}
               {renderField(<FaVenusMars />, "Gender", "gender", "text", ["Male", "Female", "Other", "Prefer not to say"])}
               {renderField(<FaTint />, "Blood Group", "bloodGroup", "text", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"])}
+              {renderField(<FaBriefcase />, "Occupation", "occupation")}
             </div>
-          </div>
+          </motion.div>
 
           {/* Contact Details */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100"
+          >
             <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-50 pb-4">Contact Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {renderField(<FaEnvelope />, "Email Address", "email", "email")}
@@ -203,16 +233,21 @@ const MyProfile = () => {
                 {renderField(<FaMapMarkerAlt />, "Home Address", "address", "text", null, true)}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Medical Information */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100"
+          >
             <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-50 pb-4">Basic Medical Info</h3>
             <div className="grid grid-cols-1 gap-6">
               {renderField(<FaAllergies />, "Known Allergies", "allergies", "text", null, true)}
               {renderField(<FaPills />, "Current Medications", "medications", "text", null, true)}
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </div>
