@@ -1,5 +1,5 @@
 import { NavLink, Link } from "react-router-dom";
-import { FaHome, FaCalendarAlt, FaFileMedical, FaCog, FaSignOutAlt, FaUserMd, FaUsers, FaChartBar, FaUserCheck, FaClipboardList } from "react-icons/fa";
+import { FaHome, FaCalendarAlt, FaFileMedical, FaCog, FaSignOutAlt, FaUserMd, FaUsers, FaChartBar, FaUserCheck, FaClipboardList, FaUserCircle, FaWallet, FaStar, FaFilePrescription, FaCalendarCheck } from "react-icons/fa";
 import logo from "../../assets/logo2.png";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -11,24 +11,27 @@ const Sidebar = ({ closeSidebar }) => {
   if (user?.role === "doctor") {
     navItems = [
       { name: "Overview", path: "/dashboard", icon: <FaHome /> },
-      { name: "My Schedule", path: "/dashboard/schedule", icon: <FaCalendarAlt /> },
-      { name: "Patient Requests", path: "/dashboard/requests", icon: <FaClipboardList /> },
-      { name: "Settings", path: "/dashboard/settings", icon: <FaCog /> },
+      { name: "Manage Schedule", path: "/dashboard/doctor/schedule", icon: <FaCalendarAlt /> },
+      { name: "Appointment Requests", path: "/dashboard/doctor/requests", icon: <FaClipboardList /> },
+      { name: "Prescription Management", path: "/dashboard/doctor/prescriptions", icon: <FaFilePrescription /> },
+      { name: "Profile Management", path: "/dashboard/doctor/profile", icon: <FaUserMd /> },
     ];
   } else if (user?.role === "admin") {
     navItems = [
       { name: "Overview", path: "/dashboard", icon: <FaHome /> },
-      { name: "Manage Users", path: "/dashboard/users", icon: <FaUsers /> },
-      { name: "Verify Doctors", path: "/dashboard/verify", icon: <FaUserCheck /> },
-      { name: "Reports", path: "/dashboard/reports", icon: <FaChartBar /> },
+      { name: "Manage Users", path: "/dashboard/admin/users", icon: <FaUsers /> },
+      { name: "Manage Doctors", path: "/dashboard/admin/doctors", icon: <FaUserMd /> },
+      { name: "Manage Appointments", path: "/dashboard/admin/appointments", icon: <FaCalendarCheck /> },
+      { name: "Payment Management", path: "/dashboard/admin/payments", icon: <FaWallet /> },
     ];
   } else {
     // Default to Patient
     navItems = [
       { name: "Overview", path: "/dashboard", icon: <FaHome /> },
-      { name: "Appointments", path: "/dashboard/appointments", icon: <FaCalendarAlt /> },
-      { name: "Medical Records", path: "/dashboard/records", icon: <FaFileMedical /> },
-      { name: "Settings", path: "/dashboard/settings", icon: <FaCog /> },
+      { name: "My Profile", path: "/dashboard/patient/profile", icon: <FaUserCircle /> },
+      { name: "My Appointments", path: "/dashboard/patient/appointments", icon: <FaCalendarAlt /> },
+      { name: "Payment History", path: "/dashboard/patient/payments", icon: <FaWallet /> },
+      { name: "My Reviews", path: "/dashboard/patient/reviews", icon: <FaStar /> },
     ];
   }
 

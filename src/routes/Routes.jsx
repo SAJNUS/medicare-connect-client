@@ -9,6 +9,24 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import DashboardOverview from "../pages/Dashboard/DashboardOverview";
 import NotFound from "../pages/NotFound/NotFound";
 
+// Patient Pages
+import MyProfile from "../pages/Dashboard/Patient/MyProfile";
+import MyAppointments from "../pages/Dashboard/Patient/MyAppointments";
+import PaymentHistory from "../pages/Dashboard/Patient/PaymentHistory";
+import MyReviews from "../pages/Dashboard/Patient/MyReviews";
+
+// Doctor Pages
+import ManageSchedule from "../pages/Dashboard/Doctor/ManageSchedule";
+import AppointmentRequests from "../pages/Dashboard/Doctor/AppointmentRequests";
+import PrescriptionManagement from "../pages/Dashboard/Doctor/PrescriptionManagement";
+import ProfileManagement from "../pages/Dashboard/Doctor/ProfileManagement";
+
+// Admin Pages
+import ManageUsers from "../pages/Dashboard/Admin/ManageUsers";
+import ManageDoctors from "../pages/Dashboard/Admin/ManageDoctors";
+import ManageAppointments from "../pages/Dashboard/Admin/ManageAppointments";
+import PaymentManagement from "../pages/Dashboard/Admin/PaymentManagement";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -44,26 +62,56 @@ export const router = createBrowserRouter([
         index: true,
         element: <DashboardOverview />,
       },
-      // Placeholders for other sidebar links to prevent 404s for now
+      // Patient Routes
       {
-        path: "appointments",
-        element: <div className="p-8 text-center text-gray-500">Appointments coming soon...</div>,
+        path: "patient/profile",
+        element: <MyProfile />,
       },
       {
-        path: "records",
-        element: <div className="p-8 text-center text-gray-500">Medical Records coming soon...</div>,
+        path: "patient/appointments",
+        element: <MyAppointments />,
       },
       {
-        path: "settings",
-        element: <div className="p-8 text-center text-gray-500">Settings coming soon...</div>,
+        path: "patient/payments",
+        element: <PaymentHistory />,
       },
       {
-        path: "verify",
-        element: <div className="p-8 text-center text-gray-500">Doctor Verification coming soon...</div>,
+        path: "patient/reviews",
+        element: <MyReviews />,
+      },
+      // Doctor Routes
+      {
+        path: "doctor/schedule",
+        element: <ManageSchedule />,
       },
       {
-        path: "reports",
-        element: <div className="p-8 text-center text-gray-500">Reports coming soon...</div>,
+        path: "doctor/requests",
+        element: <AppointmentRequests />,
+      },
+      {
+        path: "doctor/prescriptions",
+        element: <PrescriptionManagement />,
+      },
+      {
+        path: "doctor/profile",
+        element: <ProfileManagement />,
+      },
+      // Admin Routes
+      {
+        path: "admin/users",
+        element: <ManageUsers />,
+      },
+      {
+        path: "admin/doctors",
+        element: <ManageDoctors />,
+      },
+      {
+        path: "admin/appointments",
+        element: <ManageAppointments />,
+      },
+      {
+        path: "admin/payments",
+        element: <PaymentManagement />,
       }
     ],
   },
