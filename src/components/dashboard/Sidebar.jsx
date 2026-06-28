@@ -13,7 +13,7 @@ const Sidebar = ({ closeSidebar }) => {
       { name: "Overview", path: "/dashboard", icon: <FaHome /> },
       { name: "Manage Schedule", path: "/dashboard/doctor/schedule", icon: <FaCalendarAlt /> },
       { name: "Appointment Requests", path: "/dashboard/doctor/requests", icon: <FaClipboardList /> },
-      { name: "Prescription Management", path: "/dashboard/doctor/prescriptions", icon: <FaFilePrescription /> },
+      { name: "Rx Management", path: "/dashboard/doctor/prescriptions", icon: <FaFilePrescription /> },
       { name: "Profile Management", path: "/dashboard/doctor/profile", icon: <FaUserMd /> },
     ];
   } else if (user?.role === "admin") {

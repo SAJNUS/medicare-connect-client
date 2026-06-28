@@ -4,7 +4,7 @@ import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCir
 const PatientDashboard = () => {
   // Mock Data
   const stats = [
-    { title: "Upcoming Visits", value: "2", icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
+    { title: "My Appointments", value: "2", icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
     { title: "Total Consultations", value: "14", icon: <FaUserMd className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Total Payments", value: "$450", fullValue: "$450.00", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
     { title: "Favorite Doctors", value: "4", icon: <FaStar className="text-orange-500" />, bg: "bg-orange-100/50" },

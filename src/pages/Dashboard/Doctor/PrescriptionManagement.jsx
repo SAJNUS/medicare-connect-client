@@ -4,7 +4,7 @@ import { FaFilePrescription } from "react-icons/fa";
 const PrescriptionManagement = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Prescription Management</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Rx Management</h1>
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

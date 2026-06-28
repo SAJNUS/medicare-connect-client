@@ -5,7 +5,7 @@ const DoctorDashboard = () => {
   // Mock Data
   const stats = [
     { title: "Total Patients", value: "1.2K", fullValue: "1,245", icon: <FaUserInjured className="text-teal-600" />, bg: "bg-teal-100/50" },
-    { title: "Today's Visits", value: "8", icon: <FaCalendarDay className="text-blue-600" />, bg: "bg-blue-100/50" },
+    { title: "Today's Appointments", value: "8", icon: <FaCalendarDay className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Total Earnings", value: "$82.5K", fullValue: "$82,450.00", icon: <FaWallet className="text-orange-500" />, bg: "bg-orange-100/50" },
     { title: "Reviews Received", value: "4.9", icon: <FaStar className="text-yellow-500" />, bg: "bg-yellow-100/50" },
   ];
