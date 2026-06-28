@@ -97,7 +97,7 @@ const PrescriptionManagement = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
@@ -129,7 +129,7 @@ const PrescriptionManagement = () => {
       </motion.div>
 
       {/* Prescriptions List */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -140,9 +140,9 @@ const PrescriptionManagement = () => {
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider">
                 <th className="p-4 font-bold">Patient Name</th>
-                <th className="p-4 font-bold">Date</th>
-                <th className="p-4 font-bold">Diagnosis</th>
-                <th className="p-4 font-bold">Status</th>
+                <th className="p-4 font-bold text-center">Date</th>
+                <th className="p-4 font-bold text-center">Diagnosis</th>
+                <th className="p-4 font-bold text-center">Status</th>
                 <th className="p-4 font-bold text-center">Actions</th>
               </tr>
             </thead>
@@ -168,9 +168,9 @@ const PrescriptionManagement = () => {
                       className="hover:bg-gray-50/50 transition-colors"
                     >
                       <td className="p-4 font-bold text-gray-900">{rx.patientName}</td>
-                      <td className="p-4 font-medium">{rx.date}</td>
-                      <td className="p-4">{rx.diagnosis}</td>
-                      <td className="p-4">
+                      <td className="p-4 font-medium text-center">{rx.date}</td>
+                      <td className="p-4 text-center">{rx.diagnosis}</td>
+                      <td className="p-4 text-center">
                         <span className={`inline-flex justify-center items-center w-24 px-2.5 py-1 rounded-md text-xs font-bold ${rx.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
                           }`}>
                           {rx.status}

@@ -102,11 +102,7 @@ const PaymentHistory = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header & Controls */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
-      >
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Payment History</h1>
           <p className="text-sm font-medium text-gray-500">Track and manage your consultation payments.</p>
@@ -132,8 +128,8 @@ const PaymentHistory = () => {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === f
-                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
+                  ? "bg-primary text-white shadow-md shadow-primary/20"
+                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
                   }`}
               >
                 {f}
@@ -141,14 +137,10 @@ const PaymentHistory = () => {
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Transactions Container */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-      >
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
         {/* Desktop Table View (Hidden on mobile) */}
         <div className="hidden md:block overflow-x-auto">
@@ -158,8 +150,8 @@ const PaymentHistory = () => {
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Transaction ID & Date</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Details</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Amount & Method</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Action</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -172,12 +164,9 @@ const PaymentHistory = () => {
                   </td>
                 </tr>
               )}
-              {filteredTransactions.map((txn, index) => (
-                <motion.tr
+              {filteredTransactions.map((txn) => (
+                <tr
                   key={txn.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
                   className="hover:bg-gray-50/50 transition-colors"
                 >
                   <td className="px-6 py-4">
@@ -195,10 +184,10 @@ const PaymentHistory = () => {
                       {txn.method}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-center">
                     {getStatusBadge(txn.status)}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-center">
                     {txn.status === "Completed" ? (
                       <button
                         onClick={() => handleDownload(txn.id)}
@@ -211,7 +200,7 @@ const PaymentHistory = () => {
                       <span className="text-gray-400 text-xs font-semibold">-</span>
                     )}
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -226,12 +215,9 @@ const PaymentHistory = () => {
               <p className="text-sm">Try adjusting your filters or search query.</p>
             </div>
           )}
-          {filteredTransactions.map((txn, index) => (
-            <motion.div
+          {filteredTransactions.map((txn) => (
+            <div
               key={txn.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
               className="p-5 space-y-4 hover:bg-gray-50/50 transition-colors"
             >
               <div className="flex justify-between items-start gap-4">
@@ -264,11 +250,11 @@ const PaymentHistory = () => {
                   </button>
                 )}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-      </motion.div>
+      </div>
     </div>
   );
 };

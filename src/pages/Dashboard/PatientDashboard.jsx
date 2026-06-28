@@ -156,24 +156,24 @@ const PatientDashboard = () => {
                 <thead>
                   <tr className="border-b border-gray-100 text-gray-500 text-sm font-semibold">
                     <th className="pb-3 pl-4">Doctor Name</th>
-                    <th className="pb-3">Date</th>
-                    <th className="pb-3">Status</th>
-                    <th className="pb-3">Action</th>
+                    <th className="pb-3 text-center">Date</th>
+                    <th className="pb-3 text-center">Status</th>
+                    <th className="pb-3 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {appointmentHistory.map((history, idx) => (
                     <tr key={history.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${idx === appointmentHistory.length - 1 ? 'border-b-0' : ''}`}>
                       <td className="py-4 pl-4 font-bold text-gray-900">{history.doctor}</td>
-                      <td className="py-4 text-gray-600 text-sm font-medium">{history.date}</td>
-                      <td className="py-4">
+                      <td className="py-4 text-gray-600 text-sm font-medium text-center">{history.date}</td>
+                      <td className="py-4 text-center">
                         <span className={`inline-flex items-center justify-center w-28 gap-1.5 py-1 rounded-full text-xs font-bold ${history.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                           }`}>
                           {history.status === 'Completed' ? <FaCheckCircle /> : <FaTimesCircle />}
                           {history.status}
                         </span>
                       </td>
-                      <td className="py-4">
+                      <td className="py-4 text-center">
                         <button className="text-primary hover:text-[#095c55] font-bold text-sm transition-colors">Review</button>
                       </td>
                     </tr>

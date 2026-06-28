@@ -111,7 +111,7 @@ const ManageUsers = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50/50 border-b border-gray-100">
-                    <th className="p-4 font-bold text-gray-600 text-sm text-center">User</th>
+                    <th className="p-4 font-bold text-gray-600 text-sm">User</th>
                     <th className="p-4 font-bold text-gray-600 text-sm text-center">Role</th>
                     <th className="p-4 font-bold text-gray-600 text-sm text-center">Join Date</th>
                     <th className="p-4 font-bold text-gray-600 text-sm text-center">Status</th>
