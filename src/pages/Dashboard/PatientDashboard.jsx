@@ -157,7 +157,7 @@ const PatientDashboard = () => {
                       <td className="py-4 pl-4 font-bold text-gray-900">{history.doctor}</td>
                       <td className="py-4 text-gray-600 text-sm font-medium">{history.date}</td>
                       <td className="py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${history.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        <span className={`inline-flex items-center justify-center w-28 gap-1.5 py-1 rounded-full text-xs font-bold ${history.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                           }`}>
                           {history.status === 'Completed' ? <FaCheckCircle /> : <FaTimesCircle />}
                           {history.status}
