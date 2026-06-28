@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
+import { useModal } from "../../context/ModalContext";
 
 const PatientDashboard = () => {
+  const { openModal } = useModal();
   // Mock Data
   const stats = [
     { title: "My Appointments", value: "2", icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
@@ -57,7 +59,10 @@ const PatientDashboard = () => {
             Here's what's happening with your health profile today.
           </p>
         </div>
-        <button className="btn btn-primary bg-primary border-primary text-white hover:bg-primary-focus rounded-xl px-6 shadow-sm">
+        <button 
+          onClick={() => openModal()}
+          className="btn btn-primary bg-primary border-primary text-white hover:bg-primary-focus rounded-xl px-6 shadow-sm"
+        >
           Book New Appointment
         </button>
       </motion.div>

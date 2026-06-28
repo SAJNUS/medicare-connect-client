@@ -93,12 +93,16 @@ const Navbar = () => {
               </NavLink>
             ))}
             <div className="mt-4 flex flex-col gap-3 px-4">
-              <button className="btn btn-outline border-primary text-primary w-full rounded-md h-12">
-                Login
-              </button>
-              <button className="btn btn-primary bg-primary text-white w-full rounded-md h-12">
-                Register
-              </button>
+              <Link to="/login" onClick={() => setIsOpen(false)}>
+                <button className="btn btn-outline border-primary text-primary w-full rounded-md h-12">
+                  Login
+                </button>
+              </Link>
+              <Link to="/register" onClick={() => setIsOpen(false)}>
+                <button className="btn btn-primary bg-primary text-white w-full rounded-md h-12">
+                  Register
+                </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -2,9 +2,14 @@ import { Link, useLocation } from "react-router-dom";
 import { FaFacebookF, FaLinkedinIn, FaInstagram, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import footerLogo from "../../../assets/footer-logo.png";
+import { useModal } from "../../../context/ModalContext";
+import { useState } from "react";
+import HealthTipsModal from "../Modals/HealthTipsModal";
 
 const Footer = () => {
   const { pathname } = useLocation();
+  const { openModal } = useModal();
+  const [isHealthTipsOpen, setIsHealthTipsOpen] = useState(false);
 
   const handleHomeClick = () => {
     if (pathname === "/") {
@@ -57,11 +62,25 @@ const Footer = () => {
           <div>
             <h3 className="text-base font-poppins font-semibold mb-5">For Patients</h3>
             <ul className="space-y-3">
-              <li><Link to="#" className="text-gray-300 text-sm hover:text-white transition-colors">Book Appointment</Link></li>
-              <li><Link to="#" className="text-gray-300 text-sm hover:text-white transition-colors">Find Doctors</Link></li>
-              <li><Link to="#" className="text-gray-300 text-sm hover:text-white transition-colors">Health Tips</Link></li>
-              <li><Link to="#" className="text-gray-300 text-sm hover:text-white transition-colors">Patient Dashboard</Link></li>
-              <li><Link to="#" className="text-gray-300 text-sm hover:text-white transition-colors">Help Center</Link></li>
+              <li>
+                <button 
+                  onClick={() => openModal()}
+                  className="text-gray-300 text-sm hover:text-white transition-colors"
+                >
+                  Book Appointment
+                </button>
+              </li>
+              <li><Link to="/doctors" className="text-gray-300 text-sm hover:text-white transition-colors">Find Doctors</Link></li>
+              <li>
+                <button 
+                  onClick={() => setIsHealthTipsOpen(true)}
+                  className="text-gray-300 text-sm hover:text-white transition-colors"
+                >
+                  Health Tips
+                </button>
+              </li>
+              <li><Link to="/dashboard" className="text-gray-300 text-sm hover:text-white transition-colors">Patient Dashboard</Link></li>
+              <li><Link to="/contact" className="text-gray-300 text-sm hover:text-white transition-colors">Help Center</Link></li>
             </ul>
           </div>
 
@@ -93,6 +112,11 @@ const Footer = () => {
           </div>
         </div>
       </div>
+
+      <HealthTipsModal 
+        isOpen={isHealthTipsOpen} 
+        onClose={() => setIsHealthTipsOpen(false)} 
+      />
     </footer>
   );
 };

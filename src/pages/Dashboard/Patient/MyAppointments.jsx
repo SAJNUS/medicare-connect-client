@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus } from "react-icons/fa";
+import { useModal } from "../../../context/ModalContext";
 
 const MyAppointments = () => {
   const [filter, setFilter] = useState("All");
+  const { openModal } = useModal();
 
   const [appointments, setAppointments] = useState([
     {
@@ -60,6 +62,10 @@ const MyAppointments = () => {
     alert("Reschedule functionality would open a calendar picker here.");
   };
 
+  const handleBookAppointment = (newAppointment) => {
+    setAppointments([newAppointment, ...appointments]);
+  };
+
   const filteredAppointments = appointments.filter(apt => {
     if (filter === "All") return true;
     return apt.status === filter;
@@ -102,6 +108,13 @@ const MyAppointments = () => {
             </button>
           ))}
         </div>
+        
+        <button 
+          onClick={() => openModal(handleBookAppointment)}
+          className="mt-4 md:mt-0 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-[#095c55] transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
+        >
+          <FaPlus /> Book New Appointment
+        </button>
       </motion.div>
 
       {/* Appointments Grid */}

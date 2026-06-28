@@ -1,0 +1,385 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaTimes, FaCalendarAlt, FaClock, FaUserMd, FaVideo, FaMapMarkerAlt, FaStethoscope, FaCheck } from "react-icons/fa";
+import toast from "react-hot-toast";
+
+const mockDoctors = [
+  { id: 1, name: "Dr. Sarah Jenkins", specialty: "Cardiologist" },
+  { id: 2, name: "Dr. Michael Chen", specialty: "Neurologist" },
+  { id: 3, name: "Dr. Emily Wong", specialty: "Dermatologist" },
+  { id: 4, name: "Dr. Robert Smith", specialty: "Orthopedic" },
+  { id: 5, name: "Dr. Jessica Taylor", specialty: "Pediatrician" },
+  { id: 6, name: "Dr. David Lee", specialty: "Cardiologist" },
+  { id: 7, name: "Dr. Lisa Adams", specialty: "Dermatologist" },
+];
+
+const specialties = ["Cardiologist", "Neurologist", "Dermatologist", "Orthopedic", "Pediatrician"];
+
+const timeSlots = ["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM"];
+
+const symptomMap = {
+  "Cardiologist": ["Chest Pain", "Shortness of Breath", "High Blood Pressure", "Palpitations", "Dizziness"],
+  "Neurologist": ["Headaches", "Seizures", "Numbness", "Memory Loss", "Muscle Weakness"],
+  "Dermatologist": ["Rash", "Itching", "Acne", "Moles", "Skin Discoloration"],
+  "Orthopedic": ["Joint Pain", "Back Pain", "Fracture", "Swelling", "Stiffness"],
+  "Pediatrician": ["Fever", "Cough", "Vomiting", "Vaccination", "Growth Check"],
+};
+
+const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    specialty: "",
+    doctorId: "",
+    type: "In-Person Consult",
+    date: "",
+    time: "",
+    symptoms: [],
+    customSymptom: ""
+  });
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  const handleInputChange = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+
+    if (name === "specialty") {
+      setFormData(prev => ({
+        ...prev,
+        specialty: String(value),
+        doctorId: "",
+        symptoms: [],
+        customSymptom: ""
+      }));
+      setIsOtherSelected(false);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: String(value) }));
+    }
+  };
+
+  const handleTypeSelect = (type) => {
+    setFormData(prev => ({ ...prev, type }));
+  };
+
+  const toggleSymptom = (symptom) => {
+    setFormData(prev => {
+      const current = prev.symptoms;
+      if (current.includes(symptom)) {
+        return { ...prev, symptoms: current.filter(s => s !== symptom) };
+      } else {
+        return { ...prev, symptoms: [...current, symptom] };
+      }
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.specialty || !formData.doctorId || !formData.date || !formData.time) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      toast.success("Appointment booked successfully!");
+
+      const selectedDoctor = mockDoctors.find(d => String(d.id) === String(formData.doctorId));
+
+      // Pass the new mock appointment back
+      if (onSubmit && selectedDoctor) {
+        onSubmit({
+          id: Date.now(),
+          doctorName: selectedDoctor.name,
+          specialty: selectedDoctor.specialty,
+          date: formData.date,
+          time: formData.time,
+          type: formData.type,
+          status: "Upcoming",
+          image: "https://randomuser.me/api/portraits/lego/1.jpg" // Placeholder mock image
+        });
+      }
+
+      // Reset and close
+      setFormData({
+        specialty: "",
+        doctorId: "",
+        type: "In-Person Consult",
+        date: "",
+        time: "",
+        symptoms: [],
+        customSymptom: ""
+      });
+      setIsOtherSelected(false);
+      onClose();
+    }, 1500);
+  };
+
+  const filteredDoctors = mockDoctors.filter(d => d.specialty === formData.specialty);
+  const availableSymptoms = formData.specialty ? symptomMap[formData.specialty] : [];
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-inter">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-100 bg-gray-50/50">
+              <div>
+                <h2 className="text-2xl font-bold font-poppins text-gray-900">Book Appointment</h2>
+                <p className="text-sm text-gray-500 mt-1">Schedule a new consultation with our experts.</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 sm:p-8 overflow-y-auto overscroll-contain custom-scrollbar">
+              <form id="appointment-form" onSubmit={handleSubmit} className="space-y-6">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Specialty Selection */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FaStethoscope className="text-teal-500" /> Select Specialty *
+                    </label>
+                    <select
+                      name="specialty"
+                      value={formData.specialty}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900"
+                    >
+                      <option value="" disabled hidden>Choose specialty...</option>
+                      {specialties.map(spec => (
+                        <option key={spec} value={spec}>{spec}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Doctor Selection */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FaUserMd className="text-teal-500" /> Select Doctor *
+                    </label>
+                    <select
+                      name="doctorId"
+                      value={formData.doctorId}
+                      onChange={handleInputChange}
+                      disabled={!formData.specialty}
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="" disabled hidden>
+                        {!formData.specialty ? "Select specialty first" : "Choose a doctor..."}
+                      </option>
+                      {filteredDoctors.map(doc => (
+                        <option key={doc.id} value={String(doc.id)}>{doc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Appointment Type */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Consultation Type</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div
+                      onClick={() => handleTypeSelect("In-Person Consult")}
+                      className={`cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 transition-all ${formData.type === "In-Person Consult"
+                        ? "border-primary bg-teal-50/50 shadow-sm"
+                        : "border-gray-100 hover:border-gray-300 bg-white"
+                        }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "In-Person Consult" ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
+                        <FaMapMarkerAlt />
+                      </div>
+                      <div>
+                        <p className={`font-bold transition-colors ${formData.type === "In-Person Consult" ? "text-gray-900" : "text-gray-700"}`}>In-Person</p>
+                        <p className="text-xs text-gray-500">Visit the clinic</p>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => handleTypeSelect("Video Consult")}
+                      className={`cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 transition-all ${formData.type === "Video Consult"
+                        ? "border-primary bg-teal-50/50 shadow-sm"
+                        : "border-gray-100 hover:border-gray-300 bg-white"
+                        }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "Video Consult" ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
+                        <FaVideo />
+                      </div>
+                      <div>
+                        <p className={`font-bold transition-colors ${formData.type === "Video Consult" ? "text-gray-900" : "text-gray-700"}`}>Video Consult</p>
+                        <p className="text-xs text-gray-500">Online consultation</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date & Time */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FaCalendarAlt className="text-blue-500" /> Date *
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <FaClock className="text-orange-500" /> Time Slot *
+                    </label>
+                    <select
+                      name="time"
+                      value={formData.time}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900"
+                    >
+                      <option value="" disabled hidden>Choose a time slot...</option>
+                      {timeSlots.map(slot => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Dynamic Symptoms Tags */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Symptoms or Reason for Visit (Optional)</label>
+
+                  {!formData.specialty ? (
+                    <div className="p-4 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center text-sm text-gray-500">
+                      Select a specialty first to see common symptoms.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {availableSymptoms.map(symptom => {
+                          const isSelected = formData.symptoms.includes(symptom);
+                          return (
+                            <button
+                              key={symptom}
+                              type="button"
+                              onClick={() => toggleSymptom(symptom)}
+                              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all flex items-center gap-2 ${isSelected
+                                ? "bg-teal-50 border-primary text-primary"
+                                : "bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:bg-gray-50"
+                                }`}
+                            >
+                              {isSelected && <FaCheck className="text-xs" />}
+                              {symptom}
+                            </button>
+                          );
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => setIsOtherSelected(!isOtherSelected)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${isOtherSelected
+                            ? "bg-teal-50 border-primary text-primary"
+                            : "bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:bg-gray-50"
+                            }`}
+                        >
+                          Other
+                        </button>
+                      </div>
+
+                      {/* Custom Input for 'Other' */}
+                      <AnimatePresence>
+                        {isOtherSelected && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden pt-2"
+                          >
+                            <input
+                              type="text"
+                              name="customSymptom"
+                              value={formData.customSymptom}
+                              onChange={handleInputChange}
+                              placeholder="Type your specific reason or symptoms..."
+                              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none text-sm"
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Footer / Actions */}
+            <div className="p-6 sm:p-8 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row gap-4 sm:justify-end shrink-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3.5 rounded-xl font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-colors w-full sm:w-auto text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="appointment-form"
+                disabled={isSubmitting || !formData.specialty || !formData.doctorId || !formData.date || !formData.time}
+                className="px-8 py-3.5 rounded-xl font-bold text-white bg-primary hover:bg-[#095c55] transition-colors shadow-lg shadow-primary/30 w-full sm:w-auto text-center flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </>
+                ) : (
+                  "Confirm Booking"
+                )}
+              </button>
+            </div>
+
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default BookAppointmentModal;

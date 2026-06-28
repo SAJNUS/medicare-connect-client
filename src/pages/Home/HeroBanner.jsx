@@ -21,7 +21,7 @@ const HeroBanner = () => {
       {/* Light Overlay for readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-teal-900/10 z-0"></div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-10 lg:py-0">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-16 lg:py-0">
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
           {/* Left Content */}
           <motion.div
@@ -30,22 +30,22 @@ const HeroBanner = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-[44px] md:text-[56px] font-poppins font-bold text-gray-900 leading-[1.1] mb-5 tracking-tight whitespace-nowrap">
-              Your Health, Our Priority<br />
-              <span className="text-primary mt-2 block text-[26px] sm:text-[30px] md:text-[36px] whitespace-nowrap">Book Trusted Doctors Instantly</span>
+            <h1 className="text-4xl md:text-[44px] lg:text-[50px] xl:text-[56px] font-poppins font-bold text-gray-900 leading-[1.2] mb-5 tracking-tight">
+              <span className="md:whitespace-nowrap">Your Health, Our Priority</span><br />
+              <span className="text-primary mt-2 block text-2xl sm:text-[30px] md:text-[36px]">Book Trusted Doctors Instantly</span>
             </h1>
             <p className="text-[17px] text-gray-700 mb-10 max-w-lg font-inter leading-relaxed font-medium">
               MediCare Connect brings quality healthcare to you. Book appointments, consult doctors, and manage your health — all in one place.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-10">
-              <button 
+              <button
                 onClick={() => navigate("/doctors")}
                 className="bg-primary hover:bg-primary-focus text-white px-8 py-3.5 rounded-lg flex items-center justify-center font-medium transition-all shadow-lg shadow-primary/30"
               >
                 Find Doctors <FaArrowRight className="ml-2 text-sm" />
               </button>
-              <button 
+              <button
                 onClick={scrollToEmergency}
                 className="bg-white border-2 border-gray-200 text-gray-800 hover:border-primary hover:text-primary px-8 py-3.5 rounded-lg flex items-center justify-center font-medium transition-all shadow-sm"
               >

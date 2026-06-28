@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
 import { FaPhoneAlt, FaArrowRight } from "react-icons/fa";
+import { useModal } from "../../context/ModalContext";
 
 const EmergencyCTA = () => {
+  const { openModal } = useModal();
   return (
-    <section id="emergency-cta" className="py-10 bg-white">
+    <section className="py-10 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#0b6e66] rounded-3xl overflow-hidden relative shadow-xl min-h-[300px] flex items-center">
+        <div id="emergency-cta" className="scroll-mt-24 bg-[#0b6e66] rounded-3xl overflow-hidden relative shadow-xl min-h-[300px] flex items-center">
           <div className="flex flex-col items-center justify-center w-full">
 
             {/* Content Side */}
@@ -47,7 +49,10 @@ const EmergencyCTA = () => {
                   </div>
                 </div>
 
-                <button className="bg-white hover:bg-gray-50 text-[#0b6e66] w-full sm:w-auto rounded-xl px-6 py-4 font-bold text-sm flex items-center justify-center transition-colors">
+                <button 
+                  onClick={() => openModal()}
+                  className="bg-white hover:bg-gray-50 text-[#0b6e66] w-full sm:w-auto rounded-xl px-6 py-4 font-bold text-sm flex items-center justify-center transition-colors"
+                >
                   Book Appointment <FaArrowRight className="ml-2" />
                 </button>
               </motion.div>
