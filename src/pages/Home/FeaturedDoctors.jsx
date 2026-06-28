@@ -12,7 +12,7 @@ const doctors = [
     image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400&q=80",
     rating: 4.9,
     reviews: 120,
-    fee: "৳700",
+    fee: "$700",
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ const doctors = [
     image: doctorFemaleImg,
     rating: 4.8,
     reviews: 98,
-    fee: "৳600",
+    fee: "$600",
   },
   {
     id: 3,
@@ -32,7 +32,7 @@ const doctors = [
     image: doctorMaleImg,
     rating: 4.9,
     reviews: 150,
-    fee: "৳800",
+    fee: "$800",
   },
   {
     id: 4,
@@ -42,7 +42,7 @@ const doctors = [
     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400&q=80",
     rating: 4.7,
     reviews: 85,
-    fee: "৳500",
+    fee: "$500",
   }
 ];
 

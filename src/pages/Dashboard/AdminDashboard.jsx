@@ -5,10 +5,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 const AdminDashboard = () => {
   // Mock Data
   const stats = [
-    { title: "Total Users", value: "24,592", icon: <FaUsers className="text-blue-600" />, bg: "bg-blue-100/50" },
-    { title: "Active Doctors", value: "1,432", icon: <FaUserMd className="text-teal-600" />, bg: "bg-teal-100/50" },
-    { title: "Appointments", value: "8,945", icon: <FaCalendarCheck className="text-purple-600" />, bg: "bg-purple-100/50" },
-    { title: "Total Revenue", value: "$124.5k", icon: <FaWallet className="text-yellow-600" />, bg: "bg-yellow-100/50" },
+    { title: "Total Users", value: "8.2K", fullValue: "8,249", icon: <FaUsers className="text-blue-600" />, bg: "bg-blue-100/50" },
+    { title: "Active Doctors", value: "342", icon: <FaUserMd className="text-teal-600" />, bg: "bg-teal-100/50" },
+    { title: "Appointments", value: "12.4K", fullValue: "12,450", icon: <FaCalendarCheck className="text-purple-600" />, bg: "bg-purple-100/50" },
+    { title: "Total Revenue", value: "$124.5K", fullValue: "$124,500.00", icon: <FaWallet className="text-yellow-600" />, bg: "bg-yellow-100/50" },
   ];
 
   const revenueData = [
@@ -77,7 +77,7 @@ const AdminDashboard = () => {
               {stat.icon}
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stat.value}</p>
+              <p className="text-3xl font-bold text-gray-900 leading-tight mb-1" title={stat.fullValue || stat.value}>{stat.value}</p>
               <p className="text-sm font-semibold text-gray-500">{stat.title}</p>
             </div>
           </motion.div>

@@ -4,8 +4,10 @@ import { HiMenuAlt2 } from "react-icons/hi";
 import { FaBell } from "react-icons/fa";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "../components/dashboard/Sidebar";
+import { useAuth } from "../hooks/useAuth";
 
 const DashboardLayout = () => {
+  const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
@@ -92,7 +94,7 @@ const DashboardLayout = () => {
             <div className="flex items-center gap-3 lg:hidden pl-4 border-l border-gray-200">
               <div className="w-9 h-9 rounded-full bg-teal-100 overflow-hidden border border-gray-200">
                 <img 
-                  src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" 
+                  src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} 
                   alt="Profile" 
                   className="w-full h-full object-cover"
                 />

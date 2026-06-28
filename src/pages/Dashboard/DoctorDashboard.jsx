@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { FaUserInjured, FaCalendarDay, FaStar, FaCheckCircle, FaTimesCircle, FaPlusCircle, FaEnvelope, FaFileMedical, FaClock } from "react-icons/fa";
+import { FaUserInjured, FaCalendarDay, FaStar, FaCheckCircle, FaTimesCircle, FaPlusCircle, FaEnvelope, FaFileMedical, FaClock, FaWallet } from "react-icons/fa";
 
 const DoctorDashboard = () => {
   // Mock Data
   const stats = [
-    { title: "Total Patients", value: "1,245", icon: <FaUserInjured className="text-teal-600" />, bg: "bg-teal-100/50" },
+    { title: "Total Patients", value: "1.2K", fullValue: "1,245", icon: <FaUserInjured className="text-teal-600" />, bg: "bg-teal-100/50" },
     { title: "Today's Appointments", value: "8", icon: <FaCalendarDay className="text-blue-600" />, bg: "bg-blue-100/50" },
+    { title: "Total Earnings", value: "$82.5K", fullValue: "$82,450.00", icon: <FaWallet className="text-orange-500" />, bg: "bg-orange-100/50" },
     { title: "Reviews Received", value: "4.9", icon: <FaStar className="text-yellow-500" />, bg: "bg-yellow-100/50" },
   ];
 
@@ -49,22 +50,30 @@ const DoctorDashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-shadow"
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
           >
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl ${stat.bg}`}>
-              {stat.icon}
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${stat.bg}`}>
+                {stat.icon}
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900 leading-tight mb-1" title={stat.fullValue || stat.value}>{stat.value}</p>
+                <p className="text-[13px] font-semibold text-gray-500 whitespace-nowrap">{stat.title}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-3xl font-bold text-gray-900 leading-tight mb-1">{stat.value}</p>
-              <p className="text-sm font-semibold text-gray-500">{stat.title}</p>
-            </div>
+            {stat.trend && (
+              <div className="mt-5 flex items-center gap-1.5 text-sm">
+                <span className="text-teal-600 font-bold">{stat.trend}</span>
+                <span className="text-gray-500 font-medium">{stat.trendText}</span>
+              </div>
+            )}
           </motion.div>
         ))}
       </div>

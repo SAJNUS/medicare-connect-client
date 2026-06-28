@@ -1,14 +1,36 @@
 import { NavLink, Link } from "react-router-dom";
-import { FaHome, FaCalendarAlt, FaFileMedical, FaCog, FaSignOutAlt } from "react-icons/fa";
+import { FaHome, FaCalendarAlt, FaFileMedical, FaCog, FaSignOutAlt, FaUserMd, FaUsers, FaChartBar, FaUserCheck, FaClipboardList } from "react-icons/fa";
 import logo from "../../assets/logo2.png";
+import { useAuth } from "../../hooks/useAuth";
 
 const Sidebar = ({ closeSidebar }) => {
-  const navItems = [
-    { name: "Overview", path: "/dashboard", icon: <FaHome /> },
-    { name: "Appointments", path: "/dashboard/appointments", icon: <FaCalendarAlt /> },
-    { name: "Medical Records", path: "/dashboard/records", icon: <FaFileMedical /> },
-    { name: "Settings", path: "/dashboard/settings", icon: <FaCog /> },
-  ];
+  const { user } = useAuth();
+  
+  // Dynamic navigation based on role
+  let navItems = [];
+  if (user?.role === "doctor") {
+    navItems = [
+      { name: "Overview", path: "/dashboard", icon: <FaHome /> },
+      { name: "My Schedule", path: "/dashboard/schedule", icon: <FaCalendarAlt /> },
+      { name: "Patient Requests", path: "/dashboard/requests", icon: <FaClipboardList /> },
+      { name: "Settings", path: "/dashboard/settings", icon: <FaCog /> },
+    ];
+  } else if (user?.role === "admin") {
+    navItems = [
+      { name: "Overview", path: "/dashboard", icon: <FaHome /> },
+      { name: "Manage Users", path: "/dashboard/users", icon: <FaUsers /> },
+      { name: "Verify Doctors", path: "/dashboard/verify", icon: <FaUserCheck /> },
+      { name: "Reports", path: "/dashboard/reports", icon: <FaChartBar /> },
+    ];
+  } else {
+    // Default to Patient
+    navItems = [
+      { name: "Overview", path: "/dashboard", icon: <FaHome /> },
+      { name: "Appointments", path: "/dashboard/appointments", icon: <FaCalendarAlt /> },
+      { name: "Medical Records", path: "/dashboard/records", icon: <FaFileMedical /> },
+      { name: "Settings", path: "/dashboard/settings", icon: <FaCog /> },
+    ];
+  }
 
   return (
     <div className="h-full flex flex-col bg-white border-r border-gray-100 shadow-[2px_0_15px_-3px_rgba(0,0,0,0.03)] w-72">
@@ -20,16 +42,16 @@ const Sidebar = ({ closeSidebar }) => {
       </div>
 
       {/* User Profile Summary */}
-      <div className="px-6 py-8 border-b border-gray-50 flex flex-col items-center flex-shrink-0">
+      <div className="px-6 py-8 border-b border-gray-50 flex flex-col items-center flex-shrink-0 text-center">
         <div className="w-20 h-20 rounded-full bg-teal-100 border-4 border-white shadow-md overflow-hidden mb-3">
           <img 
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" 
+            src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} 
             alt="User Profile" 
             className="w-full h-full object-cover"
           />
         </div>
-        <h3 className="font-poppins font-bold text-gray-900 text-lg">John Doe</h3>
-        <p className="text-sm font-medium text-primary">Patient</p>
+        <h3 className="font-poppins font-bold text-gray-900 text-lg leading-tight">{user?.name || "John Doe"}</h3>
+        <p className="text-sm font-medium text-primary mt-1">{user?.designation || "Patient"}</p>
       </div>
 
       {/* Navigation Links */}

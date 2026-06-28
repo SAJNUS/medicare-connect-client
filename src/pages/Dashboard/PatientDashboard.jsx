@@ -6,7 +6,8 @@ const PatientDashboard = () => {
   const stats = [
     { title: "Upcoming Appointments", value: "2", icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
     { title: "Total Consultations", value: "14", icon: <FaUserMd className="text-blue-600" />, bg: "bg-blue-100/50" },
-    { title: "Total Payments", value: "$450", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
+    { title: "Total Payments", value: "$450", fullValue: "$450.00", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
+    { title: "Favorite Doctors", value: "4", icon: <FaStar className="text-orange-500" />, bg: "bg-orange-100/50" },
   ];
 
   const upcomingAppointments = [
@@ -62,22 +63,31 @@ const PatientDashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-shadow"
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col justify-between"
           >
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl ${stat.bg}`}>
-              {stat.icon}
+            <div className="flex items-center gap-4">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${stat.bg}`}>
+                {stat.icon}
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900 leading-tight mb-1" title={stat.fullValue || stat.value}>{stat.value}</p>
+                <p className="text-[13px] font-semibold text-gray-500 whitespace-nowrap">{stat.title}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-3xl font-bold text-gray-900 leading-tight mb-1">{stat.value}</p>
-              <p className="text-sm font-semibold text-gray-500">{stat.title}</p>
-            </div>
+            {stat.footerText && (
+              <div className="mt-5 pt-4 border-t border-gray-50">
+                <button className="text-orange-500 font-medium text-sm hover:underline flex items-center gap-1">
+                  {stat.footerText} <span className="text-lg leading-none">&rarr;</span>
+                </button>
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
