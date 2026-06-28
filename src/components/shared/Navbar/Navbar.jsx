@@ -43,12 +43,16 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white rounded-md px-6 py-2 min-h-0 h-10 font-inter font-medium text-[15px]">
-              Login
-            </button>
-            <button className="btn btn-primary bg-primary border-primary text-white hover:bg-primary-focus rounded-md px-6 py-2 min-h-0 h-10 font-inter font-medium text-[15px]">
-              Register
-            </button>
+            <Link to="/login">
+              <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white rounded-md px-6 py-2 min-h-0 h-10 font-inter font-medium text-[15px]">
+                Login
+              </button>
+            </Link>
+            <Link to="/register">
+              <button className="btn btn-primary bg-primary border-primary text-white hover:bg-primary-focus rounded-md px-6 py-2 min-h-0 h-10 font-inter font-medium text-[15px]">
+                Register
+              </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
