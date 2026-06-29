@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaSearch, FaFilter, FaSortAmountDown } from "react-icons/fa";
 import DoctorCard from "../../components/shared/DoctorCard";
-import { mockDoctors } from "../../utils/mockDoctors";
+import axiosInstance from "../../api/axiosInstance";
 
 const specialities = ["All", "Cardiologist", "Dermatologist", "Neurologist", "Pediatrician", "Orthopedic", "Gynecologist"];
 
@@ -29,8 +29,40 @@ const FindDoctors = () => {
     setCurrentPage(1);
   }, [searchQuery, specialtyFilter, sortBy]);
 
+  const [doctors, setDoctors] = useState([]);
+
+  // Fetch doctors from backend
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axiosInstance.get('/doctors');
+        if (response.data.success) {
+          const mappedDocs = response.data.data.map(doc => ({
+            id: doc._id,
+            name: doc.name,
+            specialty: doc.specialization || doc.specialty || "General",
+            experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
+            experienceYears: parseInt(doc.experience) || 5,
+            image: doc.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400&q=80",
+            rating: doc.rating || 4.5,
+            reviews: doc.reviews || 0,
+            fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
+            feeAmount: parseInt(doc.consultationFee) || 500,
+          }));
+          setDoctors(mappedDocs);
+        }
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
+
   const filteredAndSortedDoctors = useMemo(() => {
-    let result = [...mockDoctors];
+    let result = [...doctors];
 
     // 1. Search filter
     if (searchQuery) {

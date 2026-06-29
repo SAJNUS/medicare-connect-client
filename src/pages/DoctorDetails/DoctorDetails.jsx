@@ -1,16 +1,62 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaStar, FaGraduationCap, FaCalendarAlt, FaClock, FaCheckCircle } from "react-icons/fa";
-import { mockDoctors } from "../../utils/mockDoctors";
+import axiosInstance from "../../api/axiosInstance";
 
 const DoctorDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const doctor = mockDoctors.find(doc => doc.id === parseInt(id));
+  const [doctor, setDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedDay, setSelectedDay] = useState(doctor?.availability?.[0]?.day || "");
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      try {
+        const response = await axiosInstance.get(`/doctors/${id}`);
+        if (response.data.success && response.data.data) {
+          const doc = response.data.data;
+          setDoctor({
+            id: doc._id,
+            name: doc.name,
+            specialty: doc.specialization || doc.specialty || "General",
+            degree: doc.degree || "MBBS",
+            experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
+            workingAt: doc.workingAt || "MediCare Hospital",
+            fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
+            rating: doc.rating || 4.5,
+            reviews: doc.reviews || 0,
+            image: doc.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400&q=80",
+            about: doc.about || "Experienced and dedicated doctor committed to providing excellent patient care.",
+            availability: doc.availability || [
+              { day: "Monday", slots: ["10:00 AM", "11:30 AM", "04:00 PM"] },
+              { day: "Wednesday", slots: ["09:00 AM", "12:00 PM", "05:00 PM"] },
+              { day: "Friday", slots: ["10:00 AM", "03:00 PM", "06:00 PM"] }
+            ]
+          });
+          
+          // Auto select first day if available
+          if (doc.availability?.[0]?.day) {
+            setSelectedDay(doc.availability[0].day);
+          } else {
+            setSelectedDay("Monday"); // fallback from hardcoded default
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching doctor details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDoctor();
+  }, [id]);
+
+  const [selectedDay, setSelectedDay] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+
+  if (loading) {
+    return <div className="min-h-[60vh] flex items-center justify-center">Loading...</div>;
+  }
 
   if (!doctor) {
     return (
