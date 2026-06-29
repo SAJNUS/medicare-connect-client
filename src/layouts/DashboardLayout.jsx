@@ -4,8 +4,8 @@ import { HiMenuAlt2 } from "react-icons/hi";
 import { FaBell } from "react-icons/fa";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "../components/dashboard/Sidebar";
-import { useAuth } from "../../hooks/useAuth";
-import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../hooks/useAuth";
+import axiosInstance from "../api/axiosInstance";
 
 const DashboardLayout = () => {
   const { user } = useAuth();
