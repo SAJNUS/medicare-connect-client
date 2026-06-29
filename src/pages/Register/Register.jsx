@@ -36,9 +36,7 @@ const Register = () => {
       newErrors.email = "Email address is invalid";
     }
 
-    if (!formData.photoURL) {
-      newErrors.photoURL = "Photo URL is required";
-    } else if (!/^https?:\/\/.+/.test(formData.photoURL)) {
+    if (formData.photoURL && !/^https?:\/\/.+/.test(formData.photoURL)) {
       newErrors.photoURL = "Must be a valid URL starting with http/https";
     }
 
@@ -194,7 +192,7 @@ const Register = () => {
 
             {/* Photo URL Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL (Optional)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaImage className="text-gray-400" />

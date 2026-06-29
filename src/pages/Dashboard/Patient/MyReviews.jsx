@@ -38,7 +38,8 @@ const MyReviews = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
   // Form State
   const [formData, setFormData] = useState({ doctorName: "", rating: 5, text: "" });
 
@@ -53,9 +54,16 @@ const MyReviews = () => {
 
   // CRUD Operations
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this review?")) {
-      setReviews(reviews.filter(r => r.id !== id));
+    setReviewToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (reviewToDelete !== null) {
+      setReviews(reviews.filter(r => r.id !== reviewToDelete));
     }
+    setIsDeleteModalOpen(false);
+    setReviewToDelete(null);
   };
 
   const handleEdit = (review) => {
@@ -309,6 +317,46 @@ const MyReviews = () => {
         )}
       </AnimatePresence>
 
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-sm relative z-10 overflow-hidden p-6 text-center"
+            >
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl">
+                <FaTimes />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Review?</h3>
+              <p className="text-gray-500 text-sm mb-6 font-medium">Are you sure you want to delete this review? This action cannot be undone.</p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 py-2.5 bg-red-500 text-white font-bold text-sm rounded-xl hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

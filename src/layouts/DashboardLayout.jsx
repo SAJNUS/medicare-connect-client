@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { FaBell } from "react-icons/fa";
@@ -10,13 +10,17 @@ const DashboardLayout = () => {
   const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const mainRef = useRef(null);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  // Close sidebar on mobile when route changes
+  // Close sidebar on mobile when route changes and scroll to top
   useEffect(() => {
     closeSidebar();
+    if (mainRef.current) {
+      mainRef.current.scrollTo(0, 0);
+    }
   }, [location.pathname]);
 
   // Prevent background scrolling when mobile sidebar is open
@@ -104,7 +108,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* Scrollable Content Outlet */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50/50 p-4 sm:p-6 lg:p-8">
+        <main ref={mainRef} className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50/50 p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto h-full">
             <Outlet />
           </div>

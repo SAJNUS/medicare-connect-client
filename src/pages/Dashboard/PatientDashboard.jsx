@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import { useModal } from "../../context/ModalContext";
 
 const PatientDashboard = () => {
@@ -220,9 +221,11 @@ const PatientDashboard = () => {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-6 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-              Find More Doctors
-            </button>
+            <Link to="/doctors">
+              <button className="w-full mt-6 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+                Find More Doctors
+              </button>
+            </Link>
           </motion.div>
 
           {/* Recent Activities */}
