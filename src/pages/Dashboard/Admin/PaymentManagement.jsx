@@ -261,7 +261,7 @@ const PaymentManagement = () => {
                     {payment.method}
                   </span>
                 </div>
-                <div>
+                <div className="text-right">
                   <span className="block text-gray-500 mb-0.5 font-semibold">Date</span>
                   <span className="font-bold text-gray-900">{payment.date}</span>
                 </div>

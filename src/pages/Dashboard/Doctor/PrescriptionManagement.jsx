@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFilePrescription, FaPlus, FaTimes, FaSearch, FaPrint, FaDownload, FaEye } from "react-icons/fa";
@@ -138,12 +139,12 @@ const PrescriptionManagement = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-bold">Patient Name</th>
-                <th className="p-4 font-bold text-center">Date</th>
-                <th className="p-4 font-bold text-center">Diagnosis</th>
-                <th className="p-4 font-bold text-center">Status</th>
-                <th className="p-4 font-bold text-center">Actions</th>
+              <tr className="bg-gray-50/50 border-b border-gray-100 text-gray-500 text-xs uppercase tracking-wider whitespace-nowrap">
+                <th className="p-4 font-bold min-w-[150px]">Patient Name</th>
+                <th className="p-4 font-bold text-center min-w-[120px]">Date</th>
+                <th className="p-4 font-bold text-center min-w-[140px]">Diagnosis</th>
+                <th className="p-4 font-bold text-center min-w-[120px]">Status</th>
+                <th className="p-4 font-bold text-center min-w-[120px]">Actions</th>
               </tr>
             </thead>
             <tbody className="text-sm text-gray-700 divide-y divide-gray-50">
@@ -165,7 +166,7 @@ const PrescriptionManagement = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="hover:bg-gray-50/50 transition-colors"
+                      className="hover:bg-gray-50/50 transition-colors whitespace-nowrap"
                     >
                       <td className="p-4 font-bold text-gray-900">{rx.patientName}</td>
                       <td className="p-4 font-medium text-center">{rx.date}</td>
@@ -199,8 +200,9 @@ const PrescriptionManagement = () => {
       </motion.div>
 
       {/* New Prescription Modal */}
-      <AnimatePresence>
-        {isModalOpen && (
+      {createPortal(
+        <AnimatePresence>
+          {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
@@ -213,7 +215,7 @@ const PrescriptionManagement = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-xl overflow-hidden"
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-xl overflow-y-auto max-h-[85vh] md:max-h-none md:overflow-hidden pb-8 sm:pb-0"
             >
               {/* Modal Header */}
               <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
@@ -331,8 +333,10 @@ const PrescriptionManagement = () => {
               </form>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

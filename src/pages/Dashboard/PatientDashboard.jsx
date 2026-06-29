@@ -160,16 +160,16 @@ const PatientDashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-100 text-gray-500 text-sm font-semibold">
-                    <th className="pb-3 pl-4">Doctor Name</th>
-                    <th className="pb-3 text-center">Date</th>
-                    <th className="pb-3 text-center">Status</th>
-                    <th className="pb-3 text-center">Action</th>
+                  <tr className="border-b border-gray-100 text-gray-500 text-sm font-semibold whitespace-nowrap">
+                    <th className="pb-3 pl-4 min-w-[150px]">Doctor Name</th>
+                    <th className="pb-3 text-center min-w-[120px]">Date</th>
+                    <th className="pb-3 text-center min-w-[120px]">Status</th>
+                    <th className="pb-3 text-center min-w-[100px]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {appointmentHistory.map((history, idx) => (
-                    <tr key={history.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${idx === appointmentHistory.length - 1 ? 'border-b-0' : ''}`}>
+                    <tr key={history.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors whitespace-nowrap ${idx === appointmentHistory.length - 1 ? 'border-b-0' : ''}`}>
                       <td className="py-4 pl-4 font-bold text-gray-900">{history.doctor}</td>
                       <td className="py-4 text-gray-600 text-sm font-medium text-center">{history.date}</td>
                       <td className="py-4 text-center">
