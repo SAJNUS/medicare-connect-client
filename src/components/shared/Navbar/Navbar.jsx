@@ -81,7 +81,7 @@ const Navbar = () => {
                   </div>
                 </div>
                 {isProfileDropdownOpen && (
-                  <ul className="menu menu-sm absolute right-0 mt-3 z-[100] p-3 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] bg-white border border-slate-200 rounded-[32px] min-w-max translate-y-2 animate-dropdown-in">
+                  <ul className="menu menu-sm absolute right-0 mt-3 z-[100] p-3 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] bg-white border border-slate-200 rounded-[32px] w-[90vw] md:w-[325px] max-w-[90vw] translate-y-2 animate-dropdown-in">
                     <li className="pointer-events-none mb-3 px-1 pt-4 pb-2">
                       <div className="flex flex-col items-center justify-center gap-3 bg-transparent hover:bg-transparent cursor-default opacity-100 w-full">
                         <div className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 shadow-sm border-2 border-gray-100">
