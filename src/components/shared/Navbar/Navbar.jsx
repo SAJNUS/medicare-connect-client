@@ -1,8 +1,9 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { HiMenu, HiX } from "react-icons/hi";
+import { HiMenu, HiX, HiOutlineUser, HiOutlineCalendar, HiOutlineStar, HiOutlineClock, HiOutlineUsers, HiOutlineLogout } from "react-icons/hi";
 import logo from "../../../assets/logo2.png";
 import { useAuth } from "../../../hooks/useAuth";
+import { getRoleColors } from "../../../utils/roleColors";
 
 const Navbar = () => {
   const { user, logoutUser } = useAuth();
@@ -10,6 +11,7 @@ const Navbar = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const roleColors = getRoleColors(user?.role);
 
   const handleHomeClick = () => {
     if (pathname === "/") {
@@ -55,24 +57,58 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col items-end">
-                  <span className="text-sm font-bold text-gray-800">{user.name || "User"}</span>
-                  <span className="text-xs font-medium text-primary capitalize">{user.role || "Patient"}</span>
+              <div className="dropdown dropdown-end">
+                <div tabIndex={0} role="button" className={`btn btn-ghost btn-circle avatar border-2 transition-colors ${roleColors.ringBorder} ${roleColors.ringHover}`}>
+                  <div className="w-10 h-10 rounded-full">
+                    <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} alt="Profile" className="object-cover w-full h-full" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 rounded-full border-2 border-primary/20 overflow-hidden cursor-pointer" onClick={() => navigate('/dashboard')}>
-                  <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} alt="Profile" className="w-full h-full object-cover" />
-                </div>
-                <button 
-                  onClick={() => {
-                    logoutUser();
-                    localStorage.removeItem("currentUserEmail");
-                    navigate('/login');
-                  }}
-                  className="btn btn-outline border-red-500 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-md px-4 py-2 min-h-0 h-10 font-inter font-medium text-[14px]"
-                >
-                  Logout
-                </button>
+                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-3 shadow-2xl bg-white rounded-2xl border border-gray-50 min-w-max">
+                  <li className="pointer-events-none mb-3 px-1 pt-1">
+                    <div className="flex items-center gap-4 bg-transparent hover:bg-transparent cursor-default opacity-100">
+                      <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-gray-100">
+                        <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} alt="Profile" className="object-cover w-full h-full" />
+                      </div>
+                      <div className="flex flex-col items-start justify-center gap-0.5">
+                        <span className="text-[17px] font-bold text-gray-900 whitespace-nowrap leading-tight">{user.name || "User"}</span>
+                        <span className="text-[13px] font-medium text-gray-500 whitespace-nowrap mb-1">{user.email}</span>
+                        <span className={`text-[12px] font-medium px-3 py-0.5 rounded-full capitalize ${roleColors.badgeBg} ${roleColors.badgeText}`}>{user.role || "Patient"}</span>
+                      </div>
+                    </div>
+                  </li>
+                  
+                  <div className="h-px bg-gray-100 w-full mb-2"></div>
+                  
+                  <li><Link to="/dashboard/profile" className="py-3 px-3 text-[15px] text-gray-700 hover:text-[#0b6e66] hover:bg-gray-50 font-medium flex items-center gap-4 rounded-xl"><HiOutlineUser className="text-[#0b6e66] text-xl" /> My Profile</Link></li>
+                  
+                  {user.role === 'patient' && (
+                    <>
+                      <li><Link to="/dashboard/patient/appointments" className="py-3 px-3 text-[15px] text-gray-700 hover:text-[#0b6e66] hover:bg-gray-50 font-medium flex items-center gap-4 rounded-xl"><HiOutlineCalendar className="text-[#0b6e66] text-xl" /> My Appointments</Link></li>
+                      <li><Link to="/dashboard/patient/reviews" className="py-3 px-3 text-[15px] text-gray-700 hover:text-[#0b6e66] hover:bg-gray-50 font-medium flex items-center gap-4 rounded-xl"><HiOutlineStar className="text-[#0b6e66] text-xl" /> My Reviews</Link></li>
+                    </>
+                  )}
+                  {user.role === 'doctor' && (
+                    <li><Link to="/dashboard/doctor/schedule" className="py-3 px-3 text-[15px] text-gray-700 hover:text-[#0b6e66] hover:bg-gray-50 font-medium flex items-center gap-4 rounded-xl"><HiOutlineClock className="text-[#0b6e66] text-xl" /> Manage Schedule</Link></li>
+                  )}
+                  {user.role === 'admin' && (
+                    <li><Link to="/dashboard/admin/users" className="py-3 px-3 text-[15px] text-gray-700 hover:text-[#0b6e66] hover:bg-gray-50 font-medium flex items-center gap-4 rounded-xl"><HiOutlineUsers className="text-[#0b6e66] text-xl" /> Manage Users</Link></li>
+                  )}
+                  
+                  <div className="h-px bg-gray-100 w-full my-2"></div>
+                  
+                  <li>
+                    <button 
+                      onClick={() => {
+                        logoutUser();
+                        localStorage.removeItem("currentUserEmail");
+                        navigate('/login');
+                      }}
+                      className="py-3 px-3 text-[15px] text-red-500 hover:text-red-600 hover:bg-red-50 font-medium flex items-center gap-4 rounded-xl active:bg-red-100 focus:bg-red-50"
+                    >
+                      <HiOutlineLogout className="text-xl" /> Logout
+                    </button>
+                  </li>
+                </ul>
               </div>
             ) : (
               <>
@@ -119,19 +155,53 @@ const Navbar = () => {
                 {link.name}
               </NavLink>
             ))}
-            <div className="mt-4 flex flex-col gap-3 px-4">
+            <div className="mt-4 flex flex-col px-2">
               {user ? (
-                <button 
-                  onClick={() => {
-                    setIsOpen(false);
-                    logoutUser();
-                    localStorage.removeItem("currentUserEmail");
-                    navigate('/login');
-                  }}
-                  className="btn btn-outline border-red-500 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-500 active:text-white active:border-red-500 focus:bg-red-500 focus:text-white focus:border-red-500 w-full rounded-md h-12 font-inter font-medium text-[15px]"
-                >
-                  Logout
-                </button>
+                <div className="border-t border-gray-100 pt-4 pb-2">
+                  <div className="flex items-center gap-3 px-4 mb-4">
+                    <div className="flex-shrink-0">
+                      <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} alt="Profile" className={`w-12 h-12 rounded-full border-2 object-cover ${roleColors.ringBorder}`} />
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-[15px] font-bold text-gray-800 break-words">{user.name || "User"}</span>
+                      <span className="text-[13px] font-medium text-gray-500 break-all">{user.email}</span>
+                      <div className="mt-1">
+                        <span className={`text-[11px] font-bold uppercase tracking-wider inline-block px-2 py-0.5 rounded-md ${roleColors.badgeBg} ${roleColors.text}`}>{user.role || "Patient"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <Link to="/dashboard/profile" onClick={() => setIsOpen(false)} className="px-4 py-2.5 text-gray-700 hover:bg-teal-50 hover:text-[#0b6e66] rounded-lg font-medium text-[15px] flex items-center gap-3"><HiOutlineUser className="text-gray-400 text-lg" /> My Profile</Link>
+                    
+                    {user.role === 'patient' && (
+                      <>
+                        <Link to="/dashboard/patient/appointments" onClick={() => setIsOpen(false)} className="px-4 py-2.5 text-gray-700 hover:bg-teal-50 hover:text-[#0b6e66] rounded-lg font-medium text-[15px] flex items-center gap-3"><HiOutlineCalendar className="text-gray-400 text-lg" /> My Appointments</Link>
+                        <Link to="/dashboard/patient/reviews" onClick={() => setIsOpen(false)} className="px-4 py-2.5 text-gray-700 hover:bg-teal-50 hover:text-[#0b6e66] rounded-lg font-medium text-[15px] flex items-center gap-3"><HiOutlineStar className="text-gray-400 text-lg" /> My Reviews</Link>
+                      </>
+                    )}
+                    {user.role === 'doctor' && (
+                      <Link to="/dashboard/doctor/schedule" onClick={() => setIsOpen(false)} className="px-4 py-2.5 text-gray-700 hover:bg-teal-50 hover:text-[#0b6e66] rounded-lg font-medium text-[15px] flex items-center gap-3"><HiOutlineClock className="text-gray-400 text-lg" /> Manage Schedule</Link>
+                    )}
+                    {user.role === 'admin' && (
+                      <Link to="/dashboard/admin/users" onClick={() => setIsOpen(false)} className="px-4 py-2.5 text-gray-700 hover:bg-teal-50 hover:text-[#0b6e66] rounded-lg font-medium text-[15px] flex items-center gap-3"><HiOutlineUsers className="text-gray-400 text-lg" /> Manage Users</Link>
+                    )}
+                    
+                    <div className="divider my-1"></div>
+                    
+                    <button 
+                      onClick={() => {
+                        setIsOpen(false);
+                        logoutUser();
+                        localStorage.removeItem("currentUserEmail");
+                        navigate('/login');
+                      }}
+                      className="px-4 py-2.5 text-left text-red-500 hover:bg-red-50 rounded-lg font-medium text-[15px] transition-colors flex items-center gap-3"
+                    >
+                      <HiOutlineLogout className="text-lg" /> Logout
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <>
                   <Link to="/login" onClick={() => setIsOpen(false)}>

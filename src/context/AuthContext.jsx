@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
               uid: dbUser._id,
               firebaseUid: currentUser.uid,
               avatar: dbUser.photoURL || currentUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-              designation: normalizedRole === 'doctor' ? 'Doctor' : normalizedRole === 'admin' ? 'System Administrator' : 'Patient'
+              designation: normalizedRole === 'doctor' ? 'Doctor' : normalizedRole === 'admin' ? 'Admin' : 'Patient'
             });
             // Keep localStorage sync just in case other parts of the app rely on it temporarily
             localStorage.setItem("currentUserEmail", currentUser.email);
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
       setUser({
         ...user,
         role: newRole,
-        designation: newRole === 'doctor' ? 'Doctor' : newRole === 'admin' ? 'System Administrator' : 'Patient'
+        designation: newRole === 'doctor' ? 'Doctor' : newRole === 'admin' ? 'Admin' : 'Patient'
       });
     }
   };

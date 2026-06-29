@@ -2,10 +2,12 @@ import { NavLink, Link } from "react-router-dom";
 import { FaHome, FaCalendarAlt, FaFileMedical, FaCog, FaSignOutAlt, FaUserMd, FaUsers, FaChartBar, FaUserCheck, FaClipboardList, FaUserCircle, FaWallet, FaStar, FaFilePrescription, FaCalendarCheck } from "react-icons/fa";
 import logo from "../../assets/logo2.png";
 import { useAuth } from "../../hooks/useAuth";
+import { getRoleColors } from "../../utils/roleColors";
 
 const Sidebar = ({ closeSidebar }) => {
   const userAuthContext = useAuth();
   const user = userAuthContext.user;
+  const roleColors = getRoleColors(user?.role);
 
   // Dynamic navigation based on role
   let navItems = [];
@@ -55,7 +57,7 @@ const Sidebar = ({ closeSidebar }) => {
           />
         </div>
         <h3 className="font-poppins font-bold text-gray-900 text-base leading-tight">{user?.name || "John Doe"}</h3>
-        <p className="text-xs font-medium text-primary mt-1">{user?.designation || "Patient"}</p>
+        <p className={`text-xs font-medium mt-1 ${roleColors.text}`}>{user?.designation || "Patient"}</p>
       </div>
 
       {/* Navigation Links */}
