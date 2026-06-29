@@ -4,7 +4,7 @@ import { FaSearch, FaFilter, FaSortAmountDown } from "react-icons/fa";
 import DoctorCard from "../../components/shared/DoctorCard";
 import axiosInstance from "../../api/axiosInstance";
 
-const specialities = ["All", "Cardiologist", "Dermatologist", "Neurologist", "Pediatrician", "Orthopedic", "Gynecologist"];
+// Dynamic specialties will be populated from doctors data
 
 const FindDoctors = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,6 +61,11 @@ const FindDoctors = () => {
     fetchDoctors();
   }, []);
 
+  const dynamicSpecialties = useMemo(() => {
+    const specs = new Set(doctors.map(d => d.specialty));
+    return ["All", ...Array.from(specs)];
+  }, [doctors]);
+
   const filteredAndSortedDoctors = useMemo(() => {
     let result = [...doctors];
 
@@ -95,7 +100,7 @@ const FindDoctors = () => {
     }
 
     return result;
-  }, [searchQuery, specialtyFilter, sortBy]);
+  }, [doctors, searchQuery, specialtyFilter, sortBy]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredAndSortedDoctors.length / doctorsPerPage);
@@ -156,7 +161,7 @@ const FindDoctors = () => {
                 onChange={(e) => setSpecialtyFilter(e.target.value)}
                 className="pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary appearance-none cursor-pointer font-inter text-sm w-full sm:w-auto"
               >
-                {specialities.map((spec) => (
+                {dynamicSpecialties.map((spec) => (
                   <option key={spec} value={spec}>{spec}</option>
                 ))}
               </select>

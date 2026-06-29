@@ -6,7 +6,10 @@ import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import toast from "react-hot-toast";
 import axiosInstance from "../../api/axiosInstance";
 
+import { useAuth } from "../../hooks/useAuth";
+
 const Login = () => {
+  const { loginUser, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,31 +49,12 @@ const Login = () => {
     if (validateForm()) {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get(`/users/${formData.email}`);
-        
-        if (response.data.success && response.data.data) {
-          const user = response.data.data;
-          
-          // Verify role (case-insensitive) matches what user selected
-          if (user.role.toLowerCase() !== role.toLowerCase()) {
-            toast.error(`No ${role} account found with this email. You are registered as ${user.role}.`);
-            return;
-          }
-          
-          localStorage.setItem("currentUserEmail", formData.email);
-          toast.success(`Successfully logged in as ${role}!`);
-          navigate("/");
-          window.location.reload(); // Refresh to trigger useAuth fetch
-        } else {
-          toast.error("Account not found. Please register first.");
-        }
+        await loginUser(formData.email, formData.password);
+        toast.success(`Successfully logged in!`);
+        navigate("/");
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          toast.error("Account not found. Please register first.");
-        } else {
-          console.error("Login error:", error);
-          toast.error("An error occurred during login.");
-        }
+        console.error("Login error:", error);
+        toast.error(error.message || "An error occurred during login.");
       } finally {
         setIsLoading(false);
       }
@@ -79,14 +63,18 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
-    // Simulate Google Auth
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success(`Successfully logged in with Google as ${role}!`);
+    try {
+      await signInWithGoogle();
+      toast.success(`Successfully logged in with Google!`);
       navigate("/");
-    }, 1500);
+    } catch (error) {
+      console.error("Google Login error:", error);
+      toast.error(error.message || "Google sign-in failed.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

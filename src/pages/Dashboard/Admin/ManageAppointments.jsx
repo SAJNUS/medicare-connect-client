@@ -2,64 +2,44 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaCalendarCheck, FaVideo, FaMapMarkerAlt, FaTimesCircle, FaCheckCircle, FaClock, FaBan, FaRegCalendarAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
-
-const initialAppointments = [
-  {
-    id: "APT-9041",
-    patientName: "Alice Johnson",
-    doctorName: "Dr. James Wilson",
-    date: "Oct 24, 2026",
-    time: "10:00 AM",
-    type: "Video Consult",
-    status: "Approved",
-    avatar: "https://i.pravatar.cc/150?u=alice"
-  },
-  {
-    id: "APT-8832",
-    patientName: "Robert Smith",
-    doctorName: "Dr. Sarah Jenkins",
-    date: "Oct 25, 2026",
-    time: "02:30 PM",
-    type: "In-Person",
-    status: "Pending",
-    avatar: "https://i.pravatar.cc/150?u=robert"
-  },
-  {
-    id: "APT-7619",
-    patientName: "Emily Wong",
-    doctorName: "Dr. Michael Chen",
-    date: "Oct 15, 2026",
-    time: "09:00 AM",
-    type: "Video Consult",
-    status: "Completed",
-    avatar: "https://i.pravatar.cc/150?u=emily"
-  },
-  {
-    id: "APT-7001",
-    patientName: "John Doe",
-    doctorName: "Dr. James Wilson",
-    date: "Oct 12, 2026",
-    time: "11:00 AM",
-    type: "In-Person",
-    status: "Cancelled",
-    avatar: "https://i.pravatar.cc/150?u=john"
-  },
-  {
-    id: "APT-6544",
-    patientName: "Sarah Connor",
-    doctorName: "Dr. Emily Wong",
-    date: "Oct 26, 2026",
-    time: "04:15 PM",
-    type: "Video Consult",
-    status: "Approved",
-    avatar: "https://i.pravatar.cc/150?u=sarahc"
-  }
-];
+import axiosInstance from "../../../api/axiosInstance";
+import { useEffect } from "react";
 
 const ManageAppointments = () => {
-  const [appointments, setAppointments] = useState(initialAppointments);
+  const [appointments, setAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await axiosInstance.get('/appointments');
+        if (response.data.success) {
+          const mappedApts = response.data.data.map(apt => ({
+            id: apt._id,
+            aptId: apt.aptId || apt._id.substring(0, 8),
+            patientName: apt.patientName || "Patient",
+            doctorName: apt.doctorName || "Doctor",
+            date: apt.date || apt.appointmentDate,
+            time: apt.time || apt.timeSlot,
+            type: apt.type || "In-Person Consult",
+            status: apt.appointmentStatus === "approved" ? "Approved" 
+                    : apt.appointmentStatus === "rejected" ? "Cancelled"
+                    : apt.appointmentStatus === "completed" ? "Completed"
+                    : "Pending",
+            avatar: apt.patientImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
+          }));
+          setAppointments(mappedApts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch appointments:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, []);
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,14 +58,20 @@ const ManageAppointments = () => {
     setIsModalOpen(true);
   };
 
-  const confirmCancel = () => {
-    setAppointments(appointments.map(apt => 
-      apt.id === selectedAppointment.id ? { ...apt, status: "Cancelled" } : apt
-    ));
-    
-    toast.success(`Successfully cancelled appointment for ${selectedAppointment.patientName}.`);
-    setIsModalOpen(false);
-    setSelectedAppointment(null);
+  const confirmCancel = async () => {
+    try {
+      await axiosInstance.patch(`/appointments/${selectedAppointment.id}/status`, { status: 'rejected' });
+      setAppointments(appointments.map(apt => 
+        apt.id === selectedAppointment.id ? { ...apt, status: "Cancelled" } : apt
+      ));
+      toast.success(`Successfully cancelled appointment for ${selectedAppointment.patientName}.`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to cancel appointment.");
+    } finally {
+      setIsModalOpen(false);
+      setSelectedAppointment(null);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -166,15 +152,6 @@ const ManageAppointments = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredAppointments.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="p-12 text-center text-gray-500">
-                    <FaRegCalendarAlt className="text-5xl text-gray-300 mx-auto mb-4" />
-                    <p className="font-semibold text-gray-900 text-lg">No appointments found</p>
-                    <p className="text-sm mt-1">Try adjusting your search or filters.</p>
-                  </td>
-                </tr>
-              )}
               {filteredAppointments.map((apt) => (
                 <tr key={apt.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="p-4">

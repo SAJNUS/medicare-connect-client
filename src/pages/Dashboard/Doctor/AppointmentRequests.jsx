@@ -3,74 +3,82 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheck, FaTimes, FaInbox, FaUserInjured, FaNotesMedical, FaCheckCircle, FaBan, FaClock as FaClockReg, FaHashtag } from "react-icons/fa";
-
-const initialRequests = [
-  {
-    id: 1,
-    aptId: "MC-2026-1042",
-    patientName: "Alice Smith",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-    issue: "Blood Pressure",
-    date: "2026-10-24",
-    time: "09:00 AM - 09:30 AM",
-    type: "In-Person Consult",
-    status: "Pending" // Pending, Approved, Rejected
-  },
-  {
-    id: 2,
-    aptId: "MC-2026-1043",
-    patientName: "Bob Johnson",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-    issue: "Chest Pain",
-    date: "2026-10-24",
-    time: "10:00 AM - 10:30 AM",
-    type: "Video Consult",
-    status: "Pending"
-  },
-  {
-    id: 3,
-    aptId: "MC-2026-1044",
-    patientName: "Charlie Brown",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-    issue: "Routine Checkup",
-    date: "2026-10-22",
-    time: "11:00 AM - 11:30 AM",
-    type: "In-Person Consult",
-    status: "Approved"
-  },
-  {
-    id: 4,
-    aptId: "MC-2026-1045",
-    patientName: "Diana Prince",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-    issue: "Prescription Refill",
-    date: "2026-10-21",
-    time: "02:00 PM - 02:30 PM",
-    type: "Video Consult",
-    status: "Rejected"
-  }
-];
-
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 const AppointmentRequests = () => {
-  const [requests, setRequests] = useState(initialRequests);
+  const { user, loading: authLoading } = useAuth();
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState("All");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchRequests = async () => {
+      if (authLoading) return;
+      if (!user?.email) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const response = await axiosInstance.get(`/appointments?doctorEmail=${user.email}`);
+        if (response.data.success) {
+          const mappedReqs = response.data.data.map(apt => ({
+            id: apt._id,
+            aptId: apt.aptId || apt._id.substring(0, 8),
+            patientName: apt.patientName || "Patient",
+            image: apt.patientImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+            issue: apt.symptoms && apt.symptoms.length > 0 ? apt.symptoms[0] : "General Checkup",
+            date: apt.date || apt.appointmentDate,
+            time: apt.time || apt.timeSlot,
+            type: apt.type || "In-Person Consult",
+            status: apt.appointmentStatus === "pending" ? "Pending"
+                  : apt.appointmentStatus === "approved" ? "Approved"
+                  : apt.appointmentStatus === "rejected" ? "Rejected" 
+                  : apt.appointmentStatus === "completed" ? "Completed" : "Pending",
+            rawStatus: apt.appointmentStatus
+          }));
+          setRequests(mappedReqs);
+        }
+      } catch (err) {
+        console.error("Failed to fetch appointment requests", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRequests();
+  }, [user, authLoading]);
+
   const filteredRequests = requests.filter(req => filter === "All" || req.status === filter);
 
-  const handleApprove = (id) => {
-    setRequests(requests.map(req => req.id === id ? { ...req, status: "Approved" } : req));
-  };
-
-  const handleReject = (id) => {
-    if (window.confirm("Are you sure you want to reject this appointment request?")) {
-      setRequests(requests.map(req => req.id === id ? { ...req, status: "Rejected" } : req));
+  const handleApprove = async (id) => {
+    try {
+      await axiosInstance.patch(`/appointments/${id}/status`, { status: 'approved' });
+      setRequests(requests.map(req => req.id === id ? { ...req, status: "Approved" } : req));
+      toast.success("Appointment approved.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to approve");
     }
   };
 
-  const handleMarkCompleted = (req) => {
-    // 1. Update state
-    setRequests(requests.map(r => r.id === req.id ? { ...r, status: "Completed" } : r));
+  const handleReject = async (id) => {
+    if (window.confirm("Are you sure you want to reject this appointment request?")) {
+      try {
+        await axiosInstance.patch(`/appointments/${id}/status`, { status: 'rejected' });
+        setRequests(requests.map(req => req.id === id ? { ...req, status: "Rejected" } : req));
+        toast.success("Appointment rejected.");
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to reject");
+      }
+    }
+  };
+
+  const handleMarkCompleted = async (req) => {
+    try {
+      await axiosInstance.patch(`/appointments/${req.id}/status`, { status: 'completed' });
+      setRequests(requests.map(r => r.id === req.id ? { ...r, status: "Completed" } : r));
+
     
     // 2. Show toast
     toast.success("Appointment marked as completed!", {
@@ -83,6 +91,10 @@ const AppointmentRequests = () => {
 
     // 3. Navigate with state
     navigate("/dashboard/doctor/prescriptions", { state: { appointmentData: req } });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to mark as completed");
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -150,19 +162,14 @@ const AppointmentRequests = () => {
           transition={{ duration: 0.1 }}
           className="grid grid-cols-1 xl:grid-cols-2 gap-6 min-h-[300px] content-start"
         >
-          {filteredRequests.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100"
-            >
-              <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-                <FaInbox />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">No Requests Found</h3>
-              <p className="text-gray-500">You don't have any {filter.toLowerCase()} requests at the moment.</p>
-            </motion.div>
+          {isLoading ? (
+            <div className="p-8 text-center text-gray-500 font-medium">Loading requests...</div>
+          ) : filteredRequests.length === 0 ? (
+            <div className="p-12 text-center bg-white rounded-2xl border border-gray-100">
+              <FaInbox className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No requests found</h3>
+              <p className="text-gray-500 text-sm">You don't have any {filter.toLowerCase() !== 'all' ? filter.toLowerCase() : ''} appointment requests.</p>
+            </div>
           ) : (
             filteredRequests.map((req, index) => (
               <motion.div

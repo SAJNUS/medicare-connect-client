@@ -4,7 +4,8 @@ import logo from "../../assets/logo2.png";
 import { useAuth } from "../../hooks/useAuth";
 
 const Sidebar = ({ closeSidebar }) => {
-  const { user } = useAuth();
+  const userAuthContext = useAuth();
+  const user = userAuthContext.user;
 
   // Dynamic navigation based on role
   let navItems = [];
@@ -84,9 +85,14 @@ const Sidebar = ({ closeSidebar }) => {
       <div className="p-4 border-t border-gray-50 flex-shrink-0">
         <button
           className="flex w-full items-center justify-center gap-2 px-4 py-3 text-red-500 font-medium rounded-xl hover:bg-red-50 transition-colors"
-          onClick={() => {
-            localStorage.removeItem("currentUserEmail");
-            window.location.href = '/';
+          onClick={async () => {
+            try {
+              await userAuthContext.logoutUser();
+              localStorage.removeItem("currentUserEmail");
+              window.location.href = '/';
+            } catch (error) {
+              console.error("Logout failed", error);
+            }
           }}
         >
           <FaSignOutAlt className="text-lg" />

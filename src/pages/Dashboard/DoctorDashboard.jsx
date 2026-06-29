@@ -1,24 +1,55 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaUserInjured, FaCalendarDay, FaStar, FaCheckCircle, FaTimesCircle, FaPlusCircle, FaEnvelope, FaFileMedical, FaClock, FaWallet } from "react-icons/fa";
+import { useAuth } from "../../hooks/useAuth";
+import axiosInstance from "../../api/axiosInstance";
 
 const DoctorDashboard = () => {
-  // Mock Data
+  const { user } = useAuth();
+  const [allAppointments, setAllAppointments] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.email) return;
+      try {
+        const res = await axiosInstance.get(`/appointments?doctorEmail=${user.email}`);
+        if (res.data.success) {
+          setAllAppointments(res.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching doctor dashboard data:", err);
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  const todaysAppointments = allAppointments
+    .filter(a => a.appointmentStatus === "approved" || a.appointmentStatus === "pending")
+    .map(apt => ({
+      id: apt._id,
+      patient: apt.patientName || "Patient",
+      time: apt.time || apt.timeSlot,
+      type: apt.type || "In-Person Consult",
+      status: apt.appointmentStatus === "approved" ? "Upcoming" : "Pending"
+    }))
+    .slice(0, 5);
+
+  const appointmentRequests = allAppointments
+    .filter(a => a.appointmentStatus === "pending")
+    .map(apt => ({
+      id: apt._id,
+      patient: apt.patientName || "Patient",
+      requestedTime: `${apt.date || apt.appointmentDate}, ${apt.time || apt.timeSlot}`,
+      reason: apt.symptoms && apt.symptoms.length > 0 ? apt.symptoms[0] : "General Checkup",
+      image: apt.patientImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
+    }))
+    .slice(0, 3);
+
   const stats = [
     { title: "Total Patients", value: "1.2K", fullValue: "1,245", icon: <FaUserInjured className="text-teal-600" />, bg: "bg-teal-100/50" },
-    { title: "Today's Appointments", value: "8", icon: <FaCalendarDay className="text-blue-600" />, bg: "bg-blue-100/50" },
+    { title: "Today's Appointments", value: todaysAppointments.length.toString(), icon: <FaCalendarDay className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Total Earnings", value: "$82.5K", fullValue: "$82,450.00", icon: <FaWallet className="text-orange-500" />, bg: "bg-orange-100/50" },
     { title: "Reviews Received", value: "4.9", icon: <FaStar className="text-yellow-500" />, bg: "bg-yellow-100/50" },
-  ];
-
-  const todaysAppointments = [
-    { id: 1, patient: "Alice Johnson", time: "09:00 AM - 09:30 AM", type: "In-Person Consult", status: "Upcoming" },
-    { id: 2, patient: "Robert Smith", time: "10:00 AM - 10:30 AM", type: "Video Consult", status: "Upcoming" },
-    { id: 3, patient: "Emily Wong", time: "11:30 AM - 12:00 PM", type: "Follow-up", status: "Upcoming" },
-  ];
-
-  const appointmentRequests = [
-    { id: 1, patient: "Michael Davis", requestedTime: "Oct 25, 10:00 AM", reason: "Annual Checkup", image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" },
-    { id: 2, patient: "Sarah Jenkins", requestedTime: "Oct 26, 02:00 PM", reason: "Heart Palpitations", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" },
   ];
 
   const quickActions = [
@@ -38,7 +69,7 @@ const DoctorDashboard = () => {
       >
         <div>
           <h2 className="text-2xl font-poppins font-bold text-gray-900 mb-1">
-            Good morning, Dr. Carter!
+            Good morning, {user?.name ? `Dr. ${user.name.split(' ')[0]}` : "Doctor"}!
           </h2>
           <p className="text-gray-500 font-medium text-sm">
             Here's what your schedule looks like today.

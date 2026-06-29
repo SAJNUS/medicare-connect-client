@@ -1,35 +1,60 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useModal } from "../../context/ModalContext";
+import { useAuth } from "../../hooks/useAuth";
+import axiosInstance from "../../api/axiosInstance";
 
 const PatientDashboard = () => {
   const { openModal } = useModal();
-  // Mock Data
+  const { user } = useAuth();
+  
+  const [allAppointments, setAllAppointments] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.email) return;
+      try {
+        const aptRes = await axiosInstance.get(`/appointments?patientEmail=${user.email}`);
+        if (aptRes.data.success) {
+          setAllAppointments(aptRes.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching patient dashboard data:", err);
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  const upcomingAppointments = allAppointments
+    .filter(a => a.appointmentStatus === "pending" || a.appointmentStatus === "approved")
+    .map(apt => ({
+      id: apt._id,
+      doctorName: apt.doctorName,
+      specialty: apt.specialty || "General",
+      date: apt.date || apt.appointmentDate,
+      time: apt.time || apt.timeSlot,
+      type: apt.type || "In-Person Consult",
+      image: apt.doctorImage || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+    }))
+    .slice(0, 3);
+
+  const appointmentHistory = allAppointments
+    .filter(a => a.appointmentStatus === "completed" || a.appointmentStatus === "rejected")
+    .map(apt => ({
+      id: apt._id,
+      doctor: apt.doctorName,
+      date: apt.date || apt.appointmentDate,
+      status: apt.appointmentStatus === "completed" ? "Completed" : "Cancelled"
+    }))
+    .slice(0, 5);
+
   const stats = [
-    { title: "My Appointments", value: "2", icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
-    { title: "Total Consultations", value: "14", icon: <FaUserMd className="text-blue-600" />, bg: "bg-blue-100/50" },
+    { title: "My Appointments", value: upcomingAppointments.length.toString(), icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
+    { title: "Total Consultations", value: appointmentHistory.filter(a => a.status === 'Completed').length.toString(), icon: <FaUserMd className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Total Payments", value: "$450", fullValue: "$450.00", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
     { title: "Favorite Doctors", value: "4", icon: <FaStar className="text-orange-500" />, bg: "bg-orange-100/50" },
-  ];
-
-  const upcomingAppointments = [
-    {
-      id: 1,
-      doctorName: "Dr. Sarah Jenkins",
-      specialty: "Cardiologist",
-      date: "Oct 24, 2026",
-      time: "10:00 AM - 10:30 AM",
-      type: "Video Consult",
-      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-    }
-  ];
-
-  const appointmentHistory = [
-    { id: 1, doctor: "Dr. Michael Chen", date: "Sep 15, 2026", status: "Completed" },
-    { id: 2, doctor: "Dr. Emily Wong", date: "Aug 02, 2026", status: "Completed" },
-    { id: 3, doctor: "Dr. Sarah Jenkins", date: "Jul 20, 2026", status: "Cancelled" },
-    { id: 4, doctor: "Dr. Robert Smith", date: "Jun 10, 2026", status: "Completed" },
   ];
 
   const favoriteDoctors = [
@@ -54,15 +79,15 @@ const PatientDashboard = () => {
       >
         <div>
           <h2 className="text-2xl font-poppins font-bold text-gray-900 mb-1">
-            Welcome back, John!
+            Welcome back, {user?.name?.split(' ')[0] || "Guest"}!
           </h2>
           <p className="text-gray-500 font-medium text-sm">
             Here's what's happening with your health profile today.
           </p>
         </div>
         <button 
-          onClick={() => openModal()}
-          className="btn btn-primary bg-primary border-primary text-white hover:bg-primary-focus rounded-xl px-6 shadow-sm"
+          onClick={() => openModal(null)}
+          className="mt-4 sm:mt-0 bg-primary hover:bg-[#095c55] text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-primary/30 transition-all hover:-translate-y-0.5"
         >
           Book New Appointment
         </button>

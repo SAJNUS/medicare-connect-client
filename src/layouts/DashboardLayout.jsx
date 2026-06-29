@@ -78,13 +78,15 @@ const DashboardLayout = () => {
               <span className="text-[10px] font-bold text-yellow-700 uppercase tracking-wide">Dev Tool:</span>
               <select 
                 className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary font-bold cursor-pointer shadow-sm"
-                defaultValue={user?.role || "patient"}
+                value={user?.role || "patient"}
                 onChange={async (e) => {
                   try {
                     await axiosInstance.patch(`/users/${user?.email}/role`, { role: e.target.value });
-                    window.location.reload();
+                    toast.success("Role updated successfully!");
+                    setTimeout(() => window.location.reload(), 500);
                   } catch (error) {
                     console.error("Error updating role:", error);
+                    toast.error("Failed to update role. Ensure user exists.");
                   }
                 }}
               >

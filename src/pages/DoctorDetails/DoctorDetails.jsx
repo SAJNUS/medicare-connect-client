@@ -3,12 +3,16 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaStar, FaGraduationCap, FaCalendarAlt, FaClock, FaCheckCircle } from "react-icons/fa";
 import axiosInstance from "../../api/axiosInstance";
+import { useAuth } from "../../hooks/useAuth";
+import toast from "react-hot-toast";
 
 const DoctorDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -69,12 +73,42 @@ const DoctorDetails = () => {
     );
   }
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!selectedDay || !selectedTime) {
-      alert("Please select a day and time slot first.");
+      toast.error("Please select a day and time slot first.");
       return;
     }
-    alert(`Appointment booked with ${doctor.name} for ${selectedDay} at ${selectedTime}!`);
+
+    setIsBooking(true);
+    try {
+      const payload = {
+        patientEmail: user?.email || "patient@example.com",
+        patientName: user?.name || "Patient",
+        patientImage: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+        doctorEmail: doctor.email || "doctor@example.com",
+        doctorName: doctor.name || "Unknown Doctor",
+        specialty: doctor.specialty || "General",
+        doctorImage: doctor.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+        date: selectedDay,
+        time: selectedTime,
+        type: "In-Person Consult",
+        symptoms: [],
+        aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
+      };
+
+      const response = await axiosInstance.post('/appointments', payload);
+
+      if (response.data.success) {
+        toast.success(`Appointment booked with ${doctor.name} for ${selectedDay} at ${selectedTime}!`);
+        // Navigate back to the find doctors or dashboard after short delay
+        setTimeout(() => navigate('/dashboard/patient/appointments'), 1500);
+      }
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast.error("Failed to book appointment.");
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   return (
@@ -235,12 +269,13 @@ const DoctorDetails = () => {
                 </>
               )}
 
-              <button
-                onClick={handleBooking}
-                className="w-full bg-primary hover:bg-[#095c55] text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-primary/30"
-              >
-                Book Appointment
-              </button>
+              <button 
+                    onClick={handleBooking}
+                    disabled={isBooking}
+                    className={`w-full font-bold py-4 rounded-xl shadow-md transition-all duration-300 font-inter text-[15px] ${isBooking ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-primary hover:bg-primary-focus text-white hover:shadow-lg transform hover:-translate-y-0.5'}`}
+                  >
+                    {isBooking ? 'Booking...' : 'Book Appointment'}
+                  </button>
             </motion.div>
           </div>
 

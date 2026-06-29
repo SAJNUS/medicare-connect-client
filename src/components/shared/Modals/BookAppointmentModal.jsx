@@ -2,16 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaCalendarAlt, FaClock, FaUserMd, FaVideo, FaMapMarkerAlt, FaStethoscope, FaCheck } from "react-icons/fa";
 import toast from "react-hot-toast";
-
-const mockDoctors = [
-  { id: 1, name: "Dr. Sarah Jenkins", specialty: "Cardiologist" },
-  { id: 2, name: "Dr. Michael Chen", specialty: "Neurologist" },
-  { id: 3, name: "Dr. Emily Wong", specialty: "Dermatologist" },
-  { id: 4, name: "Dr. Robert Smith", specialty: "Orthopedic" },
-  { id: 5, name: "Dr. Jessica Taylor", specialty: "Pediatrician" },
-  { id: 6, name: "Dr. David Lee", specialty: "Cardiologist" },
-  { id: 7, name: "Dr. Lisa Adams", specialty: "Dermatologist" },
-];
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 
 const specialties = ["Cardiologist", "Neurologist", "Dermatologist", "Orthopedic", "Pediatrician"];
 
@@ -26,6 +18,8 @@ const symptomMap = {
 };
 
 const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
+  const { user } = useAuth();
+  const [doctors, setDoctors] = useState([]);
   const [formData, setFormData] = useState({
     specialty: "",
     doctorId: "",
@@ -37,6 +31,27 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
   });
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await axiosInstance.get('/doctors');
+        if (response.data.success) {
+          // Keep frontend structure intact
+          setDoctors(response.data.data.map(doc => ({
+            id: doc._id,
+            name: doc.name,
+            specialty: doc.specialization || doc.specialty || "General",
+            email: doc.email,
+            image: doc.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+          })));
+        }
+      } catch (err) {
+        console.error("Error fetching doctors for modal:", err);
+      }
+    };
+    if (isOpen) fetchDoctors();
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -82,7 +97,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.specialty || !formData.doctorId || !formData.date || !formData.time) {
       toast.error("Please fill in all required fields.");
@@ -91,44 +106,68 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      toast.success("Appointment booked successfully!");
+    try {
+      const selectedDoctor = doctors.find(d => String(d.id) === String(formData.doctorId));
 
-      const selectedDoctor = mockDoctors.find(d => String(d.id) === String(formData.doctorId));
+      const payload = {
+        patientEmail: user?.email || "patient@example.com",
+        patientName: user?.name || "Patient",
+        patientImage: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+        doctorEmail: selectedDoctor?.email || "doctor@example.com",
+        doctorName: selectedDoctor?.name || "Unknown Doctor",
+        specialty: selectedDoctor?.specialty || formData.specialty,
+        doctorImage: selectedDoctor?.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+        date: formData.date,
+        time: formData.time,
+        type: formData.type,
+        symptoms: formData.symptoms.length > 0 ? formData.symptoms : (formData.customSymptom ? [formData.customSymptom] : []),
+        aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
+      };
 
-      // Pass the new mock appointment back
-      if (onSubmit && selectedDoctor) {
-        onSubmit({
-          id: Date.now(),
-          doctorName: selectedDoctor.name,
-          specialty: selectedDoctor.specialty,
-          date: formData.date,
-          time: formData.time,
-          type: formData.type,
-          status: "Upcoming",
-          image: "https://randomuser.me/api/portraits/lego/1.jpg" // Placeholder mock image
+      const response = await axiosInstance.post('/appointments', payload);
+
+      if (response.data.success) {
+        toast.success("Appointment booked successfully!");
+
+        if (onSubmit && selectedDoctor) {
+          // Pass the new fully-formed appointment back to parent to update local state immediately
+          onSubmit({
+            id: response.data.data.insertedId || Date.now(),
+            aptId: payload.aptId,
+            doctorName: payload.doctorName,
+            specialty: payload.specialty,
+            date: payload.date,
+            time: payload.time,
+            type: payload.type,
+            status: "Upcoming",
+            image: payload.doctorImage
+          });
+        }
+
+        // Reset and close
+        setFormData({
+          specialty: "",
+          doctorId: "",
+          type: "In-Person Consult",
+          date: "",
+          time: "",
+          symptoms: [],
+          customSymptom: ""
         });
+        setIsOtherSelected(false);
+        onClose();
       }
-
-      // Reset and close
-      setFormData({
-        specialty: "",
-        doctorId: "",
-        type: "In-Person Consult",
-        date: "",
-        time: "",
-        symptoms: [],
-        customSymptom: ""
-      });
-      setIsOtherSelected(false);
-      onClose();
-    }, 1500);
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast.error("Failed to book appointment.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const filteredDoctors = mockDoctors.filter(d => d.specialty === formData.specialty);
-  const availableSymptoms = formData.specialty ? symptomMap[formData.specialty] : [];
+  const filteredDoctors = doctors.filter(d => d.specialty === formData.specialty);
+  const availableSymptoms = formData.specialty ? (symptomMap[formData.specialty] || ["General Symptoms"]) : [];
+  const dynamicSpecialties = Array.from(new Set(doctors.map(d => d.specialty)));
 
   return (
     <AnimatePresence>
@@ -181,7 +220,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900"
                     >
                       <option value="" disabled hidden>Choose specialty...</option>
-                      {specialties.map(spec => (
+                      {dynamicSpecialties.map(spec => (
                         <option key={spec} value={spec}>{spec}</option>
                       ))}
                     </select>

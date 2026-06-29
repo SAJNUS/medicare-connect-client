@@ -1,64 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus, FaHashtag } from "react-icons/fa";
 import { useModal } from "../../../context/ModalContext";
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 
 const MyAppointments = () => {
   const [filter, setFilter] = useState("All");
   const { openModal } = useModal();
 
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      aptId: "MC-2026-1042",
-      doctorName: "Dr. Sarah Jenkins",
-      specialty: "Cardiologist",
-      date: "Oct 24, 2026",
-      time: "10:00 AM - 10:30 AM",
-      type: "Video Consult",
-      status: "Upcoming",
-      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-    },
-    {
-      id: 2,
-      aptId: "MC-2026-1043",
-      doctorName: "Dr. Michael Chen",
-      specialty: "Neurologist",
-      date: "Nov 02, 2026",
-      time: "02:00 PM - 03:00 PM",
-      type: "In-Person Consult",
-      status: "Upcoming",
-      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-    },
-    {
-      id: 3,
-      aptId: "MC-2026-1044",
-      doctorName: "Dr. Emily Wong",
-      specialty: "Dermatologist",
-      date: "Sep 15, 2026",
-      time: "09:00 AM - 09:30 AM",
-      type: "Video Consult",
-      status: "Completed",
-      image: "https://images.unsplash.com/photo-1594824436998-d58df189038e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-    },
-    {
-      id: 4,
-      aptId: "MC-2026-1045",
-      doctorName: "Dr. Robert Smith",
-      specialty: "Orthopedic",
-      date: "Aug 20, 2026",
-      time: "11:00 AM - 12:00 PM",
-      type: "In-Person Consult",
-      status: "Cancelled",
-      image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-    }
-  ]);
+  const { user, loading: authLoading } = useAuth();
+  const [appointments, setAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleCancel = (id) => {
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (authLoading) return;
+      if (!user?.email) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const response = await axiosInstance.get(`/appointments?patientEmail=${user.email}`);
+        if (response.data.success) {
+          // Map backend appointments to frontend format
+          const mappedApts = response.data.data.map(apt => ({
+            id: apt._id,
+            aptId: apt.aptId || apt._id.substring(0, 8),
+            doctorName: apt.doctorName,
+            specialty: apt.specialty || "General",
+            date: apt.date || apt.appointmentDate,
+            time: apt.time || apt.timeSlot,
+            type: apt.type || "In-Person Consult",
+            status: apt.appointmentStatus === "approved" || apt.appointmentStatus === "pending" ? "Upcoming" 
+                    : apt.appointmentStatus === "rejected" ? "Cancelled"
+                    : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
+            image: apt.doctorImage || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+            rawStatus: apt.appointmentStatus // Store backend status just in case
+          }));
+          setAppointments(mappedApts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch appointments:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, [user, authLoading]);
+
+  const handleCancel = async (id) => {
     if (window.confirm("Are you sure you want to cancel this appointment?")) {
-      setAppointments(appointments.map(apt =>
-        apt.id === id ? { ...apt, status: "Cancelled" } : apt
-      ));
+      try {
+        await axiosInstance.patch(`/appointments/${id}/status`, { status: 'rejected' });
+        setAppointments(appointments.map(apt =>
+          apt.id === id ? { ...apt, status: "Cancelled", rawStatus: "rejected" } : apt
+        ));
+      } catch (err) {
+        console.error("Failed to cancel appointment", err);
+        alert("Failed to cancel appointment");
+      }
     }
   };
 
@@ -124,19 +125,14 @@ const MyAppointments = () => {
       {/* Appointments Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <AnimatePresence mode="wait">
-          {filteredAppointments.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="col-span-full bg-white rounded-2xl p-12 text-center border border-gray-100"
-            >
-              <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-                <FaCalendarAlt />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">No Appointments Found</h3>
-              <p className="text-gray-500">You don't have any {filter.toLowerCase()} appointments at the moment.</p>
-            </motion.div>
+          {isLoading ? (
+            <div className="p-8 text-center text-gray-500 font-medium">Loading appointments...</div>
+          ) : filteredAppointments.length === 0 ? (
+            <div className="p-12 text-center">
+              <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No appointments found</h3>
+              <p className="text-gray-500 text-sm">You don't have any {filter.toLowerCase() !== 'all' ? filter.toLowerCase() : ''} appointments.</p>
+            </div>
           ) : (
             filteredAppointments.map((apt, index) => (
               <motion.div

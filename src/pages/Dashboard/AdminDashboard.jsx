@@ -1,13 +1,35 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaUsers, FaUserMd, FaCalendarCheck, FaStar, FaDownload } from "react-icons/fa";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from "recharts";
+import axiosInstance from "../../api/axiosInstance";
 
 const AdminDashboard = () => {
+  const [totalAppointments, setTotalAppointments] = useState(0);
+
+  useEffect(() => {
+    const fetchApts = async () => {
+      try {
+        const response = await axiosInstance.get('/appointments');
+        if (response.data.success) {
+          setTotalAppointments(response.data.data.length);
+        }
+      } catch (err) {
+        console.error("Failed to fetch appointments for admin:", err);
+      }
+    };
+    fetchApts();
+  }, []);
+
+  const formattedTotal = totalAppointments >= 1000 
+    ? (totalAppointments / 1000).toFixed(1) + "K" 
+    : totalAppointments.toString();
+
   // Mock Data
   const stats = [
     { title: "Total Patients", value: "5.4K", fullValue: "5,432", icon: <FaUsers className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Total Doctors", value: "342", fullValue: "342", icon: <FaUserMd className="text-teal-600" />, bg: "bg-teal-100/50" },
-    { title: "Total Appointments", value: "12.4K", fullValue: "12,450", icon: <FaCalendarCheck className="text-purple-600" />, bg: "bg-purple-100/50" },
+    { title: "Total Appointments", value: formattedTotal, fullValue: totalAppointments.toString(), icon: <FaCalendarCheck className="text-purple-600" />, bg: "bg-purple-100/50" },
     { title: "Average Rating", value: "4.8", fullValue: "4.8 / 5.0", icon: <FaStar className="text-yellow-500" />, bg: "bg-yellow-100/50" },
   ];
 

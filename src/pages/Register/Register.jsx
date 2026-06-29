@@ -6,7 +6,10 @@ import { FaUser, FaEnvelope, FaImage, FaLock, FaEye, FaEyeSlash } from "react-ic
 import toast from "react-hot-toast";
 import axiosInstance from "../../api/axiosInstance";
 
+import { useAuth } from "../../hooks/useAuth";
+
 const Register = () => {
+  const { createUser, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,30 +66,32 @@ const Register = () => {
     if (validateForm()) {
       setIsLoading(true);
       try {
+        // Create user in Firebase
+        const userCredential = await createUser(formData.email, formData.password);
+        const fbUser = userCredential.user;
+
         const payload = {
           name: formData.name,
           email: formData.email,
           photoURL: formData.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-          password: formData.password,
-          role: role.toLowerCase()
+          password: formData.password, // Ideally backend hashes this or doesn't store it since Firebase handles auth
+          role: role.toLowerCase(),
+          firebaseUid: fbUser.uid
         };
 
         const response = await axiosInstance.post('/users', payload);
         
         if (response.data.success) {
-          localStorage.setItem("currentUserEmail", formData.email);
-          
           if (role === "Doctor") {
             toast.success("Account created! Pending Admin Verification.");
           } else {
             toast.success("Account created successfully!");
           }
           navigate("/");
-          window.location.reload(); // Refresh to trigger useAuth fetch
         }
       } catch (error) {
         console.error("Registration error:", error);
-        toast.error(error.response?.data?.message || "An error occurred during registration");
+        toast.error(error.message || error.response?.data?.message || "An error occurred during registration");
       } finally {
         setIsLoading(false);
       }
@@ -95,17 +100,37 @@ const Register = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      if (role === "Doctor") {
-        toast.success("Registered with Google! Pending Admin Verification.");
-      } else {
-        toast.success("Successfully registered with Google!");
+    try {
+      const result = await signInWithGoogle();
+      const fbUser = result.user;
+
+      // Ensure user is in MongoDB
+      const payload = {
+        name: fbUser.displayName || "Google User",
+        email: fbUser.email,
+        photoURL: fbUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+        password: "google_login_no_password",
+        role: role.toLowerCase(),
+        firebaseUid: fbUser.uid
+      };
+      
+      // We catch error in case user already exists, which is fine for Google login
+      try {
+        await axiosInstance.post('/users', payload);
+      } catch (e) {
+        console.log("User might already exist in DB, proceeding.");
       }
+
+      toast.success(`Successfully logged in with Google!`);
       navigate("/");
-    }, 1500);
+    } catch (error) {
+      console.error("Google Login error:", error);
+      toast.error(error.message || "Google sign-in failed.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
