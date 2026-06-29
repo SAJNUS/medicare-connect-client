@@ -9,7 +9,7 @@ import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
 
 const Register = () => {
-  const { createUser, signInWithGoogle } = useAuth();
+  const { createUser, signInWithGoogle, logoutUser } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +66,18 @@ const Register = () => {
     if (validateForm()) {
       setIsLoading(true);
       try {
+        // Pre-check MongoDB to avoid dangling Firebase accounts
+        try {
+          await axiosInstance.get(`/users/${formData.email}`);
+          toast.error("User with this email already exists.");
+          setIsLoading(false);
+          return;
+        } catch (dbError) {
+          if (dbError.response && dbError.response.status !== 404) {
+            throw dbError;
+          }
+        }
+
         // Create user in Firebase
         const userCredential = await createUser(formData.email, formData.password);
         const fbUser = userCredential.user;
@@ -74,7 +86,7 @@ const Register = () => {
           name: formData.name,
           email: formData.email,
           photoURL: formData.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-          password: formData.password, // Ideally backend hashes this or doesn't store it since Firebase handles auth
+          password: formData.password,
           role: role.toLowerCase(),
           firebaseUid: fbUser.uid
         };
@@ -82,12 +94,13 @@ const Register = () => {
         const response = await axiosInstance.post('/users', payload);
         
         if (response.data.success) {
+          await logoutUser();
           if (role === "Doctor") {
-            toast.success("Account created! Pending Admin Verification.");
+            toast.success("Account created! Please log in.");
           } else {
-            toast.success("Account created successfully!");
+            toast.success("Account created successfully! Please log in.");
           }
-          navigate("/");
+          navigate("/login", { state: { defaultRole: role } });
         }
       } catch (error) {
         console.error("Registration error:", error);
@@ -106,25 +119,41 @@ const Register = () => {
       const result = await signInWithGoogle();
       const fbUser = result.user;
 
-      // Ensure user is in MongoDB
-      const payload = {
-        name: fbUser.displayName || "Google User",
-        email: fbUser.email,
-        photoURL: fbUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-        password: "google_login_no_password",
-        role: role.toLowerCase(),
-        firebaseUid: fbUser.uid
-      };
-      
-      // We catch error in case user already exists, which is fine for Google login
       try {
-        await axiosInstance.post('/users', payload);
-      } catch (e) {
-        console.log("User might already exist in DB, proceeding.");
+        // Check if user exists in DB
+        const dbRes = await axiosInstance.get(`/users/${fbUser.email}`);
+        const dbUser = dbRes.data.data;
+        const dbRole = dbUser?.role?.toLowerCase() || 'patient';
+        
+        if (dbRole === 'admin') {
+          toast.success("Successfully logged in as Admin!");
+          navigate("/dashboard");
+        } else if (dbRole !== role.toLowerCase()) {
+          await logoutUser();
+          throw new Error(`Email already registered as ${dbUser.role}. Please log in from the correct tab.`);
+        } else {
+          toast.success("Successfully logged in with Google!");
+          navigate("/");
+        }
+      } catch (dbError) {
+        if (dbError.response && dbError.response.status === 404) {
+          // User does not exist, safe to register
+          const payload = {
+            name: fbUser.displayName || "Google User",
+            email: fbUser.email,
+            photoURL: fbUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+            password: "google_login_no_password",
+            role: role.toLowerCase(),
+            firebaseUid: fbUser.uid
+          };
+          await axiosInstance.post('/users', payload);
+          await logoutUser();
+          toast.success("Account created successfully! Please log in.");
+          navigate("/login", { state: { defaultRole: role } });
+        } else {
+          throw dbError;
+        }
       }
-
-      toast.success(`Successfully logged in with Google!`);
-      navigate("/");
     } catch (error) {
       console.error("Google Login error:", error);
       toast.error(error.message || "Google sign-in failed.");

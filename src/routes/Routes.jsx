@@ -10,6 +10,7 @@ import Register from "../pages/Register/Register";
 import DashboardLayout from "../layouts/DashboardLayout";
 import DashboardOverview from "../pages/Dashboard/DashboardOverview";
 import NotFound from "../pages/NotFound/NotFound";
+import RoleRoute from "./RoleRoute";
 
 // Patient Pages
 import MyProfile from "../pages/Dashboard/Patient/MyProfile";
@@ -66,7 +67,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <DashboardLayout />,
+    element: (
+      <RoleRoute allowedRoles={['patient', 'doctor', 'admin']}>
+        <DashboardLayout />
+      </RoleRoute>
+    ),
     children: [
       {
         index: true,
@@ -75,53 +80,53 @@ export const router = createBrowserRouter([
       // Patient Routes
       {
         path: "patient/profile",
-        element: <MyProfile />,
+        element: <RoleRoute allowedRoles={['patient', 'admin']}><MyProfile /></RoleRoute>,
       },
       {
         path: "patient/appointments",
-        element: <MyAppointments />,
+        element: <RoleRoute allowedRoles={['patient', 'admin']}><MyAppointments /></RoleRoute>,
       },
       {
         path: "patient/payments",
-        element: <PaymentHistory />,
+        element: <RoleRoute allowedRoles={['patient', 'admin']}><PaymentHistory /></RoleRoute>,
       },
       {
         path: "patient/reviews",
-        element: <MyReviews />,
+        element: <RoleRoute allowedRoles={['patient', 'admin']}><MyReviews /></RoleRoute>,
       },
       // Doctor Routes
       {
         path: "doctor/schedule",
-        element: <ManageSchedule />,
+        element: <RoleRoute allowedRoles={['doctor', 'admin']}><ManageSchedule /></RoleRoute>,
       },
       {
         path: "doctor/requests",
-        element: <AppointmentRequests />,
+        element: <RoleRoute allowedRoles={['doctor', 'admin']}><AppointmentRequests /></RoleRoute>,
       },
       {
         path: "doctor/prescriptions",
-        element: <PrescriptionManagement />,
+        element: <RoleRoute allowedRoles={['doctor', 'admin']}><PrescriptionManagement /></RoleRoute>,
       },
       {
         path: "doctor/profile",
-        element: <ProfileManagement />,
+        element: <RoleRoute allowedRoles={['doctor', 'admin']}><ProfileManagement /></RoleRoute>,
       },
       // Admin Routes
       {
         path: "admin/users",
-        element: <ManageUsers />,
+        element: <RoleRoute allowedRoles={['admin']}><ManageUsers /></RoleRoute>,
       },
       {
         path: "admin/doctors",
-        element: <ManageDoctors />,
+        element: <RoleRoute allowedRoles={['admin']}><ManageDoctors /></RoleRoute>,
       },
       {
         path: "admin/appointments",
-        element: <ManageAppointments />,
+        element: <RoleRoute allowedRoles={['admin']}><ManageAppointments /></RoleRoute>,
       },
       {
         path: "admin/payments",
-        element: <PaymentManagement />,
+        element: <RoleRoute allowedRoles={['admin']}><PaymentManagement /></RoleRoute>,
       }
     ],
   },

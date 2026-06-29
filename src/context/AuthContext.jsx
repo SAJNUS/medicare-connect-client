@@ -116,16 +116,6 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const updateUserRole = (newRole) => {
-    if (user) {
-      setUser({
-        ...user,
-        role: newRole,
-        designation: newRole === 'doctor' ? 'Doctor' : newRole === 'admin' ? 'Admin' : 'Patient'
-      });
-    }
-  };
-
   const authInfo = {
     user,
     loading,
@@ -133,7 +123,6 @@ export const AuthProvider = ({ children }) => {
     loginUser,
     signInWithGoogle,
     logoutUser,
-    updateUserRole,
   };
 
   return (

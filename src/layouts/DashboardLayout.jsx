@@ -8,7 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 import axiosInstance from "../api/axiosInstance";
 
 const DashboardLayout = () => {
-  const { user, updateUserRole } = useAuth();
+  const { user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const mainRef = useRef(null);
@@ -73,29 +73,6 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* DEV TOOL: Role Switcher */}
-            <div className="hidden md:flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-3 py-1 rounded-lg mr-2">
-              <span className="text-[10px] font-bold text-yellow-700 uppercase tracking-wide">Dev Tool:</span>
-              <select 
-                className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary font-bold cursor-pointer shadow-sm"
-                value={user?.role || "patient"}
-                onChange={async (e) => {
-                  try {
-                    const newRole = e.target.value;
-                    await axiosInstance.patch(`/users/${user?.email}/role`, { role: newRole });
-                    updateUserRole(newRole);
-                    toast.success("Role updated successfully!");
-                  } catch (error) {
-                    console.error("Error updating role:", error);
-                    toast.error("Failed to update role. Ensure user exists.");
-                  }
-                }}
-              >
-                <option value="patient">Patient</option>
-                <option value="doctor">Doctor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
 
             <button className="relative p-2 text-gray-500 hover:text-primary transition-colors">
               <FaBell className="w-5 h-5" />

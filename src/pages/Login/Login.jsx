@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -9,11 +9,17 @@ import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
 
 const Login = () => {
-  const { loginUser, signInWithGoogle } = useAuth();
+  const { loginUser, signInWithGoogle, logoutUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [role, setRole] = useState("Patient");
+  
+  const initialRole = location.state?.defaultRole 
+    ? location.state.defaultRole.charAt(0).toUpperCase() + location.state.defaultRole.slice(1)
+    : "Patient";
+  const [role, setRole] = useState(initialRole);
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -49,12 +55,44 @@ const Login = () => {
     if (validateForm()) {
       setIsLoading(true);
       try {
-        await loginUser(formData.email, formData.password);
-        toast.success(`Successfully logged in!`);
-        navigate("/");
+        const userCredential = await loginUser(formData.email, formData.password);
+        const fbUser = userCredential.user;
+        
+        // Fetch actual role from MongoDB
+        try {
+          const dbRes = await axiosInstance.get(`/users/${fbUser.email}`);
+          const dbUser = dbRes.data.data;
+          const dbRole = dbUser?.role?.toLowerCase() || 'patient';
+          
+          if (dbRole === 'admin') {
+            toast.success(`Successfully logged in as Admin!`);
+            navigate("/dashboard");
+          } else if (dbRole !== role.toLowerCase()) {
+            await logoutUser();
+            throw new Error("Invalid email or password.");
+          } else {
+            toast.success(`Successfully logged in!`);
+            navigate("/");
+          }
+        } catch (dbError) {
+          // If user doesn't exist in MongoDB, maybe they are just a Firebase user
+          // But strict roles say MongoDB is source of truth.
+          if (dbError.response && dbError.response.status === 404) {
+            // Let the AuthContext create the default patient, but if they logged in as Doctor, fail.
+            if (role.toLowerCase() !== 'patient') {
+               await logoutUser();
+               throw new Error("Invalid email or password.");
+            } else {
+               toast.success(`Successfully logged in!`);
+               navigate("/");
+            }
+          } else {
+            throw dbError;
+          }
+        }
       } catch (error) {
         console.error("Login error:", error);
-        toast.error(error.message || "An error occurred during login.");
+        toast.error(error.message === "Invalid email or password." ? error.message : "An error occurred during login.");
       } finally {
         setIsLoading(false);
       }
@@ -66,12 +104,40 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      await signInWithGoogle();
-      toast.success(`Successfully logged in with Google!`);
-      navigate("/");
+      const userCredential = await signInWithGoogle();
+      const fbUser = userCredential.user;
+      
+      try {
+        const dbRes = await axiosInstance.get(`/users/${fbUser.email}`);
+        const dbUser = dbRes.data.data;
+        const dbRole = dbUser?.role?.toLowerCase() || 'patient';
+        
+        if (dbRole === 'admin') {
+          toast.success(`Successfully logged in as Admin!`);
+          navigate("/dashboard");
+        } else if (dbRole !== role.toLowerCase()) {
+          await logoutUser();
+          throw new Error("Invalid email or password.");
+        } else {
+          toast.success(`Successfully logged in with Google!`);
+          navigate("/");
+        }
+      } catch (dbError) {
+        if (dbError.response && dbError.response.status === 404) {
+          if (role.toLowerCase() !== 'patient') {
+             await logoutUser();
+             throw new Error("Invalid email or password.");
+          } else {
+             toast.success(`Successfully logged in with Google!`);
+             navigate("/");
+          }
+        } else {
+          throw dbError;
+        }
+      }
     } catch (error) {
       console.error("Google Login error:", error);
-      toast.error(error.message || "Google sign-in failed.");
+      toast.error(error.message === "Invalid email or password." ? error.message : "Google sign-in failed.");
     } finally {
       setIsLoading(false);
     }
