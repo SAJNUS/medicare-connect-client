@@ -8,7 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 import axiosInstance from "../api/axiosInstance";
 
 const DashboardLayout = () => {
-  const { user } = useAuth();
+  const { user, updateUserRole } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const mainRef = useRef(null);
@@ -81,9 +81,10 @@ const DashboardLayout = () => {
                 value={user?.role || "patient"}
                 onChange={async (e) => {
                   try {
-                    await axiosInstance.patch(`/users/${user?.email}/role`, { role: e.target.value });
+                    const newRole = e.target.value;
+                    await axiosInstance.patch(`/users/${user?.email}/role`, { role: newRole });
+                    updateUserRole(newRole);
                     toast.success("Role updated successfully!");
-                    setTimeout(() => window.location.reload(), 500);
                   } catch (error) {
                     console.error("Error updating role:", error);
                     toast.error("Failed to update role. Ensure user exists.");
