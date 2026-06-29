@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus, FaHashtag } from "react-icons/fa";
 import { useModal } from "../../../context/ModalContext";
 
 const MyAppointments = () => {
@@ -10,6 +10,7 @@ const MyAppointments = () => {
   const [appointments, setAppointments] = useState([
     {
       id: 1,
+      aptId: "MC-2026-1042",
       doctorName: "Dr. Sarah Jenkins",
       specialty: "Cardiologist",
       date: "Oct 24, 2026",
@@ -20,6 +21,7 @@ const MyAppointments = () => {
     },
     {
       id: 2,
+      aptId: "MC-2026-1043",
       doctorName: "Dr. Michael Chen",
       specialty: "Neurologist",
       date: "Nov 02, 2026",
@@ -30,6 +32,7 @@ const MyAppointments = () => {
     },
     {
       id: 3,
+      aptId: "MC-2026-1044",
       doctorName: "Dr. Emily Wong",
       specialty: "Dermatologist",
       date: "Sep 15, 2026",
@@ -40,6 +43,7 @@ const MyAppointments = () => {
     },
     {
       id: 4,
+      aptId: "MC-2026-1045",
       doctorName: "Dr. Robert Smith",
       specialty: "Orthopedic",
       date: "Aug 20, 2026",
@@ -171,9 +175,13 @@ const MyAppointments = () => {
                         <FaClock className="text-orange-500" />
                         {apt.time}
                       </div>
-                      <div className="col-span-full flex items-center gap-2 text-xs font-semibold text-gray-700">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
                         {apt.type === 'Video Consult' ? <FaVideo className="text-blue-500" /> : <FaMapMarkerAlt className="text-red-500" />}
                         {apt.type}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 whitespace-nowrap">
+                        <FaHashtag className="text-purple-500" />
+                        {apt.aptId}
                       </div>
                     </div>
 

@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheck, FaTimes, FaInbox, FaUserInjured, FaNotesMedical, FaCheckCircle, FaBan, FaClock as FaClockReg } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheck, FaTimes, FaInbox, FaUserInjured, FaNotesMedical, FaCheckCircle, FaBan, FaClock as FaClockReg, FaHashtag } from "react-icons/fa";
 
 const initialRequests = [
   {
     id: 1,
+    aptId: "MC-2026-1042",
     patientName: "Alice Smith",
     image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     issue: "Blood Pressure",
@@ -17,6 +18,7 @@ const initialRequests = [
   },
   {
     id: 2,
+    aptId: "MC-2026-1043",
     patientName: "Bob Johnson",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     issue: "Chest Pain",
@@ -27,6 +29,7 @@ const initialRequests = [
   },
   {
     id: 3,
+    aptId: "MC-2026-1044",
     patientName: "Charlie Brown",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     issue: "Routine Checkup",
@@ -37,6 +40,7 @@ const initialRequests = [
   },
   {
     id: 4,
+    aptId: "MC-2026-1045",
     patientName: "Diana Prince",
     image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
     issue: "Prescription Refill",
@@ -202,9 +206,13 @@ const AppointmentRequests = () => {
                         <FaClock className="text-orange-500" />
                         {req.time}
                       </div>
-                      <div className="col-span-full flex items-center gap-2 text-xs font-semibold text-gray-700">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
                         {req.type === 'Video Consult' ? <FaVideo className="text-blue-500" /> : <FaMapMarkerAlt className="text-red-500" />}
                         {req.type}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 whitespace-nowrap">
+                        <FaHashtag className="text-purple-500" />
+                        {req.aptId}
                       </div>
                     </div>
 

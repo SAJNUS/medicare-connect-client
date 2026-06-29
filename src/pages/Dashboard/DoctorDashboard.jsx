@@ -130,12 +130,15 @@ const DoctorDashboard = () => {
             <div className="space-y-4">
               {appointmentRequests.map(req => (
                 <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border border-gray-100 rounded-xl bg-white hover:shadow-sm transition-shadow">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 w-full sm:w-auto flex-1">
                     <img src={req.image} alt={req.patient} className="w-12 h-12 rounded-full object-cover shadow-sm flex-shrink-0" />
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-sm">{req.patient}</h4>
-                      <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-gray-500 mt-1">
-                        <span className="flex items-center gap-1 text-primary bg-teal-50 px-2 py-0.5 rounded-md"><FaClock /> {req.requestedTime}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start sm:block">
+                        <h4 className="font-bold text-gray-900 text-sm truncate">{req.patient}</h4>
+                        <span className="flex sm:hidden items-center gap-1 text-primary bg-teal-50 px-2 py-0.5 rounded-md text-xs font-medium whitespace-nowrap flex-shrink-0"><FaClock /> {req.requestedTime}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2 text-xs font-medium text-gray-500 mt-1">
+                        <span className="hidden sm:flex items-center gap-1 text-primary bg-teal-50 px-2 py-0.5 rounded-md w-max"><FaClock /> {req.requestedTime}</span>
                         <span className="hidden sm:inline">•</span>
                         <span>{req.reason}</span>
                       </div>
