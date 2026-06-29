@@ -140,7 +140,7 @@ const PaymentManagement = () => {
                 key={f}
                 onClick={() => setStatusFilter(f)}
                 className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${statusFilter === f
-                    ? "bg-teal-500 text-white shadow-md shadow-teal-500/20"
+                    ? "bg-primary text-white shadow-md shadow-primary/20"
                     : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
                   }`}
               >

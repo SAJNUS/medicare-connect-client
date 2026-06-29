@@ -131,7 +131,7 @@ const AppointmentRequests = () => {
             onClick={() => setFilter(f)}
             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
               filter === f
-                ? "bg-gray-900 text-white shadow-md"
+                ? "bg-primary text-white shadow-md shadow-primary/20"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
             }`}
           >
@@ -148,7 +148,7 @@ const AppointmentRequests = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1 }}
-          className="grid grid-cols-1 xl:grid-cols-2 gap-6 min-h-[300px]"
+          className="grid grid-cols-1 xl:grid-cols-2 gap-6 min-h-[300px] content-start"
         >
           {filteredRequests.length === 0 ? (
             <motion.div 
