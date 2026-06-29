@@ -57,7 +57,7 @@ const Sidebar = ({ closeSidebar }) => {
           />
         </div>
         <h3 className="font-poppins font-bold text-gray-900 text-base leading-tight">{user?.name || "John Doe"}</h3>
-        <p className={`text-xs font-medium mt-1 ${roleColors.text}`}>{user?.designation || "Patient"}</p>
+        <p className={`text-sm font-bold mt-1 capitalize ${roleColors.text}`}>{user?.role || "Patient"}</p>
       </div>
 
       {/* Navigation Links */}

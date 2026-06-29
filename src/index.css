@@ -17,3 +17,20 @@
     font-family: 'Poppins', sans-serif;
   }
 }
+
+@layer utilities {
+  .animate-dropdown-in {
+    animation: dropdownFadeIn 200ms ease-out forwards;
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
