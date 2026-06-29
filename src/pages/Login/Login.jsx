@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import toast from "react-hot-toast";
+import axiosInstance from "../../api/axiosInstance";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -39,17 +40,40 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
+      try {
+        const response = await axiosInstance.get(`/users/${formData.email}`);
+        
+        if (response.data.success && response.data.data) {
+          const user = response.data.data;
+          
+          // Verify role (case-insensitive) matches what user selected
+          if (user.role.toLowerCase() !== role.toLowerCase()) {
+            toast.error(`No ${role} account found with this email. You are registered as ${user.role}.`);
+            return;
+          }
+          
+          localStorage.setItem("currentUserEmail", formData.email);
+          toast.success(`Successfully logged in as ${role}!`);
+          navigate("/");
+          window.location.reload(); // Refresh to trigger useAuth fetch
+        } else {
+          toast.error("Account not found. Please register first.");
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          toast.error("Account not found. Please register first.");
+        } else {
+          console.error("Login error:", error);
+          toast.error("An error occurred during login.");
+        }
+      } finally {
         setIsLoading(false);
-        toast.success(`Successfully logged in as ${role}!`);
-        navigate("/");
-      }, 1500);
+      }
     } else {
       toast.error("Please fix the errors in the form");
     }

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { FaUser, FaEnvelope, FaImage, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import toast from "react-hot-toast";
+import axiosInstance from "../../api/axiosInstance";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -56,21 +57,39 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false);
-        if (role === "Doctor") {
-          toast.success("Account created! Pending Admin Verification.");
-        } else {
-          toast.success("Account created successfully!");
+      try {
+        const payload = {
+          name: formData.name,
+          email: formData.email,
+          photoURL: formData.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+          password: formData.password,
+          role: role.toLowerCase()
+        };
+
+        const response = await axiosInstance.post('/users', payload);
+        
+        if (response.data.success) {
+          localStorage.setItem("currentUserEmail", formData.email);
+          
+          if (role === "Doctor") {
+            toast.success("Account created! Pending Admin Verification.");
+          } else {
+            toast.success("Account created successfully!");
+          }
+          navigate("/");
+          window.location.reload(); // Refresh to trigger useAuth fetch
         }
-        navigate("/");
-      }, 1500);
+      } catch (error) {
+        console.error("Registration error:", error);
+        toast.error(error.response?.data?.message || "An error occurred during registration");
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       toast.error("Please fix the validation errors");
     }

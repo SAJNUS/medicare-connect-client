@@ -85,9 +85,8 @@ const Sidebar = ({ closeSidebar }) => {
         <button
           className="flex w-full items-center justify-center gap-2 px-4 py-3 text-red-500 font-medium rounded-xl hover:bg-red-50 transition-colors"
           onClick={() => {
-            // Placeholder logout logic
-            alert("Logging out...");
-            closeSidebar && closeSidebar();
+            localStorage.removeItem("currentUserEmail");
+            window.location.href = '/';
           }}
         >
           <FaSignOutAlt className="text-lg" />

@@ -4,7 +4,8 @@ import { HiMenuAlt2 } from "react-icons/hi";
 import { FaBell } from "react-icons/fa";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "../components/dashboard/Sidebar";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
+import axiosInstance from "../../api/axiosInstance";
 
 const DashboardLayout = () => {
   const { user } = useAuth();
@@ -76,11 +77,15 @@ const DashboardLayout = () => {
             <div className="hidden md:flex items-center gap-2 bg-yellow-50 border border-yellow-200 px-3 py-1 rounded-lg mr-2">
               <span className="text-[10px] font-bold text-yellow-700 uppercase tracking-wide">Dev Tool:</span>
               <select 
-                className="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none cursor-pointer"
-                defaultValue={localStorage.getItem("test_userRole") || "patient"}
-                onChange={(e) => {
-                  localStorage.setItem("test_userRole", e.target.value);
-                  window.location.reload();
+                className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary font-bold cursor-pointer shadow-sm"
+                defaultValue={user?.role || "patient"}
+                onChange={async (e) => {
+                  try {
+                    await axiosInstance.patch(`/users/${user?.email}/role`, { role: e.target.value });
+                    window.location.reload();
+                  } catch (error) {
+                    console.error("Error updating role:", error);
+                  }
                 }}
               >
                 <option value="patient">Patient</option>
