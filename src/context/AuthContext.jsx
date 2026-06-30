@@ -15,6 +15,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [previewRole, setPreviewRole] = useState(null);
 
   // Create User
   const createUser = (email, password) => {
@@ -116,13 +117,23 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // Enhance user object with activeRole for Dev Mode preview
+  const enhancedUser = user ? {
+    ...user,
+    activeRole: (user.email === 'sajnussaharearhojayfa@gmail.com' && previewRole) 
+      ? previewRole 
+      : (user.role || 'patient')
+  } : null;
+
   const authInfo = {
-    user,
+    user: enhancedUser,
     loading,
     createUser,
     loginUser,
     signInWithGoogle,
     logoutUser,
+    setPreviewRole,
+    previewRole,
   };
 
   return (
