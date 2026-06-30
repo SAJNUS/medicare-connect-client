@@ -36,9 +36,14 @@ export const AuthProvider = ({ children }) => {
     return signInWithPopup(auth, provider);
   };
 
-  // Logout User
-  const logoutUser = () => {
+  // Logout User — also clears the httpOnly JWT cookie on the backend
+  const logoutUser = async () => {
     setLoading(true);
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch {
+      // Best-effort: proceed with Firebase logout regardless
+    }
     return signOut(auth);
   };
 
@@ -95,13 +100,10 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  // Enhance user object with overwritten role for Dev Mode preview
+  // The user object, with role always sourced from MongoDB
   const enhancedUser = user ? {
     ...user,
-    realRole: user.role,
-    role: (user.email === 'sajnussaharearhojayfa@gmail.com' && previewRole) 
-      ? previewRole 
-      : (user.role || 'patient')
+    role: user.role || 'patient'
   } : null;
 
   const authInfo = {

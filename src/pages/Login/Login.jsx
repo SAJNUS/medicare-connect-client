@@ -65,12 +65,16 @@ const Login = () => {
           const dbRole = dbUser?.role?.toLowerCase() || 'patient';
           
           if (dbRole === 'admin') {
+            // Issue JWT cookie
+            await axiosInstance.post('/auth/jwt', { email: fbUser.email, role: dbUser.role });
             toast.success(`Successfully logged in as Admin!`);
             navigate("/dashboard");
           } else if (dbRole !== role.toLowerCase()) {
             await logoutUser();
             throw new Error("Invalid email or password.");
           } else {
+            // Issue JWT cookie
+            await axiosInstance.post('/auth/jwt', { email: fbUser.email, role: dbUser.role });
             toast.success(`Successfully logged in!`);
             navigate("/");
           }
@@ -113,15 +117,19 @@ const Login = () => {
         const dbRole = dbUser?.role?.toLowerCase() || 'patient';
         
         if (dbRole === 'admin') {
-          toast.success(`Successfully logged in as Admin!`);
-          navigate("/dashboard");
-        } else if (dbRole !== role.toLowerCase()) {
-          await logoutUser();
-          throw new Error("Invalid email or password.");
-        } else {
-          toast.success(`Successfully logged in with Google!`);
-          navigate("/");
-        }
+            // Issue JWT cookie
+            await axiosInstance.post('/auth/jwt', { email: fbUser.email, role: dbUser.role });
+            toast.success(`Successfully logged in as Admin!`);
+            navigate("/dashboard");
+          } else if (dbRole !== role.toLowerCase()) {
+            await logoutUser();
+            throw new Error("Invalid email or password.");
+          } else {
+            // Issue JWT cookie
+            await axiosInstance.post('/auth/jwt', { email: fbUser.email, role: dbUser.role });
+            toast.success(`Successfully logged in with Google!`);
+            navigate("/");
+          }
       } catch (dbError) {
         if (dbError.response && dbError.response.status === 404) {
           if (role.toLowerCase() !== 'patient') {
