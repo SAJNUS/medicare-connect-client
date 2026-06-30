@@ -6,7 +6,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { getRoleColors } from "../../../utils/roleColors";
 
 const Navbar = () => {
-  const { user, logoutUser } = useAuth();
+  const { user, loading, logoutUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -69,7 +69,12 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            {user ? (
+            {loading ? (
+              <div className="flex space-x-2">
+                <div className="skeleton w-24 h-10 rounded-md bg-gray-200"></div>
+                <div className="skeleton w-24 h-10 rounded-md bg-gray-200"></div>
+              </div>
+            ) : user ? (
               <div className="relative" ref={dropdownRef}>
                 <div
                   role="button"
@@ -176,7 +181,12 @@ const Navbar = () => {
               </NavLink>
             ))}
             <div className="mt-4 flex flex-col px-2">
-              {user ? (
+              {loading ? (
+                <div className="flex flex-col space-y-2 mt-4">
+                  <div className="skeleton h-12 w-full rounded-md bg-gray-200"></div>
+                  <div className="skeleton h-12 w-full rounded-md bg-gray-200"></div>
+                </div>
+              ) : user ? (
                 <div className="border-t border-gray-100 pt-4 pb-2">
                   <div className="flex flex-col items-center justify-center gap-3 px-4 mb-6 mt-2 text-center">
                     <div className="flex-shrink-0">
@@ -225,7 +235,7 @@ const Navbar = () => {
               ) : (
                 <>
                   <Link to="/login" onClick={() => setIsOpen(false)}>
-                    <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary focus:bg-primary focus:text-white focus:border-primary w-full rounded-md h-12 font-inter font-medium text-[15px]">
+                    <button className="btn btn-outline border-primary text-primary hover:bg-primary hover:text-white hover:border-primary active:bg-primary active:text-white active:border-primary focus:bg-primary focus:text-white focus:border-primary w-full rounded-md h-12 font-inter font-medium text-[15px] mb-2">
                       Login
                     </button>
                   </Link>

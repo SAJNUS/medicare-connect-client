@@ -13,7 +13,7 @@ const FeaturedDoctors = () => {
   useEffect(() => {
     const fetchFeaturedDoctors = async () => {
       try {
-        const response = await axiosInstance.get('/doctors');
+        const response = await axiosInstance.get('/doctors?status=verified&limit=4');
         if (response.data.success) {
           // Take only the first 4 doctors for the featured section
           const allDocs = response.data.data.slice(0, 4);

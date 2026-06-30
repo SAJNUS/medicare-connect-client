@@ -262,11 +262,11 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
                     <div
                       onClick={() => handleTypeSelect("In-Person Consult")}
                       className={`cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 transition-all ${formData.type === "In-Person Consult"
-                        ? "border-primary bg-teal-50/50 shadow-sm"
+                        ? "border-red-500 bg-red-50 shadow-sm"
                         : "border-gray-100 hover:border-gray-300 bg-white"
                         }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "In-Person Consult" ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "In-Person Consult" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500"}`}>
                         <FaMapMarkerAlt />
                       </div>
                       <div>
@@ -278,11 +278,11 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
                     <div
                       onClick={() => handleTypeSelect("Video Consult")}
                       className={`cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 transition-all ${formData.type === "Video Consult"
-                        ? "border-primary bg-teal-50/50 shadow-sm"
+                        ? "border-blue-500 bg-blue-50 shadow-sm"
                         : "border-gray-100 hover:border-gray-300 bg-white"
                         }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "Video Consult" ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "Video Consult" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-500"}`}>
                         <FaVideo />
                       </div>
                       <div>
