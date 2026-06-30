@@ -72,7 +72,7 @@ const PaymentModal = ({ isOpen, onClose, appointment, onPaymentSuccess }) => {
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500 font-medium">Amount Due</p>
-                <p className="text-xl font-bold text-primary">৳{appointment.fee}</p>
+                <p className="text-xl font-bold text-primary">BDT {appointment.fee}</p>
               </div>
             </div>
 

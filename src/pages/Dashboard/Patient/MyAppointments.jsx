@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus, FaHashtag, FaHeartbeat, FaBrain, FaBaby, FaBone, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
 import { useModal } from "../../../context/ModalContext";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
 import PaymentModal from "../../../components/payment/PaymentModal";
+import toast from "react-hot-toast";
+import { formatToDDMMYYYY, generateAvailableTimeSlots } from "../../../utils/dateUtils";
 
 const getSpecialtyIcon = (specialty) => {
   if (!specialty) return <FaUserMd />;
@@ -28,6 +30,13 @@ const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentModalData, setPaymentModalData] = useState(null);
+
+  const [cancelData, setCancelData] = useState(null);
+
+  const [rescheduleData, setRescheduleData] = useState(null);
+  const [rescheduleForm, setRescheduleForm] = useState({ date: '', time: '' });
+  const [isRescheduleDateFocused, setIsRescheduleDateFocused] = useState(false);
+  const rescheduleDateInputRef = useRef(null);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -84,31 +93,76 @@ const MyAppointments = () => {
     fetchAppointments();
   }, [user, authLoading]);
 
-  const handleCancel = async (id) => {
+  const handleCancel = (id) => {
     const apt = appointments.find(a => a.id === id);
     if (!apt) return;
 
-    // Guard: only upcoming appointments can be cancelled
     if (apt.rawStatus === 'rejected' || apt.rawStatus === 'cancelled' || apt.rawStatus === 'completed') {
-      alert("This appointment cannot be cancelled.");
+      toast.error("This appointment cannot be cancelled.");
       return;
     }
+    setCancelData(apt);
+  };
 
-    if (window.confirm("Are you sure you want to cancel this appointment?")) {
-      try {
-        await axiosInstance.patch(`/appointments/${id}/status`, { status: 'cancelled' });
-        setAppointments(appointments.map(a =>
-          a.id === id ? { ...a, status: "Cancelled", rawStatus: "cancelled" } : a
-        ));
-      } catch (err) {
-        console.error("Failed to cancel appointment", err);
-        alert("Failed to cancel appointment");
+  const confirmCancel = async () => {
+    if (!cancelData) return;
+    try {
+      await axiosInstance.patch(`/appointments/${cancelData.id}/status`, { status: 'cancelled' });
+      setAppointments(appointments.map(a =>
+        a.id === cancelData.id ? { ...a, status: "Cancelled", rawStatus: "cancelled" } : a
+      ));
+      toast.success("Appointment cancelled successfully");
+    } catch (err) {
+      console.error("Failed to cancel appointment", err);
+      toast.error("Failed to cancel appointment");
+    } finally {
+      setCancelData(null);
+    }
+  };
+
+  const handleRescheduleDateClick = (e) => {
+    e.preventDefault();
+    if (rescheduleDateInputRef.current) {
+      rescheduleDateInputRef.current.type = "date";
+      if (rescheduleDateInputRef.current.showPicker) {
+        try {
+          rescheduleDateInputRef.current.showPicker();
+        } catch (err) {
+          console.error(err);
+        }
       }
+      setIsRescheduleDateFocused(true);
+    }
+  };
+
+  const handleRescheduleSubmit = async (e) => {
+    e.preventDefault();
+    if (!rescheduleData) return;
+    try {
+      const res = await axiosInstance.patch(`/appointments/${rescheduleData.id}/reschedule`, {
+        date: formatToDDMMYYYY(rescheduleForm.date),
+        time: rescheduleForm.time
+      });
+      if (res.data.success) {
+        toast.success("Appointment rescheduled successfully!");
+        setAppointments(appointments.map(a => 
+          a.id === rescheduleData.id ? { ...a, date: formatToDDMMYYYY(rescheduleForm.date), time: rescheduleForm.time } : a
+        ));
+        setRescheduleData(null);
+        setRescheduleForm({ date: '', time: '' });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to reschedule appointment");
     }
   };
 
   const handleReschedule = (id) => {
-    alert("Reschedule functionality would open a calendar picker here.");
+    const apt = appointments.find(a => a.id === id);
+    if (apt) {
+      setRescheduleData(apt);
+      setRescheduleForm({ date: '', time: '' });
+    }
   };
 
   const handleBookAppointment = (newAppointment) => {
@@ -177,9 +231,14 @@ const MyAppointments = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <AnimatePresence mode="wait">
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500 font-medium">Loading appointments...</div>
+            <div className="col-span-full min-h-[300px] flex items-center justify-center">
+              <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
           ) : filteredAppointments.length === 0 ? (
-            <div className="p-12 text-center">
+            <div className="col-span-full min-h-[300px] flex flex-col items-center justify-center p-12 text-center">
               <FaCalendarAlt className="mx-auto h-12 w-12 text-gray-300 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-1">No appointments found</h3>
               <p className="text-gray-500 text-sm">You don't have any {filter.toLowerCase() !== 'all' ? filter.toLowerCase() : ''} appointments.</p>
@@ -231,10 +290,6 @@ const MyAppointments = () => {
                         {apt.type === 'Video Consult' ? <FaVideo className="text-blue-500" /> : <FaMapMarkerAlt className="text-red-500" />}
                         {apt.type}
                       </div>
-                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 whitespace-nowrap">
-                        <FaHashtag className="text-purple-500" />
-                        {apt.aptId}
-                      </div>
                     </div>
 
                     {/* Action Buttons */}
@@ -278,12 +333,130 @@ const MyAppointments = () => {
         </AnimatePresence>
       </div>
 
-      <PaymentModal
-        isOpen={!!paymentModalData}
-        onClose={() => setPaymentModalData(null)}
+      <PaymentModal 
+        isOpen={!!paymentModalData} 
+        onClose={() => setPaymentModalData(null)} 
         appointment={paymentModalData}
         onPaymentSuccess={handlePaymentSuccess}
       />
+
+      {/* Cancel Modal */}
+      <AnimatePresence>
+        {cancelData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCancelData(null)}
+              className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-sm relative z-10 overflow-hidden p-6 text-center"
+            >
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl">
+                <FaTimesCircle />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Cancel Appointment?</h3>
+              <p className="text-gray-500 text-sm mb-6 font-medium">Are you sure you want to cancel your appointment with {cancelData.doctorName} on {cancelData.date}? This action cannot be undone.</p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setCancelData(null)}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Keep Appointment
+                </button>
+                <button
+                  onClick={confirmCancel}
+                  className="flex-1 py-2.5 bg-red-500 text-white font-bold text-sm rounded-xl hover:bg-red-600 transition-colors shadow-sm shadow-red-500/20"
+                >
+                  Yes, Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Reschedule Modal */}
+      <AnimatePresence>
+        {rescheduleData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setRescheduleData(null)}
+              className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md relative z-10 overflow-hidden"
+            >
+              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">Reschedule Appointment</h3>
+                <button onClick={() => setRescheduleData(null)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={handleRescheduleSubmit} className="p-6">
+                <p className="text-gray-600 text-sm mb-6">
+                  Select a new date and time for your appointment with <span className="font-bold text-gray-900">{rescheduleData.doctorName}</span>.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">New Date</label>
+                    <input 
+                      ref={rescheduleDateInputRef}
+                      type={isRescheduleDateFocused || !rescheduleForm.date ? "date" : "text"}
+                      onFocus={() => setIsRescheduleDateFocused(true)}
+                      onBlur={() => setIsRescheduleDateFocused(false)}
+                      onClick={handleRescheduleDateClick}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                      value={isRescheduleDateFocused || !rescheduleForm.date ? rescheduleForm.date : formatToDDMMYYYY(rescheduleForm.date)} 
+                      onChange={(e) => {
+                        setRescheduleForm({...rescheduleForm, date: e.target.value});
+                        setIsRescheduleDateFocused(false);
+                        if (rescheduleDateInputRef.current) rescheduleDateInputRef.current.type = "text";
+                      }}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">New Time</label>
+                    <select 
+                      required
+                      value={rescheduleForm.time} 
+                      onChange={(e) => setRescheduleForm({...rescheduleForm, time: e.target.value})}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none font-medium"
+                    >
+                      <option value="" disabled hidden>{rescheduleForm.date ? "Choose a time slot..." : "Select date first"}</option>
+                      {generateAvailableTimeSlots(rescheduleForm.date).map(slot => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex items-center justify-end gap-3">
+                  <button type="button" onClick={() => setRescheduleData(null)} className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors text-sm">Cancel</button>
+                  <button type="submit" className="px-5 py-2.5 rounded-xl font-bold text-white bg-primary hover:bg-[#0b6e66] transition-colors shadow-lg shadow-primary/30 text-sm">Confirm Reschedule</button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

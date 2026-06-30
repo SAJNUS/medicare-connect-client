@@ -8,6 +8,7 @@ const CheckoutForm = ({ appointment, clientSecret, onPaymentSuccess }) => {
   const elements = useElements();
   const [error, setError] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [useAutoFill, setUseAutoFill] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -23,28 +24,37 @@ const CheckoutForm = ({ appointment, clientSecret, onPaymentSuccess }) => {
 
     setProcessing(true);
 
-    const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
-      type: "card",
-      card,
-    });
+    let paymentMethodToUse;
 
-    if (paymentMethodError) {
-      setError(paymentMethodError.message);
-      setProcessing(false);
-      return;
-    } else {
+    if (useAutoFill) {
+      paymentMethodToUse = 'pm_card_visa';
       setError("");
-    }
+    } else {
+      const { error: paymentMethodError, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card,
+      });
 
-    // Confirm Payment
-    const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
+      if (paymentMethodError) {
+        setError(paymentMethodError.message);
+        setProcessing(false);
+        return;
+      } else {
+        setError("");
+      }
+      
+      paymentMethodToUse = {
         card: card,
         billing_details: {
           email: appointment.patientEmail,
           name: appointment.patientName,
         },
-      },
+      };
+    }
+
+    // Confirm Payment
+    const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: paymentMethodToUse,
     });
 
     if (confirmError) {
@@ -107,6 +117,17 @@ const CheckoutForm = ({ appointment, clientSecret, onPaymentSuccess }) => {
           }}
         />
       </div>
+      
+      <div className="flex justify-end mb-4">
+        <button
+          type="button"
+          onClick={() => setUseAutoFill(!useAutoFill)}
+          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors border ${useAutoFill ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+        >
+          {useAutoFill ? '✓ Card Auto-Filled' : 'Auto Fill Card'}
+        </button>
+      </div>
+
       {error && <p className="text-red-500 text-sm mt-2 mb-4">{error}</p>}
       <button
         type="submit"
@@ -121,7 +142,7 @@ const CheckoutForm = ({ appointment, clientSecret, onPaymentSuccess }) => {
             </svg>
             Processing...
           </span>
-        ) : `Pay ৳${appointment.fee}`}
+        ) : `Pay`}
       </button>
     </form>
   );
