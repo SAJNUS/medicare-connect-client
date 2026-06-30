@@ -1,69 +1,55 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaCheckCircle, FaTimesCircle, FaBan, FaUserMd, FaEnvelope } from "react-icons/fa";
 import toast from "react-hot-toast";
-
-const initialDoctors = [
-  {
-    id: 1,
-    name: "Dr. James Wilson",
-    email: "j.wilson@example.com",
-    specialty: "Cardiology",
-    license: "MED-2026-8921",
-    applyDate: "Oct 10, 2026",
-    status: "Verified",
-    avatar: "https://i.pravatar.cc/150?u=drjames"
-  },
-  {
-    id: 2,
-    name: "Dr. Sarah Jenkins",
-    email: "sarah.j@example.com",
-    specialty: "Pediatrics",
-    license: "MED-2026-9041",
-    applyDate: "Oct 15, 2026",
-    status: "Pending",
-    avatar: "https://i.pravatar.cc/150?u=drsarah"
-  },
-  {
-    id: 3,
-    name: "Dr. Michael Chen",
-    email: "m.chen@example.com",
-    specialty: "Neurology",
-    license: "MED-2026-7732",
-    applyDate: "Oct 18, 2026",
-    status: "Pending",
-    avatar: "https://i.pravatar.cc/150?u=drmichael"
-  },
-  {
-    id: 4,
-    name: "Dr. Emily Wong",
-    email: "ewong@example.com",
-    specialty: "Dermatology",
-    license: "MED-2026-6621",
-    applyDate: "Sep 22, 2026",
-    status: "Rejected",
-    avatar: "https://i.pravatar.cc/150?u=dremily"
-  },
-  {
-    id: 5,
-    name: "Dr. Robert Smith",
-    email: "robert.s@example.com",
-    specialty: "Orthopedics",
-    license: "MED-2026-5511",
-    applyDate: "Sep 10, 2026",
-    status: "Verified",
-    avatar: "https://i.pravatar.cc/150?u=drrobert"
-  }
-];
+import axiosInstance from "../../../api/axiosInstance";
 
 const ManageDoctors = () => {
-  const [doctors, setDoctors] = useState(initialDoctors);
+  const [doctors, setDoctors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [modalActionType, setModalActionType] = useState(null);
+  const [isActioning, setIsActioning] = useState(false);
+
+  // Fetch doctors from backend
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        setIsLoading(true);
+        // Fetch all pages; admin needs full visibility
+        const res = await axiosInstance.get('/doctors?limit=100');
+        if (res.data.success) {
+          const mapped = res.data.data.map(doc => ({
+            id: doc._id,
+            name: doc.name,
+            email: doc.email,
+            specialty: doc.specialization || doc.specialty || "General",
+            license: doc.licenseNumber || "N/A",
+            applyDate: doc.createdAt
+              ? new Date(doc.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : "N/A",
+            status: doc.verificationStatus === 'verified' ? 'Verified'
+                  : doc.verificationStatus === 'rejected' ? 'Rejected'
+                  : doc.verificationStatus === 'removed' ? 'Removed'
+                  : 'Pending',
+            avatar: doc.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.name)}&background=0b6e66&color=fff`,
+            rawStatus: doc.verificationStatus || 'pending'
+          }));
+          setDoctors(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch doctors:", err);
+        toast.error("Failed to load doctor list.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
 
   const filteredDoctors = doctors.filter(doc => 
     doc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -76,29 +62,40 @@ const ManageDoctors = () => {
     setIsModalOpen(true);
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     let newStatus = "";
     let toastMsg = "";
+    let apiStatus = "";
 
     if (modalActionType === "verify") {
-      newStatus = "Verified";
+      newStatus = "Verified"; apiStatus = "verified";
       toastMsg = `Successfully verified ${selectedDoctor.name}.`;
     } else if (modalActionType === "reject") {
-      newStatus = "Rejected";
+      newStatus = "Rejected"; apiStatus = "rejected";
       toastMsg = `Rejected verification for ${selectedDoctor.name}.`;
     } else if (modalActionType === "cancel") {
-      newStatus = "Pending";
-      toastMsg = `Cancelled verification for ${selectedDoctor.name}.`;
+      newStatus = "Removed"; apiStatus = "removed";
+      toastMsg = `Removed verification for ${selectedDoctor.name}.`;
+    } else if (modalActionType === "reinstate") {
+      newStatus = "Pending"; apiStatus = "pending";
+      toastMsg = `Reinstated ${selectedDoctor.name} to pending review.`;
     }
 
-    setDoctors(doctors.map(doc => 
-      doc.id === selectedDoctor.id ? { ...doc, status: newStatus } : doc
-    ));
-    
-    toast.success(toastMsg);
-    setIsModalOpen(false);
-    setSelectedDoctor(null);
-    setModalActionType(null);
+    setIsActioning(true);
+    try {
+      await axiosInstance.patch(`/doctors/${selectedDoctor.id}/verification`, { status: apiStatus });
+      setDoctors(doctors.map(doc => 
+        doc.id === selectedDoctor.id ? { ...doc, status: newStatus, rawStatus: apiStatus } : doc
+      ));
+      toast.success(toastMsg);
+    } catch (err) {
+      toast.error(err.response?.data?.message || `Failed to ${modalActionType} doctor.`);
+    } finally {
+      setIsActioning(false);
+      setIsModalOpen(false);
+      setSelectedDoctor(null);
+      setModalActionType(null);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -109,6 +106,8 @@ const ManageDoctors = () => {
         return <span className="inline-flex justify-center items-center w-24 px-2.5 py-1 rounded-md text-xs font-bold bg-orange-100 text-orange-700">Pending</span>;
       case "Rejected":
         return <span className="inline-flex justify-center items-center w-24 px-2.5 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700">Rejected</span>;
+      case "Removed":
+        return <span className="inline-flex justify-center items-center w-24 px-2.5 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-700">Removed</span>;
       default:
         return null;
     }
@@ -160,15 +159,22 @@ const ManageDoctors = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredDoctors.length === 0 && (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="6" className="p-8 text-center text-gray-500">
+                    <span className="loading loading-spinner loading-md text-primary"></span>
+                    <p className="mt-2 font-medium">Loading doctors...</p>
+                  </td>
+                </tr>
+              ) : filteredDoctors.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-gray-500">
                     <FaUserMd className="text-4xl text-gray-300 mx-auto mb-3" />
                     <p className="font-semibold text-gray-900">No doctors found</p>
                   </td>
                 </tr>
-              )}
-              {filteredDoctors.map((doc) => (
+              ) : (
+                filteredDoctors.map((doc) => (
                 <tr key={doc.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -190,48 +196,61 @@ const ManageDoctors = () => {
                     {getStatusBadge(doc.status)}
                   </td>
                   <td className="p-4 text-center">
-                    <div className="flex justify-center items-center gap-2">
+                    <div className="flex justify-center items-center gap-1.5">
                       <button 
                         onClick={() => handleActionClick(doc, "verify")} 
                         disabled={doc.status === "Verified"}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${doc.status === "Verified" ? "text-gray-300 cursor-not-allowed" : "text-green-600 hover:bg-green-50"}`} 
+                        className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${doc.status === "Verified" ? "text-gray-300 cursor-not-allowed" : "text-green-600 hover:bg-green-50"}`} 
                         title="Verify"
                       >
-                        <FaCheckCircle className="text-lg" />
+                        <FaCheckCircle />
                       </button>
                       <button 
                         onClick={() => handleActionClick(doc, "reject")} 
                         disabled={doc.status === "Rejected"}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${doc.status === "Rejected" ? "text-gray-300 cursor-not-allowed" : "text-red-500 hover:bg-red-50"}`} 
+                        className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${doc.status === "Rejected" ? "text-gray-300 cursor-not-allowed" : "text-red-500 hover:bg-red-50"}`} 
                         title="Reject"
                       >
-                        <FaTimesCircle className="text-lg" />
+                        <FaTimesCircle />
                       </button>
                       <button 
                         onClick={() => handleActionClick(doc, "cancel")} 
                         disabled={doc.status !== "Verified"}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${doc.status !== "Verified" ? "text-gray-300 cursor-not-allowed" : "text-orange-500 hover:bg-orange-50"}`} 
-                        title="Cancel Verification"
+                        className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${doc.status !== "Verified" ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:bg-gray-100"}`} 
+                        title="Remove Verification"
                       >
-                        <FaBan className="text-lg" />
+                        <FaBan />
+                      </button>
+                      <button 
+                        onClick={() => handleActionClick(doc, "reinstate")} 
+                        disabled={doc.status === "Pending" || doc.status === "Verified"}
+                        className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${doc.status === "Pending" || doc.status === "Verified" ? "text-gray-300 cursor-not-allowed" : "text-orange-500 hover:bg-orange-50"}`} 
+                        title="Reinstate to Pending"
+                      >
+                        <FaCheckCircle className="text-orange-500"/>
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
 
         {/* Mobile Cards View */}
         <div className="lg:hidden divide-y divide-gray-100">
-          {filteredDoctors.length === 0 && (
+          {isLoading ? (
+            <div className="p-8 text-center text-gray-500">
+              <span className="loading loading-spinner loading-md text-primary"></span>
+              <p className="mt-2 font-medium">Loading doctors...</p>
+            </div>
+          ) : filteredDoctors.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <FaUserMd className="text-4xl text-gray-300 mx-auto mb-3" />
               <p className="font-semibold text-gray-900">No doctors found</p>
             </div>
-          )}
-          {filteredDoctors.map((doc) => (
+          ) : (
+            filteredDoctors.map((doc) => (
             <div key={doc.id} className="p-5 space-y-4 hover:bg-gray-50/50 transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -259,31 +278,38 @@ const ManageDoctors = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <button 
                   onClick={() => handleActionClick(doc, "verify")} 
                   disabled={doc.status === "Verified"}
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex-1 ${doc.status === "Verified" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-green-50 text-green-600 hover:bg-green-100"}`}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${doc.status === "Verified" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-green-50 text-green-600 hover:bg-green-100"}`}
                 >
                   <FaCheckCircle /> Verify
                 </button>
                 <button 
                   onClick={() => handleActionClick(doc, "reject")} 
                   disabled={doc.status === "Rejected"}
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex-1 ${doc.status === "Rejected" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-red-50 text-red-600 hover:bg-red-100"}`}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${doc.status === "Rejected" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-red-50 text-red-600 hover:bg-red-100"}`}
                 >
                   <FaTimesCircle /> Reject
                 </button>
                 <button 
                   onClick={() => handleActionClick(doc, "cancel")} 
                   disabled={doc.status !== "Verified"}
-                  className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex-1 ${doc.status !== "Verified" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-orange-50 text-orange-600 hover:bg-orange-100"}`}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${doc.status !== "Verified" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
                 >
-                  <FaBan /> Cancel
+                  <FaBan /> Remove
+                </button>
+                <button 
+                  onClick={() => handleActionClick(doc, "reinstate")} 
+                  disabled={doc.status === "Pending" || doc.status === "Verified"}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${doc.status === "Pending" || doc.status === "Verified" ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-orange-50 text-orange-600 hover:bg-orange-100"}`}
+                >
+                  <FaCheckCircle /> Reinstate
                 </button>
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </motion.div>
 

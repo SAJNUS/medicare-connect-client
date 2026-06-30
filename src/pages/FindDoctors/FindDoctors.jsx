@@ -15,28 +15,29 @@ const FindDoctors = () => {
 
   const doctorsPerPage = 8;
 
-  // Handle fake loading state on filter change
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, specialtyFilter, sortBy, currentPage]);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, specialtyFilter, sortBy]);
-
   const [doctors, setDoctors] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch doctors from backend
+  // Fetch doctors from backend with pagination, search, and sorting
   useEffect(() => {
     const fetchDoctors = async () => {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.get('/doctors');
+        let sortParam = "";
+        if (sortBy === "fee-low-high") sortParam = "fee";
+        else if (sortBy === "exp-high-low") sortParam = "experience";
+        else if (sortBy === "rating-high-low") sortParam = "rating";
+
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: doctorsPerPage
+        });
+
+        if (searchQuery) params.append("search", searchQuery);
+        if (specialtyFilter !== "All") params.append("specialization", specialtyFilter);
+        if (sortParam) params.append("sortBy", sortParam);
+
+        const response = await axiosInstance.get(`/doctors?${params.toString()}`);
         if (response.data.success) {
           const mappedDocs = response.data.data.map(doc => ({
             id: doc._id,
@@ -44,13 +45,14 @@ const FindDoctors = () => {
             specialty: doc.specialization || doc.specialty || "General",
             experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
             experienceYears: parseInt(doc.experience) || 5,
-            image: doc.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400&q=80",
+            image: doc.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.name)}&background=0b6e66&color=fff`,
             rating: doc.rating || 4.5,
             reviews: doc.reviews || 0,
             fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
             feeAmount: parseInt(doc.consultationFee) || 500,
           }));
           setDoctors(mappedDocs);
+          setTotalPages(response.data.totalPages || 1);
         }
       } catch (error) {
         console.error("Error fetching doctors:", error);
@@ -58,55 +60,19 @@ const FindDoctors = () => {
         setIsLoading(false);
       }
     };
-    fetchDoctors();
-  }, []);
+    
+    // Debounce the fetch slightly to prevent spamming on rapid typing
+    const timer = setTimeout(() => {
+      fetchDoctors();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, specialtyFilter, sortBy, currentPage]);
 
-  const dynamicSpecialties = useMemo(() => {
-    const specs = new Set(doctors.map(d => d.specialty));
-    return ["All", ...Array.from(specs)];
-  }, [doctors]);
+  const dynamicSpecialties = [
+    "All", "Cardiology", "Neurology", "Pediatrics", "Dermatology", "Orthopedics", "General", "Psychiatry"
+  ];
 
-  const filteredAndSortedDoctors = useMemo(() => {
-    let result = [...doctors];
-
-    // 1. Search filter
-    if (searchQuery) {
-      result = result.filter((doc) =>
-        doc.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // 2. Specialty filter
-    if (specialtyFilter !== "All") {
-      result = result.filter((doc) => doc.specialty === specialtyFilter);
-    }
-
-    // 3. Sorting
-    switch (sortBy) {
-      case "fee-low-high":
-        result.sort((a, b) => a.feeAmount - b.feeAmount);
-        break;
-      case "fee-high-low":
-        result.sort((a, b) => b.feeAmount - a.feeAmount);
-        break;
-      case "rating-high-low":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      case "exp-high-low":
-        result.sort((a, b) => b.experienceYears - a.experienceYears);
-        break;
-      default:
-        break;
-    }
-
-    return result;
-  }, [doctors, searchQuery, specialtyFilter, sortBy]);
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredAndSortedDoctors.length / doctorsPerPage);
-  const indexOfLastDoctor = currentPage * doctorsPerPage;
-  const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage;
-  const currentDoctors = filteredAndSortedDoctors.slice(indexOfFirstDoctor, indexOfLastDoctor);
+  const currentDoctors = doctors;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">

@@ -1,44 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaPlus, FaTimes, FaPencilAlt, FaTrash, FaCheckCircle, FaBan, FaToggleOn, FaToggleOff } from "react-icons/fa";
-
-const initialSlots = [
-  {
-    id: 1,
-    date: "2026-10-24",
-    startTime: "09:00",
-    endTime: "09:30",
-    type: "In-Person Consult",
-    status: "Available" // Available, Booked, Unavailable
-  },
-  {
-    id: 2,
-    date: "2026-10-24",
-    startTime: "10:00",
-    endTime: "10:30",
-    type: "Video Consult",
-    status: "Booked"
-  },
-  {
-    id: 3,
-    date: "2026-10-25",
-    startTime: "14:00",
-    endTime: "15:00",
-    type: "In-Person Consult",
-    status: "Unavailable"
-  },
-  {
-    id: 4,
-    date: "2026-10-25",
-    startTime: "15:30",
-    endTime: "16:00",
-    type: "Video Consult",
-    status: "Available"
-  }
-];
+import { toast } from "react-hot-toast";
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 
 const ManageSchedule = () => {
-  const [slots, setSlots] = useState(initialSlots);
+  const { user } = useAuth();
+  const [slots, setSlots] = useState([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(true);
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -46,6 +16,36 @@ const ManageSchedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ date: "", startTime: "", endTime: "", type: "Video Consult" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch slots from backend
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (!user?.email) return;
+      try {
+        setIsLoadingSlots(true);
+        const res = await axiosInstance.get(`/schedules?doctorEmail=${user.email}`);
+        if (res.data.success) {
+          const mapped = res.data.data.map(slot => ({
+            id: slot._id,
+            date: slot.date,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            type: slot.type,
+            status: slot.status === 'available' ? 'Available'
+                  : slot.status === 'booked' ? 'Booked' : 'Unavailable'
+          }));
+          setSlots(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch schedule slots:", err);
+        toast.error("Failed to load your schedule.");
+      } finally {
+        setIsLoadingSlots(false);
+      }
+    };
+    fetchSlots();
+  }, [user]);
 
   // Filtering
   const filteredSlots = slots.filter(slot => {
@@ -53,39 +53,47 @@ const ManageSchedule = () => {
     const matchesStatus = statusFilter === "All" || slot.status === statusFilter;
     return matchesDate && matchesStatus;
   }).sort((a, b) => {
-    // Sort by date then time
     if (a.date !== b.date) return a.date.localeCompare(b.date);
     return a.startTime.localeCompare(b.startTime);
   });
 
   // CRUD Operations
-  const handleToggleStatus = (id) => {
-    setSlots(slots.map(slot => {
-      if (slot.id === id) {
-        if (slot.status === "Booked") {
-          alert("Cannot toggle availability for a booked slot. Cancel the appointment first.");
-          return slot;
-        }
-        return { ...slot, status: slot.status === "Available" ? "Unavailable" : "Available" };
-      }
-      return slot;
-    }));
+  const handleToggleStatus = async (id) => {
+    const slot = slots.find(s => s.id === id);
+    if (!slot) return;
+    if (slot.status === "Booked") {
+      toast.error("Cannot toggle a booked slot. Cancel the appointment first.");
+      return;
+    }
+    const newStatus = slot.status === "Available" ? "unavailable" : "available";
+    try {
+      await axiosInstance.patch(`/schedules/${id}`, { status: newStatus });
+      setSlots(slots.map(s => s.id === id ? { ...s, status: newStatus === 'available' ? 'Available' : 'Unavailable' } : s));
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update slot status.");
+    }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const slot = slots.find(s => s.id === id);
-    if (slot.status === "Booked") {
-      alert("Cannot delete a booked slot. Please cancel the appointment first.");
+    if (slot?.status === "Booked") {
+      toast.error("Cannot delete a booked slot. Cancel the appointment first.");
       return;
     }
     if (window.confirm("Are you sure you want to delete this slot?")) {
-      setSlots(slots.filter(s => s.id !== id));
+      try {
+        await axiosInstance.delete(`/schedules/${id}`);
+        setSlots(slots.filter(s => s.id !== id));
+        toast.success("Slot deleted successfully.");
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to delete slot.");
+      }
     }
   };
 
   const handleEdit = (slot) => {
     if (slot.status === "Booked") {
-      alert("Cannot edit a booked slot. Please cancel the appointment first.");
+      toast.error("Cannot edit a booked slot. Cancel the appointment first.");
       return;
     }
     setFormData({ date: slot.date, startTime: slot.startTime, endTime: slot.endTime, type: slot.type });
@@ -99,21 +107,34 @@ const ManageSchedule = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      // Update existing
-      setSlots(slots.map(s => s.id === editingId ? { ...s, ...formData } : s));
-    } else {
-      // Add new
-      const newSlot = {
-        id: Date.now(),
-        ...formData,
-        status: "Available"
-      };
-      setSlots([...slots, newSlot]);
+    if (!formData.date || !formData.startTime || !formData.endTime) {
+      toast.error("Date, start time, and end time are required.");
+      return;
     }
-    setIsModalOpen(false);
+    setIsSubmitting(true);
+    try {
+      if (editingId) {
+        await axiosInstance.patch(`/schedules/${editingId}`, formData);
+        setSlots(slots.map(s => s.id === editingId ? { ...s, ...formData } : s));
+        toast.success("Slot updated successfully.");
+      } else {
+        const res = await axiosInstance.post('/schedules', { ...formData, doctorEmail: user.email });
+        const newSlot = {
+          id: res.data.data.insertedId,
+          ...formData,
+          status: "Available"
+        };
+        setSlots([...slots, newSlot]);
+        toast.success("Slot added successfully.");
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save slot.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status) => {
