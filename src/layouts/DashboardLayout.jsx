@@ -41,28 +41,27 @@ const DashboardLayout = () => {
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-gray-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={closeSidebar}
         />
       )}
 
       {/* Sidebar - Fixed for Desktop, absolute/sliding for Mobile */}
-      <div 
-        className={`fixed inset-y-0 left-0 z-50 transform ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out`}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out`}
       >
         <Sidebar closeSidebar={closeSidebar} />
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative w-full">
-        
+
         {/* Dashboard Header */}
         <header className="h-20 bg-white border-b border-gray-100 shadow-sm flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10 flex-shrink-0">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={toggleSidebar}
               className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-primary hover:bg-teal-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
@@ -78,7 +77,15 @@ const DashboardLayout = () => {
               <div className="relative">
                 <button 
                   onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
-                  className={`p-2 rounded-lg transition-colors ${previewRole ? 'bg-yellow-100 text-yellow-700' : 'text-gray-500 hover:text-primary hover:bg-teal-50'}`}
+                  className={`p-2 rounded-lg transition-colors ${
+                    !previewRole 
+                      ? 'bg-[#6B7280]/10 text-[#6B7280]' 
+                      : previewRole === 'patient'
+                        ? 'bg-[#10B981]/10 text-[#10B981]'
+                        : previewRole === 'doctor'
+                          ? 'bg-[#3B82F6]/10 text-[#3B82F6]'
+                          : 'bg-[#EF4444]/10 text-[#EF4444]'
+                  }`}
                   title="Developer Tools"
                 >
                   <FaCode className="w-5 h-5" />
@@ -104,13 +111,13 @@ const DashboardLayout = () => {
               <FaBell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
             </button>
-            
+
             {/* Mobile Header Profile Snippet */}
             <div className="flex items-center gap-3 lg:hidden pl-4 border-l border-gray-200">
               <div className="w-9 h-9 rounded-full bg-teal-100 overflow-hidden border border-gray-200">
-                <img 
-                  src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} 
-                  alt="Profile" 
+                <img
+                  src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"}
+                  alt="Profile"
                   className="w-full h-full object-cover"
                 />
               </div>
