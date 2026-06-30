@@ -1,5 +1,6 @@
 import { FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const specializations = [
   { id: 1, title: "Cardiology", icon: <FaHeartbeat className="text-3xl" /> },
@@ -13,6 +14,7 @@ const specializations = [
 ];
 
 const MedicalSpecializations = () => {
+  const navigate = useNavigate();
   return (
     <section className="py-10 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -27,6 +29,7 @@ const MedicalSpecializations = () => {
           {specializations.map((spec, index) => (
             <motion.div
               key={spec.id}
+              onClick={() => navigate(`/doctors?specialization=${encodeURIComponent(spec.title)}&sortBy=experience_desc`)}
               className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center hover:shadow-md hover:border-primary/20 transition-all duration-300 cursor-pointer group"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}

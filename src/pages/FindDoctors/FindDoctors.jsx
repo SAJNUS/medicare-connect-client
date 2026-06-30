@@ -1,15 +1,20 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaSearch, FaFilter, FaSortAmountDown } from "react-icons/fa";
+import { useSearchParams } from "react-router-dom";
 import DoctorCard from "../../components/shared/DoctorCard";
 import axiosInstance from "../../api/axiosInstance";
 
 // Dynamic specialties will be populated from doctors data
 
 const FindDoctors = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const [specialtyFilter, setSpecialtyFilter] = useState("All");
-  const [sortBy, setSortBy] = useState("default");
+  const [specialtyFilter, setSpecialtyFilter] = useState(searchParams.get("specialization") || "All");
+  
+  const initialSortBy = searchParams.get("sortBy") === "experience_desc" ? "exp-high-low" : "default";
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -168,7 +173,7 @@ const FindDoctors = () => {
                 <option value="fee-low-high">Fee: Low to High</option>
                 <option value="fee-high-low">Fee: High to Low</option>
                 <option value="rating-high-low">Rating: Highest First</option>
-                <option value="exp-high-low">Experience: Highest First</option>
+                <option value="exp-high-low">Experience: High to Low</option>
               </select>
             </div>
           </div>
