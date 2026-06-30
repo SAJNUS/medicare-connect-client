@@ -5,60 +5,72 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import axiosInstance from "../../api/axiosInstance";
 
 const AdminDashboard = () => {
-  const [totalAppointments, setTotalAppointments] = useState(0);
+  const [dashboardData, setDashboardData] = useState({
+    totalPatients: 0,
+    totalDoctors: 0,
+    totalAppointments: 0,
+    averageRating: 0,
+    appointmentTrendData: [],
+    specialtyRevenueData: [],
+    doctorPerformanceData: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchApts = async () => {
+    const fetchStats = async () => {
       try {
-        const response = await axiosInstance.get('/appointments');
+        const response = await axiosInstance.get('/admin/stats');
         if (response.data.success) {
-          setTotalAppointments(response.data.data.length);
+          setDashboardData(response.data.data);
         }
       } catch (err) {
-        console.error("Failed to fetch appointments for admin:", err);
+        console.error("Failed to fetch admin stats:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchApts();
+    fetchStats();
   }, []);
 
-  const formattedTotal = totalAppointments >= 1000 
-    ? (totalAppointments / 1000).toFixed(1) + "K" 
-    : totalAppointments.toString();
+  const formatNumber = (num) => {
+    if (!num) return "0";
+    return num >= 1000 ? (num / 1000).toFixed(1) + "K" : num.toString();
+  };
 
-  // Mock Data
   const stats = [
-    { title: "Total Patients", value: "5.4K", fullValue: "5,432", icon: <FaUsers className="text-blue-600" />, bg: "bg-blue-100/50" },
-    { title: "Total Doctors", value: "342", fullValue: "342", icon: <FaUserMd className="text-teal-600" />, bg: "bg-teal-100/50" },
-    { title: "Total Appointments", value: formattedTotal, fullValue: totalAppointments.toString(), icon: <FaCalendarCheck className="text-purple-600" />, bg: "bg-purple-100/50" },
-    { title: "Average Rating", value: "4.8", fullValue: "4.8 / 5.0", icon: <FaStar className="text-yellow-500" />, bg: "bg-yellow-100/50" },
+    { title: "Total Patients", value: formatNumber(dashboardData.totalPatients), fullValue: dashboardData.totalPatients.toString(), icon: <FaUsers className="text-blue-600" />, bg: "bg-blue-100/50" },
+    { title: "Total Doctors", value: formatNumber(dashboardData.totalDoctors), fullValue: dashboardData.totalDoctors.toString(), icon: <FaUserMd className="text-teal-600" />, bg: "bg-teal-100/50" },
+    { title: "Total Appointments", value: formatNumber(dashboardData.totalAppointments), fullValue: dashboardData.totalAppointments.toString(), icon: <FaCalendarCheck className="text-purple-600" />, bg: "bg-purple-100/50" },
+    { title: "Average Rating", value: dashboardData.averageRating.toFixed(1), fullValue: `${dashboardData.averageRating.toFixed(1)} / 5.0`, icon: <FaStar className="text-yellow-500" />, bg: "bg-yellow-100/50" },
   ];
 
-  const appointmentTrendData = [
-    { name: 'Jan', appointments: 1200 },
-    { name: 'Feb', appointments: 1800 },
-    { name: 'Mar', appointments: 1500 },
-    { name: 'Apr', appointments: 2200 },
-    { name: 'May', appointments: 2600 },
-    { name: 'Jun', appointments: 3100 },
-  ];
-
-  const doctorPerformanceData = [
-    { name: 'Dr. Smith', rating: 4.9 },
-    { name: 'Dr. Johnson', rating: 4.8 },
-    { name: 'Dr. Davis', rating: 4.6 },
-    { name: 'Dr. Wilson', rating: 4.5 },
-    { name: 'Dr. Taylor', rating: 4.3 },
-    { name: 'Dr. Brown', rating: 4.2 },
-    { name: 'Dr. Miller', rating: 4.1 },
-  ];
-
-  const specialtyRevenueData = [
-    { name: 'Cardiology', value: 45000 },
-    { name: 'Neurology', value: 32000 },
-    { name: 'Pediatrics', value: 28000 },
-    { name: 'Orthopedics', value: 21000 },
-    { name: 'Dermatology', value: 15000 },
-  ];
+  const exportCSV = () => {
+    const csvRows = [];
+    csvRows.push(['Metric', 'Value']);
+    csvRows.push(['Total Patients', dashboardData.totalPatients]);
+    csvRows.push(['Total Doctors', dashboardData.totalDoctors]);
+    csvRows.push(['Total Appointments', dashboardData.totalAppointments]);
+    csvRows.push(['Average Rating', dashboardData.averageRating]);
+    csvRows.push([]);
+    csvRows.push(['Specialty', 'Revenue']);
+    dashboardData.specialtyRevenueData.forEach(item => {
+      csvRows.push([item.name, item.value]);
+    });
+    csvRows.push([]);
+    csvRows.push(['Doctor', 'Rating']);
+    dashboardData.doctorPerformanceData.forEach(item => {
+      csvRows.push([item.name, item.rating]);
+    });
+    
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "admin_dashboard_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   
   const COLORS = ['#0d9488', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899'];
 
@@ -79,7 +91,7 @@ const AdminDashboard = () => {
             Monitor platform health, engagement, and doctor performance.
           </p>
         </div>
-        <button className="btn btn-outline border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl px-6 shadow-sm flex items-center gap-2">
+        <button onClick={exportCSV} className="btn btn-outline border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl px-6 shadow-sm flex items-center gap-2">
           <FaDownload /> Export Report
         </button>
       </motion.div>
@@ -124,7 +136,7 @@ const AdminDashboard = () => {
           </div>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={appointmentTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={dashboardData.appointmentTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorAppointments" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3}/>
@@ -155,7 +167,7 @@ const AdminDashboard = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={specialtyRevenueData}
+                  data={dashboardData.specialtyRevenueData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -163,12 +175,12 @@ const AdminDashboard = () => {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {specialtyRevenueData.map((entry, index) => (
+                  {dashboardData.specialtyRevenueData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <RechartsTooltip 
-                  formatter={(value) => `$${value.toLocaleString()}`}
+                  formatter={(value) => `BDT ${value}`}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                 />
                 <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#4b5563' }} />
@@ -192,17 +204,21 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-poppins font-bold text-gray-900">Top 7 Doctors by Performance</h3>
           </div>
-          <div className="h-80 w-full">
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={doctorPerformanceData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+              <BarChart data={dashboardData.doctorPerformanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 13}} dy={10} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 11}} dy={10} />
                 <YAxis domain={[0, 5]} axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} />
                 <RechartsTooltip 
                   cursor={{fill: '#f3f4f6'}}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                 />
-                <Bar dataKey="rating" fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={60} />
+                <Bar dataKey="rating" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                  {dashboardData.doctorPerformanceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.rating > 4.5 ? '#3b82f6' : '#94a3b8'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
