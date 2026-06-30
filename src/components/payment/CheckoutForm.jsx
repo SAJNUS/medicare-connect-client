@@ -68,10 +68,10 @@ const CheckoutForm = ({ appointment, clientSecret, onPaymentSuccess }) => {
           date: new Date().toISOString()
         };
 
-        await axiosInstance.post("http://localhost:5001/payments", paymentPayload);
+        await axiosInstance.post("/payments", paymentPayload);
 
         // Update appointment status
-        await axiosInstance.patch(`http://localhost:5001/appointments/${appointment.id || appointment._id}/payment`, {
+        await axiosInstance.patch(`/appointments/${appointment.id || appointment._id}/payment`, {
           paymentStatus: "paid",
           transactionId: paymentIntent.id
         });

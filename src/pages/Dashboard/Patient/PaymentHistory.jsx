@@ -18,7 +18,7 @@ const PaymentHistory = () => {
       try {
         setLoading(true);
         // Force local URL to hit the updated server
-        const response = await axiosInstance.get(`http://localhost:5001/payments?patientEmail=${user.email}`);
+        const response = await axiosInstance.get(`/payments?patientEmail=${user.email}`);
         if (response.data.success) {
           
           const mappedTxns = response.data.data.map(txn => {
@@ -48,7 +48,9 @@ const PaymentHistory = () => {
   }, [user]);
 
   const handleDownload = (txn) => {
-    window.open(`http://localhost:5001/payments/${txn.id}/receipt`, '_blank');
+    // Ensure the VITE_API_URL handles trailing slashes correctly, or fallback for dev
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    window.open(`${baseUrl}/payments/${txn.id}/receipt`, '_blank');
   };
 
   const filteredTransactions = transactions.filter(txn => {
