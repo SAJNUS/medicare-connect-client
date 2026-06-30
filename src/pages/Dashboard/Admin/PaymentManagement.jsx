@@ -1,75 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaCheckCircle, FaTimesCircle, FaUndo, FaCcVisa, FaCcMastercard, FaCreditCard, FaFileInvoiceDollar } from "react-icons/fa";
 import toast from "react-hot-toast";
-
-const initialPayments = [
-  {
-    id: "TXN-2026-9041",
-    patientName: "Alice Johnson",
-    amount: 150.00,
-    method: "Visa ending in 4242",
-    cardType: "visa",
-    date: "Oct 24, 2026",
-    status: "Paid",
-    avatar: "https://i.pravatar.cc/150?u=alice"
-  },
-  {
-    id: "TXN-2026-8832",
-    patientName: "Robert Smith",
-    amount: 200.00,
-    method: "Mastercard ending in 8812",
-    cardType: "mastercard",
-    date: "Oct 15, 2026",
-    status: "Paid",
-    avatar: "https://i.pravatar.cc/150?u=robert"
-  },
-  {
-    id: "TXN-2026-7619",
-    patientName: "Emily Wong",
-    amount: 120.00,
-    method: "Stripe",
-    cardType: "other",
-    date: "Oct 10, 2026",
-    status: "Refunded",
-    avatar: "https://i.pravatar.cc/150?u=emily"
-  },
-  {
-    id: "TXN-2026-7001",
-    patientName: "John Doe",
-    amount: 180.00,
-    method: "Visa ending in 4242",
-    cardType: "visa",
-    date: "Sep 28, 2026",
-    status: "Failed",
-    avatar: "https://i.pravatar.cc/150?u=john"
-  },
-  {
-    id: "TXN-2026-6544",
-    patientName: "Sarah Connor",
-    amount: 150.00,
-    method: "Visa ending in 4242",
-    cardType: "visa",
-    date: "Sep 15, 2026",
-    status: "Paid",
-    avatar: "https://i.pravatar.cc/150?u=sarahc"
-  }
-];
+import axiosInstance from "../../../api/axiosInstance";
 
 const PaymentManagement = () => {
-  const [payments, setPayments] = useState(initialPayments);
+  const [payments, setPayments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [isActioning, setIsActioning] = useState(false);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await axiosInstance.get('/admin/payments');
+        if (res.data.success) {
+          setPayments(res.data.data);
+        } else {
+          setError(res.data.message || "Failed to fetch payments.");
+        }
+      } catch (err) {
+        console.error("Failed to fetch payments:", err.response?.data || err.message || err);
+        setError(err.response?.data?.message || "Error loading payments.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPayments();
+  }, []);
 
   const filteredPayments = payments.filter(payment => {
     const matchesSearch = 
-      payment.patientName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      payment.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "All" || payment.status === statusFilter;
+      (payment.patientName || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (payment.id || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "All" || (payment.status || "").toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -78,27 +50,49 @@ const PaymentManagement = () => {
     setIsModalOpen(true);
   };
 
-  const confirmRefund = () => {
-    setPayments(payments.map(payment => 
-      payment.id === selectedPayment.id ? { ...payment, status: "Refunded" } : payment
-    ));
-    
-    toast.success(`Successfully issued refund of $${selectedPayment.amount.toFixed(2)} to ${selectedPayment.patientName}.`);
-    setIsModalOpen(false);
-    setSelectedPayment(null);
+  const confirmRefund = async () => {
+    setIsActioning(true);
+    try {
+      // Call backend to update status
+      const res = await axiosInstance.patch(`/payments/${selectedPayment._id}/status`, { status: "refunded" });
+      if (res.data.success) {
+        setPayments(payments.map(payment => 
+          payment._id === selectedPayment._id ? { ...payment, status: "refunded" } : payment
+        ));
+        toast.success(`Successfully issued refund of ${selectedPayment.amount} BDT to ${selectedPayment.patientName}.`);
+      }
+    } catch (err) {
+      console.error("Refund error:", err);
+      toast.error(err.response?.data?.message || "Failed to process refund.");
+    } finally {
+      setIsActioning(false);
+      setIsModalOpen(false);
+      setSelectedPayment(null);
+    }
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
-      case "Paid":
+    const lower = (status || "").toLowerCase();
+    switch(lower) {
+      case "paid":
         return <span className="inline-flex justify-center items-center w-24 gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-green-100 text-green-700"><FaCheckCircle /> Paid</span>;
-      case "Refunded":
+      case "refunded":
         return <span className="inline-flex justify-center items-center w-24 gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-700"><FaUndo /> Refunded</span>;
-      case "Failed":
+      case "failed":
         return <span className="inline-flex justify-center items-center w-24 gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-red-100 text-red-700"><FaTimesCircle /> Failed</span>;
       default:
-        return null;
+        return <span className="inline-flex justify-center items-center w-24 gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-orange-100 text-orange-700">Pending</span>;
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   const getCardIcon = (type) => {
@@ -164,6 +158,7 @@ const PaymentManagement = () => {
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="p-4 font-bold text-gray-600 text-sm">Patient Name</th>
+                <th className="p-4 font-bold text-gray-600 text-sm">Doctor Name</th>
                 <th className="p-4 font-bold text-gray-600 text-sm">Amount & Method</th>
                 <th className="p-4 font-bold text-gray-600 text-sm text-center">Transaction ID</th>
                 <th className="p-4 font-bold text-gray-600 text-sm text-center">Date</th>
@@ -172,17 +167,31 @@ const PaymentManagement = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredPayments.length === 0 && (
+              {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="p-12 text-center text-gray-500">
+                  <td colSpan="7" className="p-12 text-center text-gray-500">
+                    <span className="loading loading-spinner loading-md text-primary"></span>
+                    <p className="mt-2 font-medium">Loading payments...</p>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="7" className="p-12 text-center text-red-500">
+                    <FaTimesCircle className="text-5xl text-red-300 mx-auto mb-4" />
+                    <p className="font-semibold text-red-700 text-lg">Failed to load payments</p>
+                    <p className="text-sm mt-1">{error}</p>
+                  </td>
+                </tr>
+              ) : filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="p-12 text-center text-gray-500">
                     <FaFileInvoiceDollar className="text-5xl text-gray-300 mx-auto mb-4" />
                     <p className="font-semibold text-gray-900 text-lg">No transactions found</p>
                     <p className="text-sm mt-1">Try adjusting your search or filters.</p>
                   </td>
                 </tr>
-              )}
-              {filteredPayments.map((payment) => (
-                <tr key={payment.id} className="hover:bg-gray-50/50 transition-colors">
+              ) : filteredPayments.map((payment) => (
+                  <tr key={payment.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <img src={payment.avatar} alt={payment.patientName} className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
@@ -192,7 +201,10 @@ const PaymentManagement = () => {
                     </div>
                   </td>
                   <td className="p-4">
-                    <div className="font-bold text-gray-900 text-sm mb-1">${payment.amount.toFixed(2)}</div>
+                    <p className="font-bold text-gray-900 text-sm">{payment.doctorName}</p>
+                  </td>
+                  <td className="p-4">
+                    <div className="font-bold text-gray-900 text-sm mb-1">{payment.amount.toFixed(2)} BDT</div>
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
                       {getCardIcon(payment.cardType)}
                       {payment.method}
@@ -202,7 +214,7 @@ const PaymentManagement = () => {
                     <p className="font-bold text-gray-900 text-sm">{payment.id}</p>
                   </td>
                   <td className="p-4 text-center">
-                    <p className="font-medium text-gray-600 text-sm">{payment.date}</p>
+                    <p className="font-medium text-gray-600 text-sm">{formatDate(payment.date)}</p>
                   </td>
                   <td className="p-4 text-center">
                     {getStatusBadge(payment.status)}
@@ -229,15 +241,25 @@ const PaymentManagement = () => {
 
         {/* Mobile Cards View */}
         <div className="lg:hidden divide-y divide-gray-100">
-          {filteredPayments.length === 0 && (
+          {isLoading ? (
+            <div className="p-12 text-center text-gray-500">
+              <span className="loading loading-spinner loading-md text-primary"></span>
+              <p className="mt-2 font-medium">Loading payments...</p>
+            </div>
+          ) : error ? (
+            <div className="p-12 text-center text-red-500">
+              <FaTimesCircle className="text-5xl text-red-300 mx-auto mb-4" />
+              <p className="font-semibold text-red-700 text-lg">Failed to load payments</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          ) : filteredPayments.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
               <FaFileInvoiceDollar className="text-5xl text-gray-300 mx-auto mb-4" />
               <p className="font-semibold text-gray-900 text-lg">No transactions found</p>
               <p className="text-sm mt-1">Try adjusting your search or filters.</p>
             </div>
-          )}
-          {filteredPayments.map((payment) => (
-            <div key={payment.id} className="p-5 space-y-4 hover:bg-gray-50/50 transition-colors">
+          ) : filteredPayments.map((payment) => (
+              <div key={payment.id} className="p-5 space-y-4 hover:bg-gray-50/50 transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <img src={payment.avatar} alt={payment.patientName} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" />
@@ -251,8 +273,12 @@ const PaymentManagement = () => {
 
               <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
                 <div className="col-span-2 flex items-center justify-between border-b border-gray-200/50 pb-2 mb-1">
+                  <span className="text-gray-500 font-semibold">Doctor</span>
+                  <span className="font-bold text-gray-900 text-sm">{payment.doctorName}</span>
+                </div>
+                <div className="col-span-2 flex items-center justify-between border-b border-gray-200/50 pb-2 mb-1">
                   <span className="text-gray-500 font-semibold">Amount</span>
-                  <span className="font-bold text-gray-900 text-sm">${payment.amount.toFixed(2)}</span>
+                  <span className="font-bold text-gray-900 text-sm">{payment.amount.toFixed(2)} BDT</span>
                 </div>
                 <div>
                   <span className="block text-gray-500 mb-0.5 font-semibold">Method</span>
@@ -261,9 +287,9 @@ const PaymentManagement = () => {
                     {payment.method}
                   </span>
                 </div>
-                <div className="text-right">
+                <div>
                   <span className="block text-gray-500 mb-0.5 font-semibold">Date</span>
-                  <span className="font-bold text-gray-900">{payment.date}</span>
+                  <span className="font-bold text-gray-900">{formatDate(payment.date)}</span>
                 </div>
               </div>
 
