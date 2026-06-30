@@ -24,7 +24,7 @@ const FeaturedDoctors = () => {
             name: doc.name,
             specialty: doc.specialization || doc.specialty || "General",
             experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
-            image: doc.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400&q=80",
+            image: doc.image || doc.avatar || doc.photoUrl || "",
             rating: doc.rating || 4.5,
             reviews: doc.reviews || 0,
             fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",

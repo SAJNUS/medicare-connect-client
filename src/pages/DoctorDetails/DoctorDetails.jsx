@@ -30,13 +30,11 @@ const DoctorDetails = () => {
             fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
             rating: doc.rating || 4.5,
             reviews: doc.reviews || 0,
-            image: doc.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=400&q=80",
+            image: doc.image || doc.avatar || doc.photoUrl || "",
             about: doc.about || "Experienced and dedicated doctor committed to providing excellent patient care.",
-            availability: doc.availability || [
-              { day: "Monday", slots: ["10:00 AM", "11:30 AM", "04:00 PM"] },
-              { day: "Wednesday", slots: ["09:00 AM", "12:00 PM", "05:00 PM"] },
-              { day: "Friday", slots: ["10:00 AM", "03:00 PM", "06:00 PM"] }
-            ]
+            availability: doc.availability || [],
+            qualifications: doc.qualifications || [],
+            reviewsList: doc.reviewsList || []
           });
           
           // Auto select first day if available
@@ -88,7 +86,7 @@ const DoctorDetails = () => {
         doctorEmail: doctor.email,
         doctorName: doctor.name || "Unknown Doctor",
         specialty: doctor.specialty || "General",
-        doctorImage: doctor.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+        doctorImage: doctor.image || "",
         date: selectedDay,
         time: selectedTime,
         type: "In-Person Consult",

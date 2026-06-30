@@ -36,6 +36,7 @@ const FindDoctors = () => {
         if (searchQuery) params.append("search", searchQuery);
         if (specialtyFilter !== "All") params.append("specialization", specialtyFilter);
         if (sortParam) params.append("sortBy", sortParam);
+        params.append("status", "verified");
 
         const response = await axiosInstance.get(`/doctors?${params.toString()}`);
         if (response.data.success) {
@@ -45,7 +46,7 @@ const FindDoctors = () => {
             specialty: doc.specialization || doc.specialty || "General",
             experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
             experienceYears: parseInt(doc.experience) || 5,
-            image: doc.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.name)}&background=0b6e66&color=fff`,
+            image: doc.image || doc.avatar || doc.photoUrl || "",
             rating: doc.rating || 4.5,
             reviews: doc.reviews || 0,
             fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
