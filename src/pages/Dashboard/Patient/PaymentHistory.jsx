@@ -3,7 +3,6 @@ import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaFileInvoiceDollar, FaCheckCircle, FaClock, FaTimesCircle, FaDownload, FaCreditCard, FaCcVisa, FaCcMastercard, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
-import jsPDF from "jspdf";
 
 const PaymentHistory = () => {
   const [filter, setFilter] = useState("All");
@@ -22,20 +21,9 @@ const PaymentHistory = () => {
         const response = await axiosInstance.get(`http://localhost:5001/payments?patientEmail=${user.email}`);
         if (response.data.success) {
           
-          const getFriendlyId = (idStr) => {
-            let hash = 0;
-            for (let i = 0; i < idStr.length; i++) {
-              hash = (hash << 5) - hash + idStr.charCodeAt(i);
-              hash |= 0;
-            }
-            const num = Math.abs(hash) % 10000;
-            return `TXN-2026-${num.toString().padStart(4, '0')}`;
-          };
-
           const mappedTxns = response.data.data.map(txn => {
-            const friendlyId = getFriendlyId(txn._id || txn.transactionId);
             return {
-              id: friendlyId,
+              id: txn.friendlyTxnId || txn.transactionId,
               realId: txn.transactionId || txn._id,
               doctorName: txn.doctorName || "Doctor",
             date: new Date(txn.paymentDate || txn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -60,58 +48,7 @@ const PaymentHistory = () => {
   }, [user]);
 
   const handleDownload = (txn) => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(11, 110, 102);
-    doc.text("MediCare Connect", 20, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Official Payment Receipt", 20, 28);
-    
-    // Line separator
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 32, 190, 32);
-    
-    // IDs
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Transaction ID: ${txn.id}`, 20, 45);
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text(`Stripe ID: ${txn.realId}`, 20, 50);
-    
-    // Details
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    
-    const details = [
-      `Patient Email: ${user.email}`,
-      `Doctor: ${txn.doctorName}`,
-      `Consultation Type: ${txn.type}`,
-      `Date & Time: ${txn.date} at ${txn.time}`,
-      `Amount Paid: ৳${txn.amount.toFixed(2)}`,
-      `Payment Status: ${txn.status}`
-    ];
-    
-    let y = 65;
-    details.forEach(detail => {
-      doc.text(detail, 20, y);
-      y += 10;
-    });
-    
-    // Footer line
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, y + 5, 190, y + 5);
-    
-    // Footer text
-    doc.setFontSize(10);
-    doc.setTextColor(150, 150, 150);
-    doc.text("Paid via Stripe (Test Mode)", 20, y + 15);
-    
-    doc.save(`Receipt-${txn.id}.pdf`);
+    window.open(`http://localhost:5001/payments/${txn.id}/receipt`, '_blank');
   };
 
   const filteredTransactions = transactions.filter(txn => {

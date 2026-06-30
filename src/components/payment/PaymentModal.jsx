@@ -16,7 +16,10 @@ const PaymentModal = ({ isOpen, onClose, appointment, onPaymentSuccess }) => {
     if (isOpen && appointment?.fee) {
       setLoading(true);
       // Force local backend URL to ensure we hit the newly added route
-      axiosInstance.post("http://localhost:5001/create-payment-intent", { amount: appointment.fee })
+      axiosInstance.post("http://localhost:5001/create-payment-intent", { 
+        amount: appointment.fee, 
+        appointmentId: appointment.id || appointment._id 
+      })
         .then(res => {
           setClientSecret(res.data.clientSecret);
           setLoading(false);

@@ -121,7 +121,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
         time: formData.time,
         type: formData.type,
         symptoms: formData.symptoms.length > 0 ? formData.symptoms : (formData.customSymptom ? [formData.customSymptom] : []),
-        fee: selectedDoctor?.fee || 1000,
+        fee: selectedDoctor?.feeAmount || 500,
         aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
       };
 

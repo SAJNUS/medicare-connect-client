@@ -93,7 +93,7 @@ const DoctorDetails = () => {
         time: selectedTime,
         type: "In-Person Consult",
         symptoms: [],
-        fee: doctor.fee || 1000,
+        fee: doctor?.feeAmount || 500,
         aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
       };
 
