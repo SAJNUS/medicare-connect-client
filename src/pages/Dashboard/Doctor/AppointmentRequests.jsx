@@ -53,7 +53,7 @@ const AppointmentRequests = () => {
   const handleApprove = async (id) => {
     try {
       await axiosInstance.patch(`/appointments/${id}/status`, { status: 'approved' });
-      setRequests(requests.map(req => req.id === id ? { ...req, status: "Approved" } : req));
+      setRequests(requests.map(req => req.id === id ? { ...req, status: "Approved", rawStatus: "approved" } : req));
       toast.success("Appointment approved.");
     } catch (err) {
       console.error(err);
@@ -65,7 +65,7 @@ const AppointmentRequests = () => {
     if (window.confirm("Are you sure you want to reject this appointment request?")) {
       try {
         await axiosInstance.patch(`/appointments/${id}/status`, { status: 'rejected' });
-        setRequests(requests.map(req => req.id === id ? { ...req, status: "Rejected" } : req));
+        setRequests(requests.map(req => req.id === id ? { ...req, status: "Rejected", rawStatus: "rejected" } : req));
         toast.success("Appointment rejected.");
       } catch (err) {
         console.error(err);
@@ -77,7 +77,7 @@ const AppointmentRequests = () => {
   const handleMarkCompleted = async (req) => {
     try {
       await axiosInstance.patch(`/appointments/${req.id}/status`, { status: 'completed' });
-      setRequests(requests.map(r => r.id === req.id ? { ...r, status: "Completed" } : r));
+      setRequests(requests.map(r => r.id === req.id ? { ...r, status: "Completed", rawStatus: "completed" } : r));
 
     
     // 2. Show toast

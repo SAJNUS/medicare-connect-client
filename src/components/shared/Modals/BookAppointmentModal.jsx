@@ -141,7 +141,13 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
             time: payload.time,
             type: payload.type,
             status: "Upcoming",
-            image: payload.doctorImage
+            rawStatus: "pending",
+            image: payload.doctorImage,
+            fee: payload.fee,
+            paymentStatus: "unpaid",
+            patientEmail: payload.patientEmail,
+            doctorEmail: payload.doctorEmail,
+            patientName: payload.patientName
           });
         }
 

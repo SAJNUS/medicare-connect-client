@@ -4,29 +4,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaFilePrescription, FaPlus, FaTimes, FaSearch, FaPrint, FaDownload, FaEye } from "react-icons/fa";
 import { toast } from "react-hot-toast";
-
-const initialPrescriptions = [
-  {
-    id: 1,
-    patientName: "John Doe",
-    date: "2026-10-15",
-    diagnosis: "Hypertension",
-    status: "Active"
-  },
-  {
-    id: 2,
-    patientName: "Jane Smith",
-    date: "2026-10-10",
-    diagnosis: "Type 2 Diabetes",
-    status: "Completed"
-  }
-];
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 
 const PrescriptionManagement = () => {
+  const { user, loading: authLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,6 +25,35 @@ const PrescriptionManagement = () => {
     dosage: "",
     instructions: ""
   });
+
+  // Fetch real prescriptions from backend
+  useEffect(() => {
+    const fetchPrescriptions = async () => {
+      if (authLoading || !user?.email) return;
+      try {
+        setIsLoading(true);
+        const res = await axiosInstance.get(`/prescriptions?doctorEmail=${user.email}`);
+        if (res.data.success) {
+          const mapped = res.data.data.map(rx => ({
+            id: rx._id,
+            patientName: rx.patientName || "Unknown Patient",
+            date: rx.date || rx.createdAt?.substring(0, 10),
+            diagnosis: rx.diagnosis || "",
+            medication: rx.medication || "",
+            dosage: rx.dosage || "",
+            instructions: rx.instructions || "",
+            status: rx.status || "Active"
+          }));
+          setPrescriptions(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch prescriptions:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPrescriptions();
+  }, [user, authLoading]);
 
   // Check for incoming appointment data
   useEffect(() => {
@@ -58,36 +74,49 @@ const PrescriptionManagement = () => {
     }
   }, [location]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newRx = {
-      id: prescriptions.length + 1,
-      patientName: formData.patientName,
-      date: formData.date,
-      diagnosis: formData.diagnosis,
-      status: "Active"
-    };
+    if (!formData.patientName || !formData.diagnosis) {
+      toast.error("Patient name and diagnosis are required.");
+      return;
+    }
 
-    setPrescriptions([newRx, ...prescriptions]);
-    setIsModalOpen(false);
+    try {
+      const payload = {
+        ...formData,
+        doctorEmail: user?.email,
+        status: "Active"
+      };
 
-    toast.success("Prescription created successfully!", {
-      style: {
-        borderRadius: '10px',
-        background: '#333',
-        color: '#fff',
+      const response = await axiosInstance.post('/prescriptions', payload);
+
+      if (response.data.success) {
+        const newRx = {
+          id: response.data.data.insertedId,
+          ...payload
+        };
+
+        setPrescriptions([newRx, ...prescriptions]);
+        setIsModalOpen(false);
+
+        toast.success("Prescription created successfully!", {
+          style: { borderRadius: '10px', background: '#333', color: '#fff' }
+        });
+
+        setFormData({
+          patientName: "",
+          date: new Date().toISOString().split('T')[0],
+          diagnosis: "",
+          medication: "",
+          dosage: "",
+          instructions: ""
+        });
       }
-    });
-
-    setFormData({
-      patientName: "",
-      date: new Date().toISOString().split('T')[0],
-      diagnosis: "",
-      medication: "",
-      dosage: "",
-      instructions: ""
-    });
+    } catch (err) {
+      console.error("Failed to save prescription:", err);
+      toast.error("Failed to create prescription.");
+    }
   };
 
   const filteredPrescriptions = prescriptions.filter(rx =>

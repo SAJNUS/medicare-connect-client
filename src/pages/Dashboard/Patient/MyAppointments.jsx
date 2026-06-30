@@ -35,7 +35,7 @@ const MyAppointments = () => {
             time: apt.time || apt.timeSlot,
             type: apt.type || "In-Person Consult",
             status: apt.appointmentStatus === "approved" || apt.appointmentStatus === "pending" ? "Upcoming" 
-                    : apt.appointmentStatus === "rejected" ? "Cancelled"
+                    : apt.appointmentStatus === "rejected" || apt.appointmentStatus === "cancelled" ? "Cancelled"
                     : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
             image: apt.doctorImage || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
             rawStatus: apt.appointmentStatus,
@@ -57,11 +57,20 @@ const MyAppointments = () => {
   }, [user, authLoading]);
 
   const handleCancel = async (id) => {
+    const apt = appointments.find(a => a.id === id);
+    if (!apt) return;
+
+    // Guard: only upcoming appointments can be cancelled
+    if (apt.rawStatus === 'rejected' || apt.rawStatus === 'cancelled' || apt.rawStatus === 'completed') {
+      alert("This appointment cannot be cancelled.");
+      return;
+    }
+
     if (window.confirm("Are you sure you want to cancel this appointment?")) {
       try {
-        await axiosInstance.patch(`/appointments/${id}/status`, { status: 'rejected' });
-        setAppointments(appointments.map(apt =>
-          apt.id === id ? { ...apt, status: "Cancelled", rawStatus: "rejected" } : apt
+        await axiosInstance.patch(`/appointments/${id}/status`, { status: 'cancelled' });
+        setAppointments(appointments.map(a =>
+          a.id === id ? { ...a, status: "Cancelled", rawStatus: "cancelled" } : a
         ));
       } catch (err) {
         console.error("Failed to cancel appointment", err);
