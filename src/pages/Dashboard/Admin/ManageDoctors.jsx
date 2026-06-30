@@ -21,22 +21,23 @@ const ManageDoctors = () => {
       try {
         setIsLoading(true);
         // Fetch all pages; admin needs full visibility
-        const res = await axiosInstance.get('/doctors?limit=100');
+        const res = await axiosInstance.get('/admin/doctors');
         if (res.data.success) {
           const mapped = res.data.data.map(doc => ({
             id: doc._id,
-            name: doc.name,
             email: doc.email,
-            specialty: doc.specialization || doc.specialty || "General",
-            license: doc.licenseNumber || "N/A",
-            applyDate: doc.createdAt
-              ? new Date(doc.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-              : "N/A",
+            name: doc.name,
+            designation: doc.designation,
+            specialty: doc.specialty,
+            qualifications: doc.qualifications,
+            experience: doc.experience,
+            fee: doc.consultationFee,
+            applyDate: doc.createdAt,
             status: doc.verificationStatus === 'verified' ? 'Verified'
                   : doc.verificationStatus === 'rejected' ? 'Rejected'
                   : doc.verificationStatus === 'removed' ? 'Removed'
                   : 'Pending',
-            avatar: doc.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.name)}&background=0b6e66&color=fff`,
+            avatar: doc.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.name)}&background=0b6e66&color=fff`,
             rawStatus: doc.verificationStatus || 'pending'
           }));
           setDoctors(mapped);
@@ -83,7 +84,7 @@ const ManageDoctors = () => {
 
     setIsActioning(true);
     try {
-      await axiosInstance.patch(`/doctors/${selectedDoctor.id}/verification`, { status: apiStatus });
+      await axiosInstance.patch(`/admin/doctors/${selectedDoctor.email}/verification`, { status: apiStatus });
       setDoctors(doctors.map(doc => 
         doc.id === selectedDoctor.id ? { ...doc, status: newStatus, rawStatus: apiStatus } : doc
       ));
@@ -111,6 +112,16 @@ const ManageDoctors = () => {
       default:
         return null;
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Unknown";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -151,9 +162,8 @@ const ManageDoctors = () => {
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="p-4 font-bold text-gray-600 text-sm">Doctor</th>
-                <th className="p-4 font-bold text-gray-600 text-sm text-center">Specialty</th>
-                <th className="p-4 font-bold text-gray-600 text-sm text-center">License</th>
-                <th className="p-4 font-bold text-gray-600 text-sm text-center">Date Applied</th>
+                <th className="p-4 font-bold text-gray-600 text-sm">Details</th>
+                <th className="p-4 font-bold text-gray-600 text-sm text-center">Registration Date</th>
                 <th className="p-4 font-bold text-gray-600 text-sm text-center">Status</th>
                 <th className="p-4 font-bold text-gray-600 text-sm text-center">Actions</th>
               </tr>
@@ -185,13 +195,17 @@ const ManageDoctors = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 text-center">
-                    <span className="inline-flex bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md text-xs font-bold">
-                      {doc.specialty}
-                    </span>
+                  <td className="p-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="inline-flex bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md text-xs font-bold w-max">
+                        {doc.specialty}
+                      </span>
+                      <p className="text-xs text-gray-600 font-medium">{doc.designation} • {doc.experience} Years Exp.</p>
+                      <p className="text-xs text-gray-500 line-clamp-1">{doc.qualifications || "No qualifications added"}</p>
+                      <p className="text-xs text-green-600 font-bold">Fee: {doc.fee ? `${doc.fee} BDT` : "N/A"}</p>
+                    </div>
                   </td>
-                  <td className="p-4 text-center font-medium text-gray-600 text-sm">{doc.license}</td>
-                  <td className="p-4 text-center font-medium text-gray-600 text-sm">{doc.applyDate}</td>
+                  <td className="p-4 text-center font-medium text-gray-600 text-sm">{formatDate(doc.applyDate)}</td>
                   <td className="p-4 text-center">
                     {getStatusBadge(doc.status)}
                   </td>
@@ -263,20 +277,21 @@ const ManageDoctors = () => {
                 <div>{getStatusBadge(doc.status)}</div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
-                <div>
-                  <span className="block text-gray-500 mb-0.5 font-semibold">Specialty</span>
-                  <span className="font-bold text-gray-900">{doc.specialty}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-500 mb-0.5 font-semibold">License</span>
-                  <span className="font-bold text-gray-900">{doc.license}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="block text-gray-500 mb-0.5 font-semibold">Date Applied</span>
-                  <span className="font-bold text-gray-900">{doc.applyDate}</span>
-                </div>
-              </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                    <div>
+                      <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider block mb-1">Details</span>
+                      <p className="text-gray-700 font-medium text-xs">{doc.designation} • {doc.experience} Yr Exp.</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{doc.qualifications || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider block mb-1">Reg. Date</span>
+                      <span className="font-medium text-gray-700 text-xs">{formatDate(doc.applyDate)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider block mb-1">Fee</span>
+                      <span className="font-bold text-green-600 text-xs">{doc.fee ? `${doc.fee} BDT` : "N/A"}</span>
+                    </div>
+                  </div>
 
               <div className="flex flex-wrap justify-end gap-2 pt-2">
                 <button 
