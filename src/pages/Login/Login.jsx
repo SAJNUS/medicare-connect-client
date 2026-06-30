@@ -9,7 +9,7 @@ import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
 
 const Login = () => {
-  const { loginUser, signInWithGoogle, logoutUser } = useAuth();
+  const { loginUser, signInWithGoogle, logoutUser, setUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
@@ -128,6 +128,22 @@ const Login = () => {
              await logoutUser();
              throw new Error("Invalid email or password.");
           } else {
+             // Auto-register them
+             const payload = {
+                name: fbUser.displayName || "Google User",
+                email: fbUser.email,
+                photoURL: fbUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+                password: "google_login_no_password",
+                role: "patient",
+                firebaseUid: fbUser.uid
+             };
+             await axiosInstance.post('/users', payload);
+             setUser({
+               ...payload,
+               designation: 'Patient',
+               avatar: payload.photoURL,
+               uid: payload.firebaseUid
+             });
              toast.success(`Successfully logged in with Google!`);
              navigate("/");
           }

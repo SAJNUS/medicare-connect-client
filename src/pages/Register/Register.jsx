@@ -7,12 +7,16 @@ import toast from "react-hot-toast";
 import axiosInstance from "../../api/axiosInstance";
 
 import { useAuth } from "../../hooks/useAuth";
+import { uploadImageToCloudinary } from "../../utils/uploadImageToCloudinary";
+import { updateProfile, deleteUser } from "firebase/auth";
 
 const Register = () => {
   const { createUser, signInWithGoogle, logoutUser } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
   const [role, setRole] = useState("Patient");
   const [formData, setFormData] = useState({
     name: "",
@@ -38,10 +42,6 @@ const Register = () => {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email address is invalid";
-    }
-
-    if (formData.photoURL && !/^https?:\/\/.+/.test(formData.photoURL)) {
-      newErrors.photoURL = "Must be a valid URL starting with http/https";
     }
 
     if (!formData.password) {
@@ -82,25 +82,46 @@ const Register = () => {
         const userCredential = await createUser(formData.email, formData.password);
         const fbUser = userCredential.user;
 
+        let finalPhotoURL = formData.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80";
+        if (imageFile) {
+          setIsUploadingImage(true);
+          finalPhotoURL = await uploadImageToCloudinary(imageFile);
+          setIsUploadingImage(false);
+        }
+
         const payload = {
           name: formData.name,
           email: formData.email,
-          photoURL: formData.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+          photoURL: finalPhotoURL,
           password: formData.password,
           role: role.toLowerCase(),
           firebaseUid: fbUser.uid
         };
 
-        const response = await axiosInstance.post('/users', payload);
-        
-        if (response.data.success) {
-          await logoutUser();
-          if (role === "Doctor") {
-            toast.success("Account created! Please log in.");
-          } else {
-            toast.success("Account created successfully! Please log in.");
+        try {
+          await updateProfile(fbUser, {
+            displayName: formData.name,
+            photoURL: finalPhotoURL
+          });
+
+          const response = await axiosInstance.post('/users', payload);
+          
+          if (response.data.success) {
+            await logoutUser();
+            if (role === "Doctor") {
+              toast.success("Account created! Please log in.");
+            } else {
+              toast.success("Account created successfully! Please log in.");
+            }
+            navigate("/login", { state: { defaultRole: role } });
           }
-          navigate("/login", { state: { defaultRole: role } });
+        } catch (dbError) {
+          try {
+            await deleteUser(fbUser);
+          } catch(e) {
+            await logoutUser();
+          }
+          throw dbError;
         }
       } catch (error) {
         console.error("Registration error:", error);
@@ -146,10 +167,19 @@ const Register = () => {
             role: role.toLowerCase(),
             firebaseUid: fbUser.uid
           };
-          await axiosInstance.post('/users', payload);
-          await logoutUser();
-          toast.success("Account created successfully! Please log in.");
-          navigate("/login", { state: { defaultRole: role } });
+          try {
+            await axiosInstance.post('/users', payload);
+            await logoutUser();
+            toast.success("Account created successfully! Please log in.");
+            navigate("/login", { state: { defaultRole: role } });
+          } catch(createError) {
+            try {
+              await deleteUser(fbUser);
+            } catch(e) {
+              await logoutUser();
+            }
+            throw createError;
+          }
         } else {
           throw dbError;
         }
@@ -263,23 +293,20 @@ const Register = () => {
               {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
             </div>
 
-            {/* Photo URL Field */}
+            {/* Photo Upload Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo (Optional)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FaImage className="text-gray-400" />
                 </div>
                 <input
-                  type="url"
-                  name="photoURL"
-                  value={formData.photoURL}
-                  onChange={handleInputChange}
-                  className={`block w-full pl-10 pr-3 py-2.5 border ${errors.photoURL ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-primary'} rounded-xl bg-gray-50 focus:bg-white text-sm transition-colors outline-none`}
-                  placeholder="https://example.com/photo.jpg"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files[0])}
+                  className={`block w-full pl-10 pr-3 py-2 border border-gray-200 focus:ring-primary rounded-xl bg-gray-50 focus:bg-white text-sm transition-colors outline-none file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-primary hover:file:bg-teal-100 cursor-pointer`}
                 />
               </div>
-              {errors.photoURL && <p className="mt-1 text-xs text-red-500">{errors.photoURL}</p>}
             </div>
 
             {/* Password Field */}
@@ -321,7 +348,7 @@ const Register = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Creating account...
+                    {isUploadingImage ? "Uploading image..." : "Creating account..."}
                   </span>
                 ) : "Register"}
               </button>

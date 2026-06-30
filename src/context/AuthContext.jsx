@@ -74,31 +74,9 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           if (error.response && error.response.status === 404) {
-            console.log("User not found in MongoDB. Creating default patient record...");
-            try {
-              const payload = {
-                name: currentUser.displayName || "New User",
-                email: currentUser.email,
-                photoURL: currentUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-                password: "firebase_managed_auth",
-                role: "patient",
-                firebaseUid: currentUser.uid
-              };
-              await axiosInstance.post('/users', payload);
-              
-              setUser({
-                ...payload,
-                designation: 'Patient',
-              });
-              localStorage.setItem("currentUserEmail", currentUser.email);
-            } catch (createError) {
-              console.error("Failed to auto-create MongoDB user:", createError);
-              setUser({
-                email: currentUser.email,
-                firebaseUid: currentUser.uid,
-                role: "patient"
-              });
-            }
+            console.log("User not found in MongoDB. Suppressing auth state for registration.");
+            // Immediately suppress the temporary Firebase auth state to prevent UI flicker
+            setUser(null);
           } else {
             console.error("Failed to fetch MongoDB user:", error);
             setUser({
@@ -133,8 +111,9 @@ export const AuthProvider = ({ children }) => {
     loginUser,
     signInWithGoogle,
     logoutUser,
-    setPreviewRole,
     previewRole,
+    setPreviewRole,
+    setUser,
   };
 
   return (
