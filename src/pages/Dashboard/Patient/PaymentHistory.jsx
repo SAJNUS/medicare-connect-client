@@ -1,71 +1,117 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaSearch, FaFileInvoiceDollar, FaCheckCircle, FaClock, FaTimesCircle, FaDownload, FaCreditCard, FaCcVisa, FaCcMastercard } from "react-icons/fa";
+import { FaSearch, FaFileInvoiceDollar, FaCheckCircle, FaClock, FaTimesCircle, FaDownload, FaCreditCard, FaCcVisa, FaCcMastercard, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
+import jsPDF from "jspdf";
 
 const PaymentHistory = () => {
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [transactions, setTransactions] = useState([
-    {
-      id: "TXN-2026-9041",
-      doctorName: "Dr. Sarah Jenkins",
-      date: "Oct 24, 2026",
-      time: "10:00 AM",
-      amount: 150.00,
-      method: "Visa ending in 4242",
-      cardType: "visa",
-      status: "Completed",
-      type: "Video Consult"
-    },
-    {
-      id: "TXN-2026-8832",
-      doctorName: "Dr. Michael Chen",
-      date: "Oct 15, 2026",
-      time: "02:30 PM",
-      amount: 200.00,
-      method: "Mastercard ending in 8812",
-      cardType: "mastercard",
-      status: "Completed",
-      type: "In-Person Consult"
-    },
-    {
-      id: "TXN-2026-7619",
-      doctorName: "Dr. Emily Wong",
-      date: "Oct 10, 2026",
-      time: "09:00 AM",
-      amount: 120.00,
-      method: "Stripe",
-      cardType: "stripe",
-      status: "Pending",
-      type: "Video Consult"
-    },
-    {
-      id: "TXN-2026-7001",
-      doctorName: "Dr. Robert Smith",
-      date: "Sep 28, 2026",
-      time: "11:00 AM",
-      amount: 180.00,
-      method: "Visa ending in 4242",
-      cardType: "visa",
-      status: "Failed",
-      type: "In-Person Consult"
-    },
-    {
-      id: "TXN-2026-6544",
-      doctorName: "Dr. Sarah Jenkins",
-      date: "Sep 15, 2026",
-      time: "10:00 AM",
-      amount: 150.00,
-      method: "Visa ending in 4242",
-      cardType: "visa",
-      status: "Completed",
-      type: "Video Consult"
-    }
-  ]);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const handleDownload = (id) => {
-    alert(`Downloading receipt for transaction ${id}... (Mock Stripe Integration)`);
+  useEffect(() => {
+    const fetchPayments = async () => {
+      if (!user?.email) return;
+      try {
+        setLoading(true);
+        // Force local URL to hit the updated server
+        const response = await axiosInstance.get(`http://localhost:5001/payments?patientEmail=${user.email}`);
+        if (response.data.success) {
+          
+          const getFriendlyId = (idStr) => {
+            let hash = 0;
+            for (let i = 0; i < idStr.length; i++) {
+              hash = (hash << 5) - hash + idStr.charCodeAt(i);
+              hash |= 0;
+            }
+            const num = Math.abs(hash) % 10000;
+            return `TXN-2026-${num.toString().padStart(4, '0')}`;
+          };
+
+          const mappedTxns = response.data.data.map(txn => {
+            const friendlyId = getFriendlyId(txn._id || txn.transactionId);
+            return {
+              id: friendlyId,
+              realId: txn.transactionId || txn._id,
+              doctorName: txn.doctorName || "Doctor",
+            date: new Date(txn.paymentDate || txn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            time: txn.time || new Date(txn.paymentDate || txn.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            amount: txn.amount || 0,
+            method: "Stripe",
+            cardType: "stripe",
+            status: "Completed",
+            type: txn.type || "Consultation",
+            original: txn
+            };
+          });
+          setTransactions(mappedTxns);
+        }
+      } catch (error) {
+        console.error("Failed to fetch payments:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
+  }, [user]);
+
+  const handleDownload = (txn) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(11, 110, 102);
+    doc.text("MediCare Connect", 20, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Official Payment Receipt", 20, 28);
+    
+    // Line separator
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 32, 190, 32);
+    
+    // IDs
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Transaction ID: ${txn.id}`, 20, 45);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Stripe ID: ${txn.realId}`, 20, 50);
+    
+    // Details
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    
+    const details = [
+      `Patient Email: ${user.email}`,
+      `Doctor: ${txn.doctorName}`,
+      `Consultation Type: ${txn.type}`,
+      `Date & Time: ${txn.date} at ${txn.time}`,
+      `Amount Paid: ৳${txn.amount.toFixed(2)}`,
+      `Payment Status: ${txn.status}`
+    ];
+    
+    let y = 65;
+    details.forEach(detail => {
+      doc.text(detail, 20, y);
+      y += 10;
+    });
+    
+    // Footer line
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, y + 5, 190, y + 5);
+    
+    // Footer text
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Paid via Stripe (Test Mode)", 20, y + 15);
+    
+    doc.save(`Receipt-${txn.id}.pdf`);
   };
 
   const filteredTransactions = transactions.filter(txn => {
@@ -175,7 +221,10 @@ const PaymentHistory = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-bold text-gray-900 text-sm mb-0.5">{txn.doctorName}</div>
-                    <div className="text-xs font-semibold text-gray-500">{txn.type}</div>
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                      {txn.type === 'Video Consult' ? <FaVideo className="text-blue-500" /> : <FaMapMarkerAlt className="text-red-500" />}
+                      {txn.type}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="font-bold text-gray-900 text-sm mb-1">${txn.amount.toFixed(2)}</div>
@@ -190,7 +239,7 @@ const PaymentHistory = () => {
                   <td className="px-6 py-4 text-center">
                     {txn.status === "Completed" ? (
                       <button
-                        onClick={() => handleDownload(txn.id)}
+                        onClick={() => handleDownload(txn)}
                         className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-600 hover:bg-primary hover:text-white transition-colors"
                         title="Download Receipt"
                       >
@@ -208,50 +257,68 @@ const PaymentHistory = () => {
 
         {/* Mobile Cards View (Hidden on desktop) */}
         <div className="md:hidden divide-y divide-gray-100">
-          {filteredTransactions.length === 0 && (
-            <div className="p-12 text-center text-gray-500">
-              <FaFileInvoiceDollar className="text-4xl text-gray-300 mx-auto mb-3" />
-              <p className="font-semibold text-gray-900">No transactions found</p>
-              <p className="text-sm">Try adjusting your filters or search query.</p>
-            </div>
-          )}
-          {filteredTransactions.map((txn) => (
-            <div
-              key={txn.id}
-              className="p-5 space-y-4 hover:bg-gray-50/50 transition-colors"
-            >
-              <div className="flex justify-between items-start gap-4">
-                <div>
-                  <div className="font-bold text-gray-900 text-sm mb-0.5">{txn.id}</div>
-                  <div className="text-xs font-semibold text-gray-500">{txn.date} • {txn.time}</div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="font-bold text-gray-900 text-base mb-1">${txn.amount.toFixed(2)}</div>
-                  {getStatusBadge(txn.status)}
-                </div>
+          <div className="space-y-4">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <span className="loading loading-spinner loading-lg text-primary"></span>
               </div>
-
-              <div className="flex justify-between items-end gap-4 pt-2 border-t border-gray-50">
-                <div>
-                  <div className="font-bold text-gray-800 text-sm mb-0.5">{txn.doctorName}</div>
-                  <div className="text-xs font-semibold text-gray-500 mb-2">{txn.type}</div>
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
-                    {getCardIcon(txn.cardType)}
-                    {txn.method}
-                  </div>
+            ) : filteredTransactions.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaFileInvoiceDollar className="text-2xl text-gray-400" />
                 </div>
-
-                {txn.status === "Completed" && (
-                  <button
-                    onClick={() => handleDownload(txn.id)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-primary hover:text-white transition-colors text-xs font-bold border border-gray-200"
+                <h3 className="text-lg font-bold text-gray-900 mb-1">No Transactions Found</h3>
+                <p className="text-gray-500 text-sm">
+                  {searchQuery || filter !== "All"
+                    ? "Try adjusting your filters or search query"
+                    : "You haven't made any payments yet"}
+                </p>
+              </div>
+            ) : (
+              <AnimatePresence>
+                {filteredTransactions.map((txn, index) => (
+                  <motion.div
+                    key={txn.id}
+                    className="p-5 space-y-4 hover:bg-gray-50/50 transition-colors"
                   >
-                    <FaDownload /> Receipt
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <div className="font-bold text-gray-900 text-sm mb-0.5">{txn.id}</div>
+                        <div className="text-xs font-semibold text-gray-500">{txn.date} • {txn.time}</div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-gray-900 text-base mb-1">${txn.amount.toFixed(2)}</div>
+                        {getStatusBadge(txn.status)}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-end gap-4 pt-2 border-t border-gray-50">
+                      <div>
+                        <div className="font-bold text-gray-800 text-sm mb-0.5">{txn.doctorName}</div>
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-2">
+                          {txn.type === 'Video Consult' ? <FaVideo className="text-blue-500" /> : <FaMapMarkerAlt className="text-red-500" />}
+                          {txn.type}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                          {getCardIcon(txn.cardType)}
+                          {txn.method}
+                        </div>
+                      </div>
+
+                      {txn.status === "Completed" && (
+                        <button
+                          onClick={() => handleDownload(txn)}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 text-gray-700 hover:bg-primary hover:text-white transition-colors text-xs font-bold border border-gray-200"
+                        >
+                          <FaDownload /> Receipt
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            )}
+          </div>
         </div>
 
       </div>

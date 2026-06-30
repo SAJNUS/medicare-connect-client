@@ -110,10 +110,10 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
       const selectedDoctor = doctors.find(d => String(d.id) === String(formData.doctorId));
 
       const payload = {
-        patientEmail: user?.email || "patient@example.com",
+        patientEmail: user?.email,
         patientName: user?.name || "Patient",
         patientImage: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-        doctorEmail: selectedDoctor?.email || "doctor@example.com",
+        doctorEmail: selectedDoctor?.email,
         doctorName: selectedDoctor?.name || "Unknown Doctor",
         specialty: selectedDoctor?.specialty || formData.specialty,
         doctorImage: selectedDoctor?.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
@@ -121,6 +121,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
         time: formData.time,
         type: formData.type,
         symptoms: formData.symptoms.length > 0 ? formData.symptoms : (formData.customSymptom ? [formData.customSymptom] : []),
+        fee: selectedDoctor?.fee || 1000,
         aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
       };
 

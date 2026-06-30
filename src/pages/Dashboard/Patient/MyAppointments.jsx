@@ -4,6 +4,7 @@ import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimes
 import { useModal } from "../../../context/ModalContext";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
+import PaymentModal from "../../../components/payment/PaymentModal";
 
 const MyAppointments = () => {
   const [filter, setFilter] = useState("All");
@@ -12,6 +13,7 @@ const MyAppointments = () => {
   const { user, loading: authLoading } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [paymentModalData, setPaymentModalData] = useState(null);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -36,7 +38,12 @@ const MyAppointments = () => {
                     : apt.appointmentStatus === "rejected" ? "Cancelled"
                     : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
             image: apt.doctorImage || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-            rawStatus: apt.appointmentStatus // Store backend status just in case
+            rawStatus: apt.appointmentStatus,
+            paymentStatus: apt.paymentStatus || 'unpaid',
+            fee: apt.fee,
+            patientEmail: apt.patientEmail,
+            doctorEmail: apt.doctorEmail,
+            patientName: apt.patientName
           }));
           setAppointments(mappedApts);
         }
@@ -69,6 +76,13 @@ const MyAppointments = () => {
 
   const handleBookAppointment = (newAppointment) => {
     setAppointments([newAppointment, ...appointments]);
+  };
+
+  const handlePaymentSuccess = (transactionId) => {
+    setAppointments(appointments.map(apt => 
+      apt.id === paymentModalData.id ? { ...apt, paymentStatus: 'paid' } : apt
+    ));
+    setPaymentModalData(null);
   };
 
   const filteredAppointments = appointments.filter(apt => {
@@ -200,6 +214,20 @@ const MyAppointments = () => {
                         </>
                       )}
 
+                      {apt.status === "Upcoming" && apt.paymentStatus === "unpaid" && (
+                        <button
+                          onClick={() => setPaymentModalData(apt)}
+                          className="w-full py-2.5 px-4 bg-primary text-white hover:bg-[#0b6e66] font-bold rounded-xl transition-colors shadow-sm text-sm mt-2 sm:mt-0 sm:ml-auto sm:w-auto"
+                        >
+                          Pay Now (৳{apt.fee})
+                        </button>
+                      )}
+                      {apt.status === "Upcoming" && apt.paymentStatus === "paid" && (
+                        <div className="flex items-center justify-center sm:justify-end gap-1.5 w-full sm:w-auto mt-2 sm:mt-0 py-2.5 px-4 text-green-600 font-bold text-sm bg-green-50 rounded-xl">
+                          <FaCheckCircle /> Paid
+                        </div>
+                      )}
+
                       {apt.status === "Completed" && (
                         <button className="w-full py-2.5 px-4 bg-teal-500 text-white hover:bg-teal-600 font-bold rounded-xl transition-colors shadow-sm shadow-teal-500/20 text-sm">
                           Book Follow-up
@@ -219,6 +247,13 @@ const MyAppointments = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <PaymentModal 
+        isOpen={!!paymentModalData} 
+        onClose={() => setPaymentModalData(null)}
+        appointment={paymentModalData}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };
