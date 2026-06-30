@@ -17,8 +17,7 @@ const RoleRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const checkRole = user.activeRole || user.role;
-  if (allowedRoles.includes(checkRole?.toLowerCase())) {
+  if (allowedRoles.includes(user.role?.toLowerCase())) {
     return children;
   }
 

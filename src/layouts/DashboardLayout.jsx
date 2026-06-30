@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { HiMenuAlt2 } from "react-icons/hi";
-import { FaBell } from "react-icons/fa";
+import { FaBell, FaCode } from "react-icons/fa";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "../components/dashboard/Sidebar";
 import { useAuth } from "../hooks/useAuth";
 import axiosInstance from "../api/axiosInstance";
 
 const DashboardLayout = () => {
-  const { user } = useAuth();
+  const { user, setPreviewRole, previewRole } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDevMenuOpen, setIsDevMenuOpen] = useState(false);
   const location = useLocation();
   const mainRef = useRef(null);
 
@@ -73,6 +74,31 @@ const DashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            {user?.email === "sajnussaharearhojayfa@gmail.com" && (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
+                  className={`p-2 rounded-lg transition-colors ${previewRole ? 'bg-yellow-100 text-yellow-700' : 'text-gray-500 hover:text-primary hover:bg-teal-50'}`}
+                  title="Developer Tools"
+                >
+                  <FaCode className="w-5 h-5" />
+                </button>
+                {isDevMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsDevMenuOpen(false)}></div>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 border border-gray-100 z-50">
+                      <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Dev Preview Mode</p>
+                      </div>
+                      <button onClick={() => { setPreviewRole(null); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${!previewRole ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Off (Real Role)</button>
+                      <button onClick={() => { setPreviewRole('patient'); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'patient' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Patient</button>
+                      <button onClick={() => { setPreviewRole('doctor'); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'doctor' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Doctor</button>
+                      <button onClick={() => { setPreviewRole('admin'); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'admin' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Admin</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             <button className="relative p-2 text-gray-500 hover:text-primary transition-colors">
               <FaBell className="w-5 h-5" />

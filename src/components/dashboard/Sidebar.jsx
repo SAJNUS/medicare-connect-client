@@ -7,7 +7,7 @@ import { getRoleColors } from "../../utils/roleColors";
 const Sidebar = ({ closeSidebar }) => {
   const userAuthContext = useAuth();
   const user = userAuthContext.user;
-  const userRole = user?.activeRole || user?.role;
+  const userRole = user?.role;
   const roleColors = getRoleColors(userRole);
 
   // Dynamic navigation based on role
@@ -60,28 +60,6 @@ const Sidebar = ({ closeSidebar }) => {
         <h3 className="font-poppins font-bold text-gray-900 text-base leading-tight">{user?.name || "John Doe"}</h3>
         <p className={`text-sm font-bold mt-1 capitalize ${roleColors.text}`}>{userRole || "Patient"}</p>
       </div>
-
-      {/* Hidden Developer Mode */}
-      {user?.email === "sajnussaharearhojayfa@gmail.com" && (
-        <div className="px-6 py-3 border-b border-gray-50 bg-yellow-50/50">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-bold text-yellow-700 uppercase tracking-wide">🛠 Dev Tools (Preview)</span>
-          </div>
-          <select 
-            className="w-full bg-white border border-yellow-200 text-gray-700 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-yellow-400 font-bold cursor-pointer shadow-sm"
-            value={userAuthContext.previewRole || ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              userAuthContext.setPreviewRole(val === "" ? null : val);
-            }}
-          >
-            <option value="">Off (Real Role)</option>
-            <option value="patient">Preview Patient</option>
-            <option value="doctor">Preview Doctor</option>
-            <option value="admin">Preview Admin</option>
-          </select>
-        </div>
-      )}
 
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-1.5 font-inter">

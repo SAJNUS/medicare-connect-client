@@ -117,10 +117,11 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  // Enhance user object with activeRole for Dev Mode preview
+  // Enhance user object with overwritten role for Dev Mode preview
   const enhancedUser = user ? {
     ...user,
-    activeRole: (user.email === 'sajnussaharearhojayfa@gmail.com' && previewRole) 
+    realRole: user.role,
+    role: (user.email === 'sajnussaharearhojayfa@gmail.com' && previewRole) 
       ? previewRole 
       : (user.role || 'patient')
   } : null;
