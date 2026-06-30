@@ -1,10 +1,31 @@
-export const formatToDDMMYYYY = (dateStr) => {
-  if (!dateStr) return "";
+export const formatToDDMMYYYY = (dateInput) => {
+  if (!dateInput) return "";
+  
+  let dateStr = dateInput;
+  
+  // If it's a Date object or timestamp (number), convert to YYYY-MM-DD string first
+  if (dateInput instanceof Date || typeof dateInput === 'number') {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return ""; // Invalid date
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${dd}-${mm}-${yyyy}`;
+  }
+
+  // Handle strings
+  if (typeof dateStr !== 'string') {
+    dateStr = String(dateStr);
+  }
+
   const parts = dateStr.split("-");
-  // If already DD-MM-YYYY
+  // If already DD-MM-YYYY or something that doesn't split to at least 3 parts
+  if (parts.length < 3) return dateStr;
+  
   if (parts[0].length === 2) return dateStr;
   // If YYYY-MM-DD
   if (parts[0].length === 4) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  
   return dateStr;
 };
 

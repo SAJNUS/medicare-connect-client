@@ -23,7 +23,7 @@ const PaymentHistory = () => {
 
           const mappedTxns = response.data.data.map(txn => {
             return {
-              id: txn.friendlyTxnId || txn.transactionId,
+              id: txn.displayTransactionId || txn.friendlyTxnId || (txn.transactionId?.startsWith('pi_') ? `TXN-2026-${txn.transactionId.slice(-4).toUpperCase()}` : txn.transactionId),
               realId: txn.transactionId || txn._id,
               doctorName: txn.doctorName || "Doctor",
               date: new Date(txn.paymentDate || txn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
