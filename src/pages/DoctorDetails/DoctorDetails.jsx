@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaStar, FaGraduationCap, FaCalendarAlt, FaClock, FaCheckCircle, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
+import { FaStar, FaGraduationCap, FaCalendarAlt, FaClock, FaCheckCircle, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus, FaHeart, FaRegHeart } from "react-icons/fa";
+import { useFavorites } from "../../contexts/FavoritesContext";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
@@ -23,9 +24,18 @@ const DoctorDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isFavorited, toggleFavorite } = useFavorites();
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
+
+  const favorited = doctor ? isFavorited(doctor.id) : false;
+
+  const handleFavoriteClick = () => {
+    if (doctor) {
+      toggleFavorite(doctor.id, doctor.name);
+    }
+  };
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -160,18 +170,24 @@ const DoctorDetails = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="w-full md:w-1/4 flex-shrink-0">
-            <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] w-full">
+            <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] w-full relative group/img">
               <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
+              <button 
+                onClick={handleFavoriteClick}
+                className="absolute top-4 right-4 p-2.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors z-10"
+              >
+                {favorited ? <FaHeart className="text-red-500 text-lg" /> : <FaRegHeart className="text-gray-400 hover:text-red-500 text-lg" />}
+              </button>
             </div>
           </div>
-          <div className="w-full md:w-3/4 flex flex-col justify-center">
-            <div className="mb-3 flex">
-              <div className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center shadow-sm whitespace-nowrap">
-                <FaCheckCircle className="mr-1.5" /> Available
+          <div className="w-full md:w-3/4 flex flex-col justify-start">
+            <div className="mb-2 mt-2 flex items-center">
+              <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 pr-3">
+                {doctor.name}
+              </h1>
+              <div className="flex items-center justify-center mt-1" title="Available for Appointments">
+                <FaCheckCircle className="text-green-500/90 text-[18px]" />
               </div>
-            </div>
-            <div className="mb-2">
-              <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 pr-4">{doctor.name}</h1>
             </div>
             {doctor.designation && <p className="text-[#0b6e66] font-medium text-sm mb-1">{doctor.designation}</p>}
             <p className="text-primary font-medium text-lg mb-4 flex items-center">{getSpecialtyIcon(doctor.specialty)} {doctor.specialty}</p>

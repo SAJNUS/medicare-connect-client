@@ -1,14 +1,31 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaVideo, FaMapMarkerAlt, FaHeart, FaHeartbeat, FaBrain, FaBaby, FaBone, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import { useModal } from "../../context/ModalContext";
 import { useAuth } from "../../hooks/useAuth";
+import { useFavorites } from "../../contexts/FavoritesContext";
 import axiosInstance from "../../api/axiosInstance";
 
+const getSpecialtyIcon = (specialty) => {
+  if (!specialty) return <FaUserMd className="mr-1 text-primary" />;
+  const s = specialty.toLowerCase();
+  if (s.includes("cardiology")) return <FaHeartbeat className="mr-1 text-primary" />;
+  if (s.includes("neurology")) return <FaBrain className="mr-1 text-primary" />;
+  if (s.includes("pediatric")) return <FaBaby className="mr-1 text-primary" />;
+  if (s.includes("orthopedics")) return <FaBone className="mr-1 text-primary" />;
+  if (s.includes("dermatology")) return <FaUserMd className="mr-1 text-primary" />;
+  if (s.includes("gynecology")) return <FaVenus className="mr-1 text-primary" />;
+  if (s.includes("dentistry")) return <FaTooth className="mr-1 text-primary" />;
+  if (s.includes("psychiatry")) return <FaHeadSideVirus className="mr-1 text-primary" />;
+  return <FaUserMd className="mr-1 text-primary" />;
+};
+
 const PatientDashboard = () => {
+  const navigate = useNavigate();
   const { openModal } = useModal();
   const { user } = useAuth();
+  const { favorites, favoriteDoctorsData } = useFavorites();
   
   const [allAppointments, setAllAppointments] = useState([]);
 
@@ -54,12 +71,7 @@ const PatientDashboard = () => {
     { title: "My Appointments", value: upcomingAppointments.length.toString(), icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
     { title: "Total Consultations", value: appointmentHistory.filter(a => a.status === 'Completed').length.toString(), icon: <FaUserMd className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Total Payments", value: "BDT 450", fullValue: "BDT 450.00", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
-    { title: "Favorite Doctors", value: "4", icon: <FaStar className="text-orange-500" />, bg: "bg-orange-100/50" },
-  ];
-
-  const favoriteDoctors = [
-    { id: 1, name: "Dr. Sarah Jenkins", specialty: "Cardiologist", rating: "4.9", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" },
-    { id: 2, name: "Dr. Michael Chen", specialty: "Neurologist", rating: "4.8", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" },
+    { title: "Favorite Doctors", value: favorites.length.toString(), icon: <FaHeart className="text-red-500" />, bg: "bg-red-100/50" },
   ];
 
   const recentActivities = [
@@ -228,23 +240,39 @@ const PatientDashboard = () => {
           >
             <h3 className="text-lg font-poppins font-bold text-gray-900 mb-6">Favorite Doctors</h3>
             <div className="space-y-5">
-              {favoriteDoctors.map(doc => (
-                <div key={doc.id} className="flex items-center justify-between group">
+              {favoriteDoctorsData.length > 0 ? favoriteDoctorsData.slice(0, 3).map(doc => (
+                <div 
+                  key={doc.id} 
+                  onClick={() => navigate(`/doctors/${doc.id}`)}
+                  className="flex items-center justify-between group cursor-pointer hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <img src={doc.image} alt={doc.name} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" />
                     <div>
-                      <h4 className="font-bold text-gray-900 text-sm">{doc.name}</h4>
-                      <p className="text-gray-500 text-xs font-medium">{doc.specialty}</p>
-                      <div className="flex items-center gap-1 mt-0.5 text-[10px] font-bold text-yellow-500">
-                        <FaStar /> {doc.rating}
-                      </div>
+                      <h4 className="font-bold text-gray-900 text-sm mb-0.5">{doc.name}</h4>
+                      {doc.designation && (
+                        <p className="text-[#0b6e66] text-[11px] font-medium flex items-center mb-0.5">
+                          {doc.designation}
+                        </p>
+                      )}
+                      <p className="text-gray-500 text-xs font-medium flex items-center">
+                        {getSpecialtyIcon(doc.specialty)} {doc.specialty}
+                      </p>
                     </div>
                   </div>
-                  <button className="text-primary p-2 bg-teal-50 rounded-lg hover:bg-primary hover:text-white transition-colors opacity-0 group-hover:opacity-100">
-                    <FaCalendarCheck />
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleFavorite(doc.id, doc.name);
+                    }}
+                    className="text-primary p-2 bg-teal-50 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors opacity-100">
+                    <FaHeart className="text-red-500 group-hover:text-white" />
                   </button>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-gray-500 text-center py-4">No favorite doctors yet.</p>
+              )}
             </div>
             <Link to="/doctors">
               <button className="w-full mt-6 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">

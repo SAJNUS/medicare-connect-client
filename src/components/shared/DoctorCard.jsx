@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { FaStar, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
+import { FaStar, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus, FaHeart, FaRegHeart } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useFavorites } from "../../contexts/FavoritesContext";
 
 const getSpecialtyIcon = (specialty) => {
   const s = specialty.toLowerCase();
@@ -17,6 +18,14 @@ const getSpecialtyIcon = (specialty) => {
 
 const DoctorCard = ({ doctor, index = 0 }) => {
   const navigate = useNavigate();
+  const { isFavorited, toggleFavorite } = useFavorites();
+  const favorited = isFavorited(doctor.id);
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(doctor.id, doctor.name);
+  };
 
   return (
     <motion.div
@@ -28,12 +37,18 @@ const DoctorCard = ({ doctor, index = 0 }) => {
       transition={{ duration: 0.4, delay: (index % 10) * 0.05 }}
     >
       <div className="flex gap-4 mb-4">
-        <div className="bg-gray-100 rounded-xl overflow-hidden w-28 h-36 flex-shrink-0 relative">
+        <div className="bg-gray-100 rounded-xl overflow-hidden w-28 h-36 flex-shrink-0 relative group/img">
           <img 
             src={doctor.image} 
             alt={doctor.name} 
             className="w-full h-full object-cover"
           />
+          <button 
+            onClick={handleFavoriteClick}
+            className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors z-10"
+          >
+            {favorited ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-400 hover:text-red-500" />}
+          </button>
         </div>
         <div className="flex flex-col flex-grow py-1">
           <h3 className="text-base font-poppins font-bold text-gray-900 leading-tight mb-1">{doctor.name}</h3>
