@@ -1,10 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus, FaHashtag } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus, FaHashtag, FaHeartbeat, FaBrain, FaBaby, FaBone, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
 import { useModal } from "../../../context/ModalContext";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
 import PaymentModal from "../../../components/payment/PaymentModal";
+
+const getSpecialtyIcon = (specialty) => {
+  if (!specialty) return <FaUserMd />;
+  const s = specialty.toLowerCase();
+  if (s.includes("cardiology")) return <FaHeartbeat />;
+  if (s.includes("neurology")) return <FaBrain />;
+  if (s.includes("pediatric")) return <FaBaby />;
+  if (s.includes("orthopedics")) return <FaBone />;
+  if (s.includes("dermatology")) return <FaUserMd />;
+  if (s.includes("gynecology")) return <FaVenus />;
+  if (s.includes("dentistry")) return <FaTooth />;
+  if (s.includes("psychiatry")) return <FaHeadSideVirus />;
+  return <FaUserMd />;
+};
 
 const MyAppointments = () => {
   const [filter, setFilter] = useState("All");
@@ -23,28 +37,42 @@ const MyAppointments = () => {
         return;
       }
       try {
-        const response = await axiosInstance.get(`/appointments?patientEmail=${user.email}`);
-        if (response.data.success) {
-          // Map backend appointments to frontend format
-          const mappedApts = response.data.data.map(apt => ({
-            id: apt._id,
-            aptId: apt.aptId || apt._id.substring(0, 8),
-            doctorName: apt.doctorName,
-            specialty: apt.specialty || "General",
-            date: apt.date || apt.appointmentDate,
-            time: apt.time || apt.timeSlot,
-            type: apt.type || "In-Person Consult",
-            status: apt.appointmentStatus === "approved" || apt.appointmentStatus === "pending" ? "Upcoming" 
-                    : apt.appointmentStatus === "rejected" || apt.appointmentStatus === "cancelled" ? "Cancelled"
-                    : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
-            image: apt.doctorImage || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-            rawStatus: apt.appointmentStatus,
-            paymentStatus: apt.paymentStatus || 'unpaid',
-            fee: apt.fee,
-            patientEmail: apt.patientEmail,
-            doctorEmail: apt.doctorEmail,
-            patientName: apt.patientName
-          }));
+        const [aptRes, docRes] = await Promise.all([
+          axiosInstance.get(`/appointments?patientEmail=${user.email}`),
+          axiosInstance.get('/doctors').catch(() => ({ data: { data: [] } }))
+        ]);
+        
+        const doctorsList = docRes.data?.data || [];
+
+        if (aptRes.data.success) {
+          const mappedApts = aptRes.data.data.map(apt => {
+            const docDetails = doctorsList.find(d => d._id === apt.doctorId || d.name === apt.doctorName);
+            const exp = docDetails ? parseInt(docDetails.experience) || 5 : 5;
+            let designation = "Consultant";
+            if (exp >= 15) designation = "Professor";
+            else if (exp >= 10) designation = "Associate Professor";
+
+            return {
+              id: apt._id,
+              aptId: apt.aptId || apt._id.substring(0, 8),
+              doctorName: apt.doctorName,
+              specialty: docDetails?.specialization || docDetails?.specialty || apt.specialty || "General",
+              designation,
+              date: apt.date || apt.appointmentDate,
+              time: apt.time || apt.timeSlot,
+              type: apt.type || "In-Person Consult",
+              status: apt.appointmentStatus === "approved" || apt.appointmentStatus === "pending" ? "Upcoming" 
+                      : apt.appointmentStatus === "rejected" || apt.appointmentStatus === "cancelled" ? "Cancelled"
+                      : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
+              image: docDetails?.photoURL || docDetails?.image || docDetails?.avatar || docDetails?.photoUrl || "",
+              rawStatus: apt.appointmentStatus,
+              paymentStatus: apt.paymentStatus || 'unpaid',
+              fee: apt.fee,
+              patientEmail: apt.patientEmail,
+              doctorEmail: apt.doctorEmail,
+              patientName: apt.patientName
+            };
+          });
           setAppointments(mappedApts);
         }
       } catch (err) {
@@ -88,7 +116,7 @@ const MyAppointments = () => {
   };
 
   const handlePaymentSuccess = (transactionId) => {
-    setAppointments(appointments.map(apt => 
+    setAppointments(appointments.map(apt =>
       apt.id === paymentModalData.id ? { ...apt, paymentStatus: 'paid' } : apt
     ));
     setPaymentModalData(null);
@@ -115,7 +143,7 @@ const MyAppointments = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header & Filters */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -128,20 +156,20 @@ const MyAppointments = () => {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === f
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
                 }`}
             >
               {f}
             </button>
           ))}
         </div>
-        
+
         <button 
           onClick={() => openModal(handleBookAppointment)}
           className="mt-4 md:mt-0 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-[#095c55] transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
         >
-          <FaPlus /> Book New Appointment
+          <FaPlus /> New Appointment
         </button>
       </motion.div>
 
@@ -179,9 +207,14 @@ const MyAppointments = () => {
                   {/* Details */}
                   <div className="flex-1 space-y-4">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-1 pr-24">{apt.doctorName}</h3>
-                      <p className="text-primary font-semibold text-sm flex items-center gap-1.5">
-                        <FaUserMd /> {apt.specialty}
+                      <h3 className="text-xl font-bold text-gray-900 mb-0.5 pr-24">{apt.doctorName}</h3>
+                      {apt.designation && (
+                        <p className="text-[#0b6e66] text-xs font-semibold mb-1">
+                          {apt.designation}
+                        </p>
+                      )}
+                      <p className="text-gray-500 font-semibold text-sm flex items-center gap-1.5">
+                        <span className="text-primary">{getSpecialtyIcon(apt.specialty)}</span> {apt.specialty}
                       </p>
                     </div>
 
@@ -228,25 +261,13 @@ const MyAppointments = () => {
                           onClick={() => setPaymentModalData(apt)}
                           className="w-full py-2.5 px-4 bg-primary text-white hover:bg-[#0b6e66] font-bold rounded-xl transition-colors shadow-sm text-sm mt-2 sm:mt-0 sm:ml-auto sm:w-auto"
                         >
-                          Pay Now (৳{apt.fee})
+                          Pay Now
                         </button>
                       )}
                       {apt.status === "Upcoming" && apt.paymentStatus === "paid" && (
-                        <div className="flex items-center justify-center sm:justify-end gap-1.5 w-full sm:w-auto mt-2 sm:mt-0 py-2.5 px-4 text-green-600 font-bold text-sm bg-green-50 rounded-xl">
+                        <div className="flex items-center justify-center sm:justify-end gap-1.5 w-full sm:w-auto mt-2 sm:mt-0 py-2.5 px-4 text-green-600 font-bold text-sm bg-green-50 rounded-xl sm:ml-auto">
                           <FaCheckCircle /> Paid
                         </div>
-                      )}
-
-                      {apt.status === "Completed" && (
-                        <button className="w-full py-2.5 px-4 bg-teal-500 text-white hover:bg-teal-600 font-bold rounded-xl transition-colors shadow-sm shadow-teal-500/20 text-sm">
-                          Book Follow-up
-                        </button>
-                      )}
-
-                      {apt.status === "Cancelled" && (
-                        <button className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold rounded-xl transition-colors text-sm">
-                          Rebook Appointment
-                        </button>
                       )}
                     </div>
                   </div>
@@ -257,8 +278,8 @@ const MyAppointments = () => {
         </AnimatePresence>
       </div>
 
-      <PaymentModal 
-        isOpen={!!paymentModalData} 
+      <PaymentModal
+        isOpen={!!paymentModalData}
         onClose={() => setPaymentModalData(null)}
         appointment={paymentModalData}
         onPaymentSuccess={handlePaymentSuccess}

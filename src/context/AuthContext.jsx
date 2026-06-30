@@ -100,10 +100,10 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  // The user object, with role always sourced from MongoDB
+  // The user object, with role overridden by previewRole if active, else sourced from MongoDB
   const enhancedUser = user ? {
     ...user,
-    role: user.role || 'patient'
+    role: previewRole || user.role || 'patient'
   } : null;
 
   const authInfo = {

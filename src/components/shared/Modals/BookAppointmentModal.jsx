@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaCalendarAlt, FaClock, FaUserMd, FaVideo, FaMapMarkerAlt, FaStethoscope, FaCheck } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
+import { formatToDDMMYYYY, generateAvailableTimeSlots } from "../../../utils/dateUtils";
 
 const specialties = ["Cardiologist", "Neurologist", "Dermatologist", "Orthopedic", "Pediatrician"];
-
-const timeSlots = ["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM"];
 
 const symptomMap = {
   "Cardiologist": ["Chest Pain", "Shortness of Breath", "High Blood Pressure", "Palpitations", "Dizziness"],
@@ -31,6 +30,23 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
   });
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDateFocused, setIsDateFocused] = useState(false);
+  const dateInputRef = useRef(null);
+
+  const handleDateClick = (e) => {
+    e.preventDefault();
+    if (dateInputRef.current) {
+      dateInputRef.current.type = "date";
+      if (dateInputRef.current.showPicker) {
+        try {
+          dateInputRef.current.showPicker();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      setIsDateFocused(true);
+    }
+  };
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -79,6 +95,10 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
       setIsOtherSelected(false);
     } else {
       setFormData(prev => ({ ...prev, [name]: String(value) }));
+      if (name === "date") {
+        setIsDateFocused(false);
+        if (dateInputRef.current) dateInputRef.current.type = "text";
+      }
     }
   };
 
@@ -117,7 +137,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
         doctorName: selectedDoctor?.name || "Unknown Doctor",
         specialty: selectedDoctor?.specialty || formData.specialty,
         doctorImage: selectedDoctor?.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-        date: formData.date,
+        date: formatToDDMMYYYY(formData.date),
         time: formData.time,
         type: formData.type,
         symptoms: formData.symptoms.length > 0 ? formData.symptoms : (formData.customSymptom ? [formData.customSymptom] : []),
@@ -300,10 +320,14 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
                       <FaCalendarAlt className="text-blue-500" /> Date *
                     </label>
                     <input
-                      type="date"
+                      ref={dateInputRef}
+                      type={isDateFocused || !formData.date ? "date" : "text"}
+                      onFocus={() => setIsDateFocused(true)}
+                      onBlur={() => setIsDateFocused(false)}
+                      onClick={handleDateClick}
                       name="date"
                       min={new Date().toISOString().split('T')[0]}
-                      value={formData.date}
+                      value={isDateFocused || !formData.date ? formData.date : formatToDDMMYYYY(formData.date)}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer text-gray-900"
                     />
@@ -318,8 +342,8 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900"
                     >
-                      <option value="" disabled hidden>Choose a time slot...</option>
-                      {timeSlots.map(slot => (
+                      <option value="" disabled hidden>{formData.date ? "Choose a time slot..." : "Select date first"}</option>
+                      {generateAvailableTimeSlots(formData.date).map(slot => (
                         <option key={slot} value={slot}>{slot}</option>
                       ))}
                     </select>

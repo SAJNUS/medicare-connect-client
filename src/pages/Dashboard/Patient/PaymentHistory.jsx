@@ -20,20 +20,20 @@ const PaymentHistory = () => {
         // Force local URL to hit the updated server
         const response = await axiosInstance.get(`/payments?patientEmail=${user.email}`);
         if (response.data.success) {
-          
+
           const mappedTxns = response.data.data.map(txn => {
             return {
               id: txn.friendlyTxnId || txn.transactionId,
               realId: txn.transactionId || txn._id,
               doctorName: txn.doctorName || "Doctor",
-            date: new Date(txn.paymentDate || txn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            time: txn.time || new Date(txn.paymentDate || txn.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            amount: txn.amount || 0,
-            method: "Stripe",
-            cardType: "stripe",
-            status: "Completed",
-            type: txn.type || "Consultation",
-            original: txn
+              date: new Date(txn.paymentDate || txn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              time: txn.time || new Date(txn.paymentDate || txn.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              amount: txn.amount || 0,
+              method: "Stripe",
+              cardType: "stripe",
+              status: "Completed",
+              type: txn.type || "Consultation",
+              original: txn
             };
           });
           setTransactions(mappedTxns);

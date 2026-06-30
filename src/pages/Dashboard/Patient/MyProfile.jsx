@@ -1,33 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaUserEdit, FaCamera, FaSave, FaTimes, FaUser, FaBirthdayCake, FaTint, FaVenusMars, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHeartbeat, FaAllergies, FaPills, FaBriefcase } from "react-icons/fa";
+import { useAuth } from "../../../hooks/useAuth";
 
 const initialProfileData = {
   // Personal
-  firstName: "John",
-  lastName: "Doe",
-  dateOfBirth: "1990-05-15",
-  gender: "Male",
-  bloodGroup: "O+",
-  occupation: "Software Engineer",
+  firstName: "",
+  lastName: "",
+  dateOfBirth: "",
+  gender: "",
+  bloodGroup: "",
+  occupation: "",
   // Contact
-  email: "john.doe@example.com",
-  phone: "+1 (555) 123-4567",
-  address: "123 Health Ave, Medical District, NY 10001",
+  email: "",
+  phone: "",
+  address: "",
   // Emergency
-  emergencyName: "Jane Doe",
-  emergencyRelation: "Spouse",
-  emergencyPhone: "+1 (555) 987-6543",
+  emergencyName: "",
+  emergencyRelation: "",
+  emergencyPhone: "",
   // Medical
-  allergies: "Penicillin, Peanuts",
-  medications: "Lisinopril 10mg daily",
-  image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&auto=format&fit=crop&w=250&q=80"
+  allergies: "",
+  medications: "",
+  image: ""
 };
 
 const MyProfile = () => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState(initialProfileData);
   const [formData, setFormData] = useState(initialProfileData);
+
+  useEffect(() => {
+    if (user) {
+      const parts = (user.name || "").split(" ");
+      const newFirstName = parts[0] || "";
+      const newLastName = parts.slice(1).join(" ") || "";
+      
+      const updatedData = {
+        ...initialProfileData,
+        firstName: newFirstName,
+        lastName: newLastName,
+        email: user.email || "",
+        image: user.avatar || user.photoURL || ""
+      };
+      setProfileData(updatedData);
+      setFormData(updatedData);
+    }
+  }, [user]);
 
   const handleEditToggle = () => {
     if (isEditing) {
@@ -173,9 +193,13 @@ const MyProfile = () => {
               )}
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-1">{profileData.firstName} {profileData.lastName}</h2>
-            <p className="text-sm font-semibold text-primary mb-4">Patient ID: PAT-8492</p>
+            <p className="text-sm font-semibold text-primary mb-4">
+              Patient ID: {user?.uid ? `PAT-${user.uid.substring(0, 5).toUpperCase()}` : "PAT-NEW"}
+            </p>
             <div className="w-full pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-500 font-medium">Account created on Jan 10, 2026</p>
+              <p className="text-xs text-gray-500 font-medium">
+                Account created {user?.metadata?.creationTime ? `on ${new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : "recently"}
+              </p>
             </div>
           </motion.div>
 

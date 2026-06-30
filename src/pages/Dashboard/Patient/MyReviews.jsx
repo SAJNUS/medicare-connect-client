@@ -1,37 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaSearch, FaStar, FaPencilAlt, FaTrash, FaPlus, FaTimes, FaUserMd } from "react-icons/fa";
+import { FaSearch, FaStar, FaPencilAlt, FaTrash, FaPlus, FaTimes, FaUserMd, FaHeartbeat, FaBrain, FaBaby, FaBone, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 
-const initialReviews = [
-  {
-    id: 1,
-    doctorName: "Dr. Sarah Jenkins",
-    specialty: "Cardiologist",
-    rating: 5,
-    date: "Oct 25, 2026",
-    text: "Dr. Jenkins was extremely thorough and took the time to explain everything clearly. Highly recommend her!",
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    id: 2,
-    doctorName: "Dr. Michael Chen",
-    specialty: "Neurologist",
-    rating: 4,
-    date: "Sep 12, 2026",
-    text: "Great consultation, but I had to wait a little bit past my appointment time. Otherwise, very professional.",
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-  }
-];
-
-const mockDoctorsList = [
-  "Dr. Sarah Jenkins",
-  "Dr. Michael Chen",
-  "Dr. Emily Wong",
-  "Dr. Robert Smith"
-];
+const getSpecialtyIcon = (specialty) => {
+  if (!specialty) return <FaUserMd />;
+  const s = specialty.toLowerCase();
+  if (s.includes("cardiology")) return <FaHeartbeat />;
+  if (s.includes("neurology")) return <FaBrain />;
+  if (s.includes("pediatric")) return <FaBaby />;
+  if (s.includes("orthopedics")) return <FaBone />;
+  if (s.includes("dermatology")) return <FaUserMd />;
+  if (s.includes("gynecology")) return <FaVenus />;
+  if (s.includes("dentistry")) return <FaTooth />;
+  if (s.includes("psychiatry")) return <FaHeadSideVirus />;
+  return <FaUserMd />;
+};
 
 const MyReviews = () => {
-  const [reviews, setReviews] = useState(initialReviews);
+  const { user } = useAuth();
+  const [reviews, setReviews] = useState([]);
+  const [allDoctors, setAllDoctors] = useState([]);
+  const [eligibleDoctors, setEligibleDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -41,13 +34,53 @@ const MyReviews = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
   // Form State
-  const [formData, setFormData] = useState({ doctorName: "", rating: 5, text: "" });
+  const [formData, setFormData] = useState({ doctorEmail: "", rating: 5, text: "" });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.email) return;
+      try {
+        setLoading(true);
+        const [aptRes, docRes, revRes] = await Promise.all([
+          axiosInstance.get(`/appointments?patientEmail=${user.email}`),
+          axiosInstance.get('/doctors'),
+          axiosInstance.get(`/reviews?patientEmail=${user.email}`)
+        ]);
+
+        const fetchedDocs = docRes.data?.data || [];
+        setAllDoctors(fetchedDocs);
+
+        const fetchedRevs = revRes.data?.data || [];
+        setReviews(fetchedRevs);
+
+        const fetchedApts = aptRes.data?.data || [];
+        // Eligible doctors: doctor has a completed appointment, and patient hasn't reviewed them yet.
+        const completedApts = fetchedApts.filter(apt => apt.appointmentStatus === "completed");
+        const uniqueDoctorEmails = [...new Set(completedApts.map(apt => apt.doctorEmail))];
+        const reviewedDoctorEmails = new Set(fetchedRevs.map(rev => rev.doctorEmail));
+
+        const unreviewedDoctors = uniqueDoctorEmails
+          .filter(email => !reviewedDoctorEmails.has(email))
+          .map(email => fetchedDocs.find(d => d.email === email))
+          .filter(Boolean);
+        
+        setEligibleDoctors(unreviewedDoctors);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [user]);
 
   // Filtering
   const filteredReviews = reviews.filter(rev => {
     const matchesFilter = filter === "All" || rev.rating.toString() === filter;
+    const doc = allDoctors.find(d => d.email === rev.doctorEmail) || {};
+    const dName = doc.name || "Doctor";
     const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = rev.doctorName.toLowerCase().includes(searchLower) || rev.text.toLowerCase().includes(searchLower);
+    const matchesSearch = dName.toLowerCase().includes(searchLower) || rev.comment.toLowerCase().includes(searchLower);
 
     return matchesFilter && matchesSearch;
   });
@@ -58,43 +91,74 @@ const MyReviews = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (reviewToDelete !== null) {
-      setReviews(reviews.filter(r => r.id !== reviewToDelete));
+  const confirmDelete = async () => {
+    if (reviewToDelete) {
+      try {
+        await axiosInstance.delete(`/reviews/${reviewToDelete}`);
+        const deletedRev = reviews.find(r => r._id === reviewToDelete);
+        setReviews(reviews.filter(r => r._id !== reviewToDelete));
+        
+        // Return doctor to eligible list if they still have a completed appointment
+        if (deletedRev) {
+          const doc = allDoctors.find(d => d.email === deletedRev.doctorEmail);
+          if (doc) setEligibleDoctors(prev => [...prev, doc]);
+        }
+      } catch (error) {
+        console.error("Error deleting review:", error);
+      }
     }
     setIsDeleteModalOpen(false);
     setReviewToDelete(null);
   };
 
   const handleEdit = (review) => {
-    setFormData({ doctorName: review.doctorName, rating: review.rating, text: review.text });
-    setEditingId(review.id);
+    setFormData({ doctorEmail: review.doctorEmail, rating: review.rating, text: review.comment });
+    setEditingId(review._id);
     setIsModalOpen(true);
   };
 
   const handleAddNew = () => {
-    setFormData({ doctorName: mockDoctorsList[0], rating: 5, text: "" });
+    if (eligibleDoctors.length > 0) {
+      setFormData({ doctorEmail: eligibleDoctors[0].email, rating: 5, text: "" });
+    } else {
+      setFormData({ doctorEmail: "", rating: 5, text: "" });
+    }
     setEditingId(null);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      // Update existing
-      setReviews(reviews.map(r => r.id === editingId ? { ...r, ...formData, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) } : r));
-    } else {
-      // Add new
-      const newReview = {
-        id: Date.now(),
-        ...formData,
-        specialty: "General Practitioner", // Mocking specialty
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        image: "https://images.unsplash.com/photo-1594824436998-d58df189038e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80" // Mock image
-      };
-      setReviews([newReview, ...reviews]);
+    try {
+      if (editingId) {
+        // Update existing
+        const res = await axiosInstance.patch(`/reviews/${editingId}`, {
+          rating: formData.rating,
+          comment: formData.text
+        });
+        if (res.data.success) {
+          setReviews(reviews.map(r => r._id === editingId ? { ...r, rating: formData.rating, comment: formData.text } : r));
+        }
+      } else {
+        // Add new
+        const payload = {
+          patientEmail: user.email,
+          patientName: user.displayName || "Patient",
+          doctorEmail: formData.doctorEmail,
+          rating: formData.rating,
+          comment: formData.text
+        };
+        const res = await axiosInstance.post('/reviews', payload);
+        if (res.data.success) {
+          const newRev = { ...payload, _id: res.data.data.insertedId, createdAt: new Date().toISOString() };
+          setReviews([newRev, ...reviews]);
+          setEligibleDoctors(prev => prev.filter(d => d.email !== formData.doctorEmail));
+        }
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error submitting review:", error);
     }
-    setIsModalOpen(false);
   };
 
   // Helper for rendering stars
@@ -140,7 +204,9 @@ const MyReviews = () => {
 
           <button
             onClick={handleAddNew}
-            className="w-full sm:w-auto flex justify-center items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-sm shadow-primary/20 hover:bg-primary-focus transition-colors"
+            disabled={eligibleDoctors.length === 0}
+            title={eligibleDoctors.length === 0 ? "You have reviewed all your visited doctors." : ""}
+            className="w-full sm:w-auto flex justify-center items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-sm shadow-primary/20 hover:bg-[#0b6e66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FaPlus /> Write Review
           </button>
@@ -193,9 +259,22 @@ const MyReviews = () => {
               <p className="text-gray-500">You haven't left any reviews matching this criteria.</p>
             </motion.div>
           ) : (
-            filteredReviews.map((rev, index) => (
+            filteredReviews.map((rev, index) => {
+              const doc = allDoctors.find(d => d.email === rev.doctorEmail) || {};
+              const docImage = doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80";
+              const docName = doc.name || "Doctor";
+              const exp = parseInt(doc.experience) || 5;
+              let designation = "Consultant";
+              if (exp >= 15) designation = "Professor";
+              else if (exp >= 10) designation = "Associate Professor";
+              const docSpecialty = doc.specialization || doc.specialty || "General";
+              
+              const dateObj = rev.createdAt ? new Date(rev.createdAt) : new Date();
+              const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}`;
+
+              return (
               <motion.div
-                key={rev.id}
+                key={rev._id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
@@ -204,18 +283,21 @@ const MyReviews = () => {
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                    <img src={rev.image} alt={rev.doctorName} className="w-full h-full object-cover" />
+                    <img src={docImage} alt={docName} className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-gray-900">{rev.doctorName}</h3>
-                    <p className="text-xs font-semibold text-primary">{rev.specialty}</p>
+                    <h3 className="text-base font-bold text-gray-900">{docName}</h3>
+                    <p className="text-[#0b6e66] text-[10px] font-bold mb-0.5">{designation}</p>
+                    <p className="text-xs font-semibold text-primary flex items-center gap-1">
+                      {getSpecialtyIcon(docSpecialty)} {docSpecialty}
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => handleEdit(rev)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-primary hover:bg-teal-50 transition-colors">
                     <FaPencilAlt />
                   </button>
-                  <button onClick={() => handleDelete(rev.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                  <button onClick={() => handleDelete(rev._id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
                     <FaTrash />
                   </button>
                 </div>
@@ -225,14 +307,14 @@ const MyReviews = () => {
                 {renderStars(rev.rating)}
               </div>
 
-              <p className="text-gray-600 text-sm leading-relaxed flex-grow">"{rev.text}"</p>
+              <p className="text-gray-600 text-sm leading-relaxed flex-grow">"{rev.comment}"</p>
 
               <div className="mt-4 pt-4 border-t border-gray-50 text-xs font-semibold text-gray-400 flex justify-between items-center">
-                <span>Posted on {rev.date}</span>
+                <span>Posted on {formattedDate}</span>
                 <span className="bg-green-50 text-green-600 px-2 py-1 rounded-md">Published</span>
               </div>
               </motion.div>
-            ))
+            )})
           )}
         </motion.div>
       </AnimatePresence>
@@ -272,14 +354,20 @@ const MyReviews = () => {
                   <div className="relative">
                     <FaUserMd className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <select
-                      value={formData.doctorName}
-                      onChange={(e) => setFormData({ ...formData, doctorName: e.target.value })}
+                      value={formData.doctorEmail}
+                      onChange={(e) => setFormData({ ...formData, doctorEmail: e.target.value })}
                       disabled={!!editingId} // Cannot change doctor when editing
                       className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none disabled:opacity-70 disabled:cursor-not-allowed font-medium"
                     >
-                      {mockDoctorsList.map(doc => (
-                        <option key={doc} value={doc}>{doc}</option>
-                      ))}
+                      {editingId ? (
+                        <option value={formData.doctorEmail}>
+                          {allDoctors.find(d => d.email === formData.doctorEmail)?.name || "Doctor"}
+                        </option>
+                      ) : (
+                        eligibleDoctors.map(doc => (
+                          <option key={doc.email} value={doc.email}>{doc.name}</option>
+                        ))
+                      )}
                     </select>
                   </div>
                 </div>
@@ -306,7 +394,7 @@ const MyReviews = () => {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-focus transition-colors shadow-sm shadow-primary/20"
+                    className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-[#0b6e66] transition-colors shadow-sm shadow-primary/20"
                   >
                     {editingId ? "Save Changes" : "Submit Review"}
                   </button>
