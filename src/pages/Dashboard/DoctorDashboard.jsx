@@ -71,8 +71,9 @@ const DoctorDashboard = () => {
   ];
 
   // 5. Today's Schedule (from /schedules)
+  const todayDateYYYYMMDD = new Date().toISOString().split('T')[0];
   const todaysSchedule = schedules
-    .filter(s => s.date === todayDateStr)
+    .filter(s => s.date === todayDateStr || s.date === todayDateYYYYMMDD)
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   // 6. Appointment Requests

@@ -28,7 +28,15 @@ const Register = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    let newValue = value;
+
+    if (name === "name" && role === "Doctor") {
+      if (!newValue.startsWith("Dr. ")) {
+        newValue = "Dr. " + newValue.replace(/^Dr\.\s*/i, "");
+      }
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -223,7 +231,12 @@ const Register = () => {
             <div className="flex bg-gray-100 p-1.5 rounded-xl mb-2 relative">
               <button
                 type="button"
-                onClick={() => setRole("Patient")}
+                onClick={() => {
+                  setRole("Patient");
+                  if (formData.name.startsWith("Dr. ")) {
+                    setFormData(prev => ({ ...prev, name: prev.name.replace(/^Dr\.\s*/i, "") }));
+                  }
+                }}
                 className={`relative z-10 flex-1 py-2 text-sm font-bold transition-colors duration-200 ${
                   role === "Patient" ? "text-primary" : "text-gray-500 hover:text-gray-700"
                 }`}
@@ -239,7 +252,12 @@ const Register = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setRole("Doctor")}
+                onClick={() => {
+                  setRole("Doctor");
+                  if (!formData.name.startsWith("Dr. ")) {
+                    setFormData(prev => ({ ...prev, name: "Dr. " + prev.name.replace(/^Dr\.\s*/i, "") }));
+                  }
+                }}
                 className={`relative z-10 flex-1 py-2 text-sm font-bold transition-colors duration-200 ${
                   role === "Doctor" ? "text-primary" : "text-gray-500 hover:text-gray-700"
                 }`}

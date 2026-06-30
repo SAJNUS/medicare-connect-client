@@ -1,21 +1,64 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaUserMd, FaSave, FaGraduationCap, FaBriefcase, FaMoneyBillWave, FaClock } from "react-icons/fa";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
 
 const initialProfile = {
-  name: "Dr. Sarah Jenkins",
-  specialty: "Cardiologist",
-  qualifications: "MBBS, MD (Cardiology), FACC",
-  experience: 12,
-  consultationFee: 150,
-  availableSlots: "Mon-Fri: 09:00 AM - 05:00 PM"
+  name: "",
+  specialty: "",
+  designation: "Consultant",
+  qualifications: "",
+  experience: "",
+  consultationFee: 500,
+  availableSlots: ""
 };
 
 const ProfileManagement = () => {
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState(initialProfile);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (authLoading || !user?.email) return;
+      try {
+        const userRes = await axiosInstance.get(`/users/${user.email}`);
+        const userData = userRes.data.data;
+        
+        let doctorData = {};
+        try {
+          const docRes = await axiosInstance.get('/doctors/profile/me');
+          doctorData = docRes.data.data;
+        } catch(err) {
+          // It's okay if not found yet
+        }
+        
+        let docName = doctorData.name || userData.name || "";
+        if (!docName.startsWith("Dr. ")) {
+          docName = "Dr. " + docName.replace(/^Dr\.\s*/i, "");
+        }
+
+        setProfile({
+          name: docName,
+          specialty: doctorData.specialty || userData.specialty || "",
+          designation: doctorData.designation || "Consultant",
+          qualifications: doctorData.qualifications || "",
+          experience: doctorData.experience || "",
+          consultationFee: doctorData.consultationFee || 500,
+          availableSlots: doctorData.availableSlots || ""
+        });
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [user, authLoading]);
 
   const validate = () => {
     const newErrors = {};
@@ -35,7 +78,7 @@ const ProfileManagement = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) {
       toast.error("Please fix the errors before saving.");
@@ -44,9 +87,11 @@ const ProfileManagement = () => {
 
     setIsSaving(true);
     
-    // Mock API delay
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      await axiosInstance.patch('/doctors/profile/update', profile);
+      // Optional: also update users collection name so they match
+      await axiosInstance.patch(`/users/${user.email}/name`, { name: profile.name }).catch(() => {});
+      
       toast.success("Profile updated successfully!", {
         style: {
           borderRadius: '10px',
@@ -54,7 +99,12 @@ const ProfileManagement = () => {
           color: '#fff',
         }
       });
-    }, 800);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update profile.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -92,10 +142,16 @@ const ProfileManagement = () => {
               <input 
                 type="text" 
                 value={profile.name}
-                disabled
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 cursor-not-allowed"
+                onChange={(e) => {
+                  let val = e.target.value;
+                  if (!val.startsWith("Dr. ")) {
+                    val = "Dr. " + val.replace(/^Dr\.\s*/i, "");
+                  }
+                  setProfile({...profile, name: val});
+                }}
+                className="w-full px-4 py-3 bg-white border border-gray-200 focus:ring-teal-500/20 focus:border-teal-500 rounded-xl text-sm font-medium transition-all"
               />
-              <p className="text-[10px] text-gray-400">Contact admin to change your registered name.</p>
+              <p className="text-[10px] text-gray-400">Your name must start with 'Dr. '</p>
             </div>
 
             <div className="space-y-1.5">
@@ -103,27 +159,64 @@ const ProfileManagement = () => {
               <input 
                 type="text" 
                 value={profile.specialty}
-                disabled
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 cursor-not-allowed"
+                onChange={(e) => setProfile({...profile, specialty: e.target.value})}
+                className="w-full px-4 py-3 bg-white border border-gray-200 focus:ring-teal-500/20 focus:border-teal-500 rounded-xl text-sm font-medium transition-all"
+                placeholder="e.g. Cardiologist"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-              <FaGraduationCap className="text-teal-500" /> Qualifications
-            </label>
-            <input 
-              type="text" 
-              value={profile.qualifications}
-              onChange={(e) => {
-                setProfile({...profile, qualifications: e.target.value});
-                if (errors.qualifications) setErrors({...errors, qualifications: null});
-              }}
-              className={`w-full px-4 py-3 bg-white border ${errors.qualifications ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200 focus:ring-teal-500/20 focus:border-teal-500'} rounded-xl text-sm transition-all font-medium text-gray-900 focus:outline-none focus:ring-2`}
-              placeholder="e.g. MBBS, MD (Cardiology)"
-            />
-            {errors.qualifications && <p className="text-xs text-red-500 font-medium">{errors.qualifications}</p>}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                <FaGraduationCap className="text-teal-500" /> Qualifications
+              </label>
+              <input 
+                type="text" 
+                value={profile.qualifications}
+                onChange={(e) => {
+                  setProfile({...profile, qualifications: e.target.value});
+                  if (errors.qualifications) setErrors({...errors, qualifications: null});
+                }}
+                className={`w-full px-4 py-3 bg-white border ${errors.qualifications ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200 focus:ring-teal-500/20 focus:border-teal-500'} rounded-xl text-sm transition-all font-medium text-gray-900 focus:outline-none focus:ring-2`}
+                placeholder="e.g. MBBS, MD (Cardiology)"
+              />
+              {errors.qualifications && <p className="text-xs text-red-500 font-medium">{errors.qualifications}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
+                <FaUserMd className="text-teal-500" /> Designation Type
+              </label>
+              <select
+                value={profile.designation}
+                onChange={(e) => {
+                  const newDesig = e.target.value;
+                  let minExp = 5;
+                  let fixedFee = 500;
+                  if (newDesig === "Associate Professor") {
+                    minExp = 10;
+                    fixedFee = 1000;
+                  } else if (newDesig === "Professor") {
+                    minExp = 15;
+                    fixedFee = 1500;
+                  }
+                  
+                  const currExp = Number(profile.experience) || 0;
+                  setProfile({
+                    ...profile,
+                    designation: newDesig,
+                    consultationFee: fixedFee,
+                    experience: currExp < minExp ? minExp : currExp
+                  });
+                }}
+                className="w-full px-4 py-3 bg-white border border-gray-200 focus:ring-teal-500/20 focus:border-teal-500 rounded-xl text-sm transition-all font-medium text-gray-900 focus:outline-none focus:ring-2"
+              >
+                <option value="Consultant">Consultant</option>
+                <option value="Associate Professor">Associate Professor</option>
+                <option value="Professor">Professor</option>
+              </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -133,10 +226,17 @@ const ProfileManagement = () => {
               </label>
               <input 
                 type="number" 
-                min="0"
+                min={profile.designation === "Professor" ? 15 : profile.designation === "Associate Professor" ? 10 : 5}
                 value={profile.experience}
                 onChange={(e) => {
-                  setProfile({...profile, experience: e.target.value === '' ? '' : Number(e.target.value)});
+                  let val = e.target.value === '' ? '' : Number(e.target.value);
+                  let minExp = 5;
+                  if (profile.designation === "Associate Professor") minExp = 10;
+                  if (profile.designation === "Professor") minExp = 15;
+                  
+                  if (val !== '' && val < minExp) val = minExp;
+
+                  setProfile({...profile, experience: val});
                   if (errors.experience) setErrors({...errors, experience: null});
                 }}
                 className={`w-full px-4 py-3 bg-white border ${errors.experience ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200 focus:ring-teal-500/20 focus:border-teal-500'} rounded-xl text-sm transition-all font-medium text-gray-900 focus:outline-none focus:ring-2`}
@@ -147,19 +247,16 @@ const ProfileManagement = () => {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
-                <FaMoneyBillWave className="text-teal-500" /> Consultation Fee ($)
+                <FaMoneyBillWave className="text-teal-500" /> Consultation Fee (BDT)
               </label>
               <input 
                 type="number" 
-                min="1"
                 value={profile.consultationFee}
-                onChange={(e) => {
-                  setProfile({...profile, consultationFee: e.target.value === '' ? '' : Number(e.target.value)});
-                  if (errors.consultationFee) setErrors({...errors, consultationFee: null});
-                }}
-                className={`w-full px-4 py-3 bg-white border ${errors.consultationFee ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-200 focus:ring-teal-500/20 focus:border-teal-500'} rounded-xl text-sm transition-all font-medium text-gray-900 focus:outline-none focus:ring-2`}
+                disabled
+                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-semibold text-gray-500 cursor-not-allowed"
                 placeholder="e.g. 100"
               />
+              <p className="text-[10px] text-gray-400">Fixed automatically based on Designation.</p>
               {errors.consultationFee && <p className="text-xs text-red-500 font-medium">{errors.consultationFee}</p>}
             </div>
           </div>

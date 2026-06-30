@@ -13,12 +13,16 @@ const PrescriptionManagement = () => {
   const navigate = useNavigate();
 
   const [prescriptions, setPrescriptions] = useState([]);
+  const [completedAppointments, setCompletedAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [formData, setFormData] = useState({
     patientName: "",
+    patientId: "",
+    appointmentId: "",
     date: new Date().toISOString().split('T')[0],
     diagnosis: "",
     medication: "",
@@ -26,17 +30,23 @@ const PrescriptionManagement = () => {
     instructions: ""
   });
 
-  // Fetch real prescriptions from backend
+  // Fetch real prescriptions and completed appointments
   useEffect(() => {
-    const fetchPrescriptions = async () => {
+    const fetchData = async () => {
       if (authLoading || !user?.email) return;
       try {
         setIsLoading(true);
-        const res = await axiosInstance.get(`/prescriptions?doctorEmail=${user.email}`);
-        if (res.data.success) {
-          const mapped = res.data.data.map(rx => ({
+        const [rxRes, aptRes] = await Promise.all([
+          axiosInstance.get(`/prescriptions?doctorEmail=${user.email}`),
+          axiosInstance.get(`/appointments?doctorEmail=${user.email}`)
+        ]);
+        
+        if (rxRes.data.success) {
+          const mapped = rxRes.data.data.map(rx => ({
             id: rx._id,
             patientName: rx.patientName || "Unknown Patient",
+            patientId: rx.patientId || "",
+            appointmentId: rx.appointmentId || "",
             date: rx.date || rx.createdAt?.substring(0, 10),
             diagnosis: rx.diagnosis || "",
             medication: rx.medication || "",
@@ -46,30 +56,36 @@ const PrescriptionManagement = () => {
           }));
           setPrescriptions(mapped);
         }
+
+        if (aptRes.data.success) {
+          const completed = aptRes.data.data.filter(a => a.appointmentStatus === 'completed');
+          setCompletedAppointments(completed);
+        }
       } catch (err) {
-        console.error("Failed to fetch prescriptions:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchPrescriptions();
+    fetchData();
   }, [user, authLoading]);
 
   // Check for incoming appointment data
   useEffect(() => {
     if (location.state && location.state.appointmentData) {
-      const { patientName, issue, date } = location.state.appointmentData;
-
-      setFormData(prev => ({
-        ...prev,
-        patientName: patientName || "",
-        diagnosis: issue || "",
-        date: date || new Date().toISOString().split('T')[0]
-      }));
-
+      const apt = location.state.appointmentData;
+      setFormData({
+        patientName: apt.patientName || "",
+        patientId: apt.patientId || "",
+        appointmentId: apt.id || apt._id || "",
+        diagnosis: apt.issue || apt.symptoms?.[0] || "",
+        date: apt.date || new Date().toISOString().split('T')[0],
+        medication: "",
+        dosage: "",
+        instructions: ""
+      });
+      setEditingId(null);
       setIsModalOpen(true);
-
-      // Clear the state so it doesn't trigger again on refresh
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -89,34 +105,61 @@ const PrescriptionManagement = () => {
         status: "Active"
       };
 
-      const response = await axiosInstance.post('/prescriptions', payload);
-
-      if (response.data.success) {
-        const newRx = {
-          id: response.data.data.insertedId,
-          ...payload
-        };
-
-        setPrescriptions([newRx, ...prescriptions]);
-        setIsModalOpen(false);
-
-        toast.success("Prescription created successfully!", {
-          style: { borderRadius: '10px', background: '#333', color: '#fff' }
-        });
-
-        setFormData({
-          patientName: "",
-          date: new Date().toISOString().split('T')[0],
-          diagnosis: "",
-          medication: "",
-          dosage: "",
-          instructions: ""
-        });
+      if (editingId) {
+        const response = await axiosInstance.patch(`/prescriptions/${editingId}`, payload);
+        if (response.data.success) {
+          setPrescriptions(prescriptions.map(rx => rx.id === editingId ? { ...rx, ...payload } : rx));
+          toast.success("Prescription updated successfully!");
+        }
+      } else {
+        const response = await axiosInstance.post('/prescriptions', payload);
+        if (response.data.success) {
+          const newRx = { id: response.data.data.insertedId, ...payload };
+          setPrescriptions([newRx, ...prescriptions]);
+          toast.success("Prescription created successfully!");
+        }
       }
+      
+      setIsModalOpen(false);
+      resetForm();
     } catch (err) {
       console.error("Failed to save prescription:", err);
-      toast.error("Failed to create prescription.");
+      toast.error("Failed to save prescription.");
     }
+  };
+
+  const handleEdit = (rx) => {
+    setFormData({
+      patientName: rx.patientName,
+      patientId: rx.patientId || "",
+      appointmentId: rx.appointmentId || "",
+      date: rx.date,
+      diagnosis: rx.diagnosis,
+      medication: rx.medication,
+      dosage: rx.dosage,
+      instructions: rx.instructions
+    });
+    setEditingId(rx.id);
+    setIsModalOpen(true);
+  };
+
+  const openNewModal = () => {
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      patientName: "",
+      patientId: "",
+      appointmentId: "",
+      date: new Date().toISOString().split('T')[0],
+      diagnosis: "",
+      medication: "",
+      dosage: "",
+      instructions: ""
+    });
+    setEditingId(null);
   };
 
   const filteredPrescriptions = prescriptions.filter(rx =>
@@ -150,7 +193,7 @@ const PrescriptionManagement = () => {
           </div>
 
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={openNewModal}
             className="w-full sm:w-auto flex justify-center items-center gap-2 px-5 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-bold shadow-sm shadow-teal-500/20 hover:bg-teal-600 transition-colors"
           >
             <FaPlus /> New Prescription
@@ -208,7 +251,7 @@ const PrescriptionManagement = () => {
                       </td>
                       <td className="p-4">
                         <div className="flex justify-center items-center gap-2">
-                          <button className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+                          <button onClick={() => handleEdit(rx)} className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
                             <FaEye />
                           </button>
                           <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
@@ -253,8 +296,8 @@ const PrescriptionManagement = () => {
                     <FaFilePrescription />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900">Create Prescription</h2>
-                    <p className="text-xs font-semibold text-gray-500">Issue a new digital Rx</p>
+                    <h2 className="text-lg font-bold text-gray-900">{editingId ? "Edit Prescription" : "Create Prescription"}</h2>
+                    <p className="text-xs font-semibold text-gray-500">{editingId ? "Update existing Rx" : "Issue a new digital Rx"}</p>
                   </div>
                 </div>
                 <button
@@ -270,14 +313,34 @@ const PrescriptionManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Patient Name</label>
-                    <input
-                      type="text"
+                    <select
                       required
-                      value={formData.patientName}
-                      onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-gray-900"
-                      placeholder="e.g. Alice Smith"
-                    />
+                      value={formData.appointmentId}
+                      onChange={(e) => {
+                        const apt = completedAppointments.find(a => a._id === e.target.value);
+                        if (apt) {
+                          setFormData({
+                            ...formData,
+                            appointmentId: apt._id,
+                            patientId: apt.patientId || "",
+                            patientName: apt.patientName || "",
+                            diagnosis: apt.issue || apt.symptoms?.[0] || formData.diagnosis,
+                            date: apt.date || formData.date
+                          });
+                        }
+                      }}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-gray-900 appearance-none"
+                    >
+                      <option value="" disabled>Select a completed appointment</option>
+                      {completedAppointments.map(apt => (
+                        <option key={apt._id} value={apt._id}>
+                          {apt.patientName} - {apt.date}
+                        </option>
+                      ))}
+                      {editingId && formData.appointmentId && !completedAppointments.some(a => a._id === formData.appointmentId) && (
+                        <option value={formData.appointmentId}>{formData.patientName}</option>
+                      )}
+                    </select>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Date</label>
@@ -356,7 +419,7 @@ const PrescriptionManagement = () => {
                     type="submit"
                     className="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-500 text-white hover:bg-teal-600 shadow-sm shadow-teal-500/20 transition-colors flex items-center gap-2"
                   >
-                    <FaPlus /> Generate Prescription
+                    {editingId ? <FaEye /> : <FaPlus />} {editingId ? "Update Prescription" : "Generate Prescription"}
                   </button>
                 </div>
               </form>

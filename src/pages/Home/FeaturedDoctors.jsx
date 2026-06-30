@@ -24,15 +24,8 @@ const FeaturedDoctors = () => {
           // Map MongoDB doctors to frontend card requirements
           const mappedDocs = allDocs.map(doc => {
             const exp = parseInt(doc.experience) || 5;
-            let designation = "Consultant";
-            let feeAmt = 500;
-            if (exp >= 15) {
-              designation = "Professor";
-              feeAmt = 1500;
-            } else if (exp >= 10) {
-              designation = "Associate Professor";
-              feeAmt = 1000;
-            }
+            const designation = doc.designation || "Consultant";
+            const feeAmt = parseInt(doc.consultationFee) || 500;
 
             const doctorReviews = allReviews.filter(r => r.doctorEmail === doc.email);
             const reviewCount = doctorReviews.length;

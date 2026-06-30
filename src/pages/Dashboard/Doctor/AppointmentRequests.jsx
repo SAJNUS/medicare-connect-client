@@ -163,9 +163,9 @@ const AppointmentRequests = () => {
           className="grid grid-cols-1 xl:grid-cols-2 gap-6 min-h-[300px] content-start"
         >
           {isLoading ? (
-            <div className="p-8 text-center text-gray-500 font-medium">Loading requests...</div>
+            <div className="col-span-full p-8 text-center text-gray-500 font-medium">Loading requests...</div>
           ) : filteredRequests.length === 0 ? (
-            <div className="p-12 text-center bg-white rounded-2xl border border-gray-100">
+            <div className="col-span-full p-12 text-center bg-white rounded-2xl border border-gray-100">
               <FaInbox className="mx-auto h-12 w-12 text-gray-300 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-1">No requests found</h3>
               <p className="text-gray-500 text-sm">You don't have any {filter.toLowerCase() !== 'all' ? filter.toLowerCase() : ''} appointment requests.</p>
