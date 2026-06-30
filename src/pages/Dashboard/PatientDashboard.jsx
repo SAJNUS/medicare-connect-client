@@ -53,7 +53,7 @@ const PatientDashboard = () => {
   const stats = [
     { title: "My Appointments", value: upcomingAppointments.length.toString(), icon: <FaCalendarCheck className="text-teal-600" />, bg: "bg-teal-100/50" },
     { title: "Total Consultations", value: appointmentHistory.filter(a => a.status === 'Completed').length.toString(), icon: <FaUserMd className="text-blue-600" />, bg: "bg-blue-100/50" },
-    { title: "Total Payments", value: "$450", fullValue: "$450.00", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
+    { title: "Total Payments", value: "BDT 450", fullValue: "BDT 450.00", icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
     { title: "Favorite Doctors", value: "4", icon: <FaStar className="text-orange-500" />, bg: "bg-orange-100/50" },
   ];
 
@@ -64,7 +64,7 @@ const PatientDashboard = () => {
 
   const recentActivities = [
     { id: 1, action: "Booked Appointment", target: "Dr. Sarah Jenkins", time: "2 hours ago", type: "booking" },
-    { id: 2, action: "Payment Successful", target: "$50 for Consultation", time: "1 day ago", type: "payment" },
+    { id: 2, action: "Payment Successful", target: "BDT 50 for Consultation", time: "1 day ago", type: "payment" },
     { id: 3, action: "Prescription Added", target: "By Dr. Michael Chen", time: "3 days ago", type: "prescription" },
   ];
 

@@ -19,16 +19,30 @@ const FeaturedDoctors = () => {
           const allDocs = response.data.data.slice(0, 4);
           
           // Map MongoDB doctors to frontend card requirements
-          const mappedDocs = allDocs.map(doc => ({
-            id: doc._id,
-            name: doc.name,
-            specialty: doc.specialization || doc.specialty || "General",
-            experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
-            image: doc.image || doc.avatar || doc.photoUrl || "",
-            rating: doc.rating || 4.5,
-            reviews: doc.reviews || 0,
-            fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
-          }));
+          const mappedDocs = allDocs.map(doc => {
+            const exp = parseInt(doc.experience) || 5;
+            let designation = "Consultant";
+            let feeAmt = 500;
+            if (exp >= 15) {
+              designation = "Professor";
+              feeAmt = 1500;
+            } else if (exp >= 10) {
+              designation = "Associate Professor";
+              feeAmt = 1000;
+            }
+
+            return {
+              id: doc._id,
+              name: doc.name,
+              specialty: doc.specialization || doc.specialty || "General",
+              designation: designation,
+              experience: `${exp}+ Years Exp.`,
+              image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
+              rating: doc.rating || 4.5,
+              reviews: doc.reviews || 0,
+              fee: `BDT ${feeAmt}`,
+            };
+          });
           
           setDoctors(mappedDocs);
         }

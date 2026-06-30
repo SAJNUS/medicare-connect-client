@@ -11,7 +11,7 @@ const FindDoctors = () => {
   const [specialtyFilter, setSpecialtyFilter] = useState("All");
   const [sortBy, setSortBy] = useState("default");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const doctorsPerPage = 8;
 
@@ -40,18 +40,32 @@ const FindDoctors = () => {
 
         const response = await axiosInstance.get(`/doctors?${params.toString()}`);
         if (response.data.success) {
-          const mappedDocs = response.data.data.map(doc => ({
-            id: doc._id,
-            name: doc.name,
-            specialty: doc.specialization || doc.specialty || "General",
-            experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
-            experienceYears: parseInt(doc.experience) || 5,
-            image: doc.image || doc.avatar || doc.photoUrl || "",
-            rating: doc.rating || 4.5,
-            reviews: doc.reviews || 0,
-            fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
-            feeAmount: parseInt(doc.consultationFee) || 500,
-          }));
+          const mappedDocs = response.data.data.map(doc => {
+            const exp = parseInt(doc.experience) || 5;
+            let designation = "Consultant";
+            let feeAmt = 500;
+            if (exp >= 15) {
+              designation = "Professor";
+              feeAmt = 1500;
+            } else if (exp >= 10) {
+              designation = "Associate Professor";
+              feeAmt = 1000;
+            }
+
+            return {
+              id: doc._id,
+              name: doc.name,
+              specialty: doc.specialization || doc.specialty || "General",
+              designation: designation,
+              experience: `${exp}+ Years Exp.`,
+              experienceYears: exp,
+              image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
+              rating: doc.rating || 4.5,
+              reviews: doc.reviews || 0,
+              fee: `BDT ${feeAmt}`,
+              feeAmount: feeAmt,
+            };
+          });
           setDoctors(mappedDocs);
           setTotalPages(response.data.totalPages || 1);
         }

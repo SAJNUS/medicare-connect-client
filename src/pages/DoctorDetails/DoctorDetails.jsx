@@ -20,17 +20,30 @@ const DoctorDetails = () => {
         const response = await axiosInstance.get(`/doctors/${id}`);
         if (response.data.success && response.data.data) {
           const doc = response.data.data;
+          const exp = parseInt(doc.experience) || 5;
+          let designation = "Consultant";
+          let feeAmt = 500;
+          if (exp >= 15) {
+            designation = "Professor";
+            feeAmt = 1500;
+          } else if (exp >= 10) {
+            designation = "Associate Professor";
+            feeAmt = 1000;
+          }
+
           setDoctor({
             id: doc._id,
             name: doc.name,
+            designation: designation,
             specialty: doc.specialization || doc.specialty || "General",
             degree: doc.degree || "MBBS",
-            experience: doc.experience ? `${doc.experience}+ Years Exp.` : "5+ Years Exp.",
+            experience: `${exp}+ Years Exp.`,
             workingAt: doc.workingAt || "MediCare Hospital",
-            fee: doc.consultationFee ? `$${doc.consultationFee}` : "$500",
+            fee: `BDT ${feeAmt}`,
+            feeAmount: feeAmt,
             rating: doc.rating || 4.5,
             reviews: doc.reviews || 0,
-            image: doc.image || doc.avatar || doc.photoUrl || "",
+            image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
             about: doc.about || "Experienced and dedicated doctor committed to providing excellent patient care.",
             availability: doc.availability || [],
             qualifications: doc.qualifications || [],
@@ -57,7 +70,11 @@ const DoctorDetails = () => {
   const [selectedTime, setSelectedTime] = useState("");
 
   if (loading) {
-    return <div className="min-h-[60vh] flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (!doctor) {
@@ -134,6 +151,7 @@ const DoctorDetails = () => {
             <div className="mb-2">
               <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 pr-4">{doctor.name}</h1>
             </div>
+            {doctor.designation && <p className="text-[#0b6e66] font-medium uppercase tracking-wider text-sm mb-1">{doctor.designation}</p>}
             <p className="text-primary font-medium text-lg mb-4">{doctor.specialty}</p>
 
             <div className="flex flex-wrap gap-4 mb-6">

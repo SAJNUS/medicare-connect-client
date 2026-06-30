@@ -24,6 +24,7 @@ const DoctorCard = ({ doctor, index = 0 }) => {
         </div>
         <div className="flex flex-col flex-grow py-1">
           <h3 className="text-base font-poppins font-bold text-gray-900 leading-tight mb-1">{doctor.name}</h3>
+          {doctor.designation && <p className="text-[#0b6e66] font-inter font-medium text-[11px] uppercase tracking-wider mb-0.5">{doctor.designation}</p>}
           <p className="text-gray-500 font-inter text-xs mb-0.5">{doctor.specialty}</p>
           <p className="text-gray-500 font-inter text-xs mb-2">{doctor.experience}</p>
           <div className="flex items-center text-xs font-bold text-gray-800">

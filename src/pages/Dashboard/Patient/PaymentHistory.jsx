@@ -166,7 +166,7 @@ const PaymentHistory = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900 text-sm mb-1">${txn.amount.toFixed(2)}</div>
+                    <div className="font-bold text-gray-900 text-sm mb-1">BDT {txn.amount.toFixed(2)}</div>
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
                       {getCardIcon(txn.cardType)}
                       {txn.method}
@@ -226,7 +226,7 @@ const PaymentHistory = () => {
                         <div className="text-xs font-semibold text-gray-500">{txn.date} • {txn.time}</div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className="font-bold text-gray-900 text-base mb-1">${txn.amount.toFixed(2)}</div>
+                        <div className="font-bold text-gray-900 text-base mb-1">BDT {txn.amount.toFixed(2)}</div>
                         {getStatusBadge(txn.status)}
                       </div>
                     </div>
