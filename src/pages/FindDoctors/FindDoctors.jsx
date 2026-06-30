@@ -39,6 +39,9 @@ const FindDoctors = () => {
         params.append("status", "verified");
 
         const response = await axiosInstance.get(`/doctors?${params.toString()}`);
+        const reviewsRes = await axiosInstance.get(`/reviews`).catch(() => ({ data: { data: [] } }));
+        const allReviews = reviewsRes.data.data || [];
+
         if (response.data.success) {
           const mappedDocs = response.data.data.map(doc => {
             const exp = parseInt(doc.experience) || 5;
@@ -52,6 +55,12 @@ const FindDoctors = () => {
               feeAmt = 1000;
             }
 
+            const doctorReviews = allReviews.filter(r => r.doctorEmail === doc.email);
+            const reviewCount = doctorReviews.length;
+            const avgRating = reviewCount > 0 
+              ? (doctorReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1) 
+              : "New";
+
             return {
               id: doc._id,
               name: doc.name,
@@ -60,8 +69,8 @@ const FindDoctors = () => {
               experience: `${exp}+ Years Exp.`,
               experienceYears: exp,
               image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
-              rating: doc.rating || 4.5,
-              reviews: doc.reviews || 0,
+              rating: avgRating,
+              reviews: reviewCount,
               fee: `BDT ${feeAmt}`,
               feeAmount: feeAmt,
             };

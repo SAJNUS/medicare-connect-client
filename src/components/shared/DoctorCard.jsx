@@ -1,6 +1,19 @@
 import { motion } from "framer-motion";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
+const getSpecialtyIcon = (specialty) => {
+  const s = specialty.toLowerCase();
+  if (s.includes("cardiology")) return <FaHeartbeat className="mr-1.5 text-primary" />;
+  if (s.includes("neurology")) return <FaBrain className="mr-1.5 text-primary" />;
+  if (s.includes("pediatrics")) return <FaBaby className="mr-1.5 text-primary" />;
+  if (s.includes("orthopedics")) return <FaBone className="mr-1.5 text-primary" />;
+  if (s.includes("dermatology")) return <FaUserMd className="mr-1.5 text-primary" />;
+  if (s.includes("gynecology")) return <FaVenus className="mr-1.5 text-primary" />;
+  if (s.includes("dentistry")) return <FaTooth className="mr-1.5 text-primary" />;
+  if (s.includes("psychiatry")) return <FaHeadSideVirus className="mr-1.5 text-primary" />;
+  return null;
+};
 
 const DoctorCard = ({ doctor, index = 0 }) => {
   const navigate = useNavigate();
@@ -24,12 +37,12 @@ const DoctorCard = ({ doctor, index = 0 }) => {
         </div>
         <div className="flex flex-col flex-grow py-1">
           <h3 className="text-base font-poppins font-bold text-gray-900 leading-tight mb-1">{doctor.name}</h3>
-          {doctor.designation && <p className="text-[#0b6e66] font-inter font-medium text-[11px] uppercase tracking-wider mb-0.5">{doctor.designation}</p>}
-          <p className="text-gray-500 font-inter text-xs mb-0.5">{doctor.specialty}</p>
+          {doctor.designation && <p className="text-[#0b6e66] font-inter font-medium text-[11px] mb-0.5">{doctor.designation}</p>}
+          <p className="text-gray-500 font-inter text-xs mb-0.5 flex items-center">{getSpecialtyIcon(doctor.specialty)} {doctor.specialty}</p>
           <p className="text-gray-500 font-inter text-xs mb-2">{doctor.experience}</p>
           <div className="flex items-center text-xs font-bold text-gray-800">
             <FaStar className="text-yellow-400 mr-1" />
-            {doctor.rating} <span className="text-gray-400 font-normal ml-1">({doctor.reviews})</span>
+            {doctor.rating} <span className="text-gray-400 font-normal ml-1">({doctor.reviews} Reviews)</span>
           </div>
         </div>
       </div>

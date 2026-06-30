@@ -1,10 +1,23 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaStar, FaGraduationCap, FaCalendarAlt, FaClock, FaCheckCircle } from "react-icons/fa";
+import { FaStar, FaGraduationCap, FaCalendarAlt, FaClock, FaCheckCircle, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
+
+const getSpecialtyIcon = (specialty) => {
+  const s = specialty.toLowerCase();
+  if (s.includes("cardiology")) return <FaHeartbeat className="mr-1.5 text-primary" />;
+  if (s.includes("neurology")) return <FaBrain className="mr-1.5 text-primary" />;
+  if (s.includes("pediatrics")) return <FaBaby className="mr-1.5 text-primary" />;
+  if (s.includes("orthopedics")) return <FaBone className="mr-1.5 text-primary" />;
+  if (s.includes("dermatology")) return <FaUserMd className="mr-1.5 text-primary" />;
+  if (s.includes("gynecology")) return <FaVenus className="mr-1.5 text-primary" />;
+  if (s.includes("dentistry")) return <FaTooth className="mr-1.5 text-primary" />;
+  if (s.includes("psychiatry")) return <FaHeadSideVirus className="mr-1.5 text-primary" />;
+  return null;
+};
 
 const DoctorDetails = () => {
   const { id } = useParams();
@@ -18,6 +31,9 @@ const DoctorDetails = () => {
     const fetchDoctor = async () => {
       try {
         const response = await axiosInstance.get(`/doctors/${id}`);
+        const reviewsRes = await axiosInstance.get(`/reviews`).catch(() => ({ data: { data: [] } }));
+        const allReviews = reviewsRes.data.data || [];
+
         if (response.data.success && response.data.data) {
           const doc = response.data.data;
           const exp = parseInt(doc.experience) || 5;
@@ -31,6 +47,12 @@ const DoctorDetails = () => {
             feeAmt = 1000;
           }
 
+          const doctorReviews = allReviews.filter(r => r.doctorEmail === doc.email);
+          const reviewCount = doctorReviews.length;
+          const avgRating = reviewCount > 0 
+            ? (doctorReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1) 
+            : "New";
+
           setDoctor({
             id: doc._id,
             name: doc.name,
@@ -41,8 +63,8 @@ const DoctorDetails = () => {
             workingAt: doc.workingAt || "MediCare Hospital",
             fee: `BDT ${feeAmt}`,
             feeAmount: feeAmt,
-            rating: doc.rating || 4.5,
-            reviews: doc.reviews || 0,
+            rating: avgRating,
+            reviews: reviewCount,
             image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
             about: doc.about || "Experienced and dedicated doctor committed to providing excellent patient care.",
             availability: doc.availability || [],
@@ -151,8 +173,8 @@ const DoctorDetails = () => {
             <div className="mb-2">
               <h1 className="text-3xl md:text-4xl font-poppins font-bold text-gray-900 pr-4">{doctor.name}</h1>
             </div>
-            {doctor.designation && <p className="text-[#0b6e66] font-medium uppercase tracking-wider text-sm mb-1">{doctor.designation}</p>}
-            <p className="text-primary font-medium text-lg mb-4">{doctor.specialty}</p>
+            {doctor.designation && <p className="text-[#0b6e66] font-medium text-sm mb-1">{doctor.designation}</p>}
+            <p className="text-primary font-medium text-lg mb-4 flex items-center">{getSpecialtyIcon(doctor.specialty)} {doctor.specialty}</p>
 
             <div className="flex flex-wrap gap-4 mb-6">
               <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">

@@ -14,6 +14,9 @@ const FeaturedDoctors = () => {
     const fetchFeaturedDoctors = async () => {
       try {
         const response = await axiosInstance.get('/doctors?status=verified&limit=4');
+        const reviewsRes = await axiosInstance.get(`/reviews`).catch(() => ({ data: { data: [] } }));
+        const allReviews = reviewsRes.data.data || [];
+
         if (response.data.success) {
           // Take only the first 4 doctors for the featured section
           const allDocs = response.data.data.slice(0, 4);
@@ -31,6 +34,12 @@ const FeaturedDoctors = () => {
               feeAmt = 1000;
             }
 
+            const doctorReviews = allReviews.filter(r => r.doctorEmail === doc.email);
+            const reviewCount = doctorReviews.length;
+            const avgRating = reviewCount > 0 
+              ? (doctorReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1) 
+              : "New";
+
             return {
               id: doc._id,
               name: doc.name,
@@ -38,8 +47,8 @@ const FeaturedDoctors = () => {
               designation: designation,
               experience: `${exp}+ Years Exp.`,
               image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
-              rating: doc.rating || 4.5,
-              reviews: doc.reviews || 0,
+              rating: avgRating,
+              reviews: reviewCount,
               fee: `BDT ${feeAmt}`,
             };
           });
