@@ -10,9 +10,11 @@ export const useModal = () => {
 export const ModalProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [submitCallback, setSubmitCallback] = useState(null);
+  const [modalConfig, setModalConfig] = useState({});
 
-  const openModal = useCallback((onSubmit) => {
+  const openModal = useCallback((onSubmit, config = {}) => {
     setSubmitCallback(() => onSubmit);
+    setModalConfig(config);
     setIsOpen(true);
   }, []);
 
@@ -21,6 +23,7 @@ export const ModalProvider = ({ children }) => {
     // Give time for exit animation before clearing callback
     setTimeout(() => {
       setSubmitCallback(null);
+      setModalConfig({});
     }, 500);
   }, []);
 
@@ -37,6 +40,7 @@ export const ModalProvider = ({ children }) => {
         isOpen={isOpen} 
         onClose={closeModal} 
         onSubmit={handleSubmit} 
+        config={modalConfig}
       />
     </ModalContext.Provider>
   );

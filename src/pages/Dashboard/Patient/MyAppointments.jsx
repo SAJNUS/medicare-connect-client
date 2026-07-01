@@ -202,35 +202,44 @@ const MyAppointments = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
-      {/* Header & Filters */}
+      {/* Header & Controls */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-6"
       >
-        <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
-
-        <div className="flex overflow-x-auto pb-2 md:pb-0 hide-scrollbar gap-2">
-          {["All", "Upcoming", "Completed", "Cancelled"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === f
-                ? "bg-primary text-white shadow-md shadow-primary/20"
-                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-                }`}
-            >
-              {f}
-            </button>
-          ))}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">My Appointments</h1>
+          <p className="text-sm font-medium text-gray-500">Manage your consultations, payments, and appointment history.</p>
         </div>
 
         <button 
           onClick={() => openModal(handleBookAppointment)}
-          className="mt-4 md:mt-0 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-[#095c55] transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
+          className="w-full md:w-auto mt-4 md:mt-0 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-[#095c55] transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
         >
           <FaPlus /> New Appointment
         </button>
+      </motion.div>
+
+      {/* Filter Pills */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2"
+      >
+        {["All", "Upcoming", "Completed", "Cancelled"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === f
+              ? "bg-gray-900 text-white shadow-md shadow-gray-900/20"
+              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              }`}
+          >
+            {f}
+          </button>
+        ))}
       </motion.div>
 
       {/* Appointments Grid */}

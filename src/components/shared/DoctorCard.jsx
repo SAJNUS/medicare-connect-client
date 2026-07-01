@@ -19,17 +19,17 @@ const getSpecialtyIcon = (specialty) => {
 const DoctorCard = ({ doctor, index = 0 }) => {
   const navigate = useNavigate();
   const { isFavorited, toggleFavorite } = useFavorites();
-  const favorited = isFavorited(doctor.id);
+  const favorited = isFavorited(doctor._id);
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(doctor.id, doctor.name);
+    toggleFavorite(doctor._id, doctor.name);
   };
 
   return (
     <motion.div
-      onClick={() => navigate(`/doctors/${doctor.id}`)}
+      onClick={() => navigate(`/doctors/${doctor._id}`)}
       className="bg-white rounded-2xl overflow-hidden shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 flex p-4 pb-5 flex-col h-full cursor-pointer transition-shadow"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -38,12 +38,12 @@ const DoctorCard = ({ doctor, index = 0 }) => {
     >
       <div className="flex gap-4 mb-4">
         <div className="bg-gray-100 rounded-xl overflow-hidden w-28 h-36 flex-shrink-0 relative group/img">
-          <img 
-            src={doctor.image} 
-            alt={doctor.name} 
+          <img
+            src={doctor.image}
+            alt={doctor.name}
             className="w-full h-full object-cover"
           />
-          <button 
+          <button
             onClick={handleFavoriteClick}
             className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors z-10"
           >
@@ -61,7 +61,7 @@ const DoctorCard = ({ doctor, index = 0 }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="mt-auto">
         <div className="mb-4 flex justify-between items-center">
           <div>

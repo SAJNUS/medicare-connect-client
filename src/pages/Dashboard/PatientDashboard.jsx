@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaVideo, FaMapMarkerAlt, FaHeart, FaHeartbeat, FaBrain, FaBaby, FaBone, FaVenus, FaTooth, FaHeadSideVirus, FaTimes } from "react-icons/fa";
+import { FaCalendarCheck, FaUserMd, FaWallet, FaClock, FaCheckCircle, FaTimesCircle, FaStar, FaVideo, FaMapMarkerAlt, FaHeart, FaHeartbeat, FaBrain, FaBaby, FaBone, FaVenus, FaTooth, FaHeadSideVirus, FaTimes, FaPlus } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useModal } from "../../context/ModalContext";
 import { useAuth } from "../../hooks/useAuth";
 import { useFavorites } from "../../contexts/FavoritesContext";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
-import { formatToDDMMYYYY, generateAvailableTimeSlots, parseDateTimeForSort } from "../../utils/dateUtils";
+import { formatToDDMMYYYY, parseDateTimeForSort } from "../../utils/dateUtils";
+import AppointmentForm from "../../components/appointments/AppointmentForm";
 
 const getSpecialtyIcon = (specialty) => {
   if (!specialty) return <FaUserMd className="mr-1 text-primary" />;
@@ -28,7 +29,7 @@ const PatientDashboard = () => {
   const { openModal } = useModal();
   const { user } = useAuth();
   const { favorites, favoriteDoctorsData } = useFavorites();
-  
+
   const [allAppointments, setAllAppointments] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
 
@@ -51,7 +52,7 @@ const PatientDashboard = () => {
     };
     const fetchDoctors = async () => {
       try {
-        const docRes = await axiosInstance.get('/doctors');
+        const docRes = await axiosInstance.get('/doctors?limit=100');
         if (docRes.data.success) {
           setAllDoctors(docRes.data.data);
         }
@@ -64,7 +65,7 @@ const PatientDashboard = () => {
   }, [user]);
 
   const upcomingAppointments = allAppointments
-    .filter(a => a.appointmentStatus === "pending" || a.appointmentStatus === "approved")
+    .filter(a => a.appointmentStatus === "approved")
     .map(apt => {
       const docDetails = allDoctors.find(d => d._id === apt.doctorId || d.name === apt.doctorName);
       const exp = docDetails ? parseInt(docDetails.experience) || 5 : 5;
@@ -74,56 +75,50 @@ const PatientDashboard = () => {
 
       return {
         id: apt._id,
+        doctorId: docDetails?._id || apt.doctorId,
         doctorName: apt.doctorName,
-        specialty: apt.specialty || "General",
+        specialty: docDetails?.specialization || docDetails?.specialty || apt.specialty || "General",
+        fee: docDetails?.feeAmount || apt.fee || 500,
+        availableDays: docDetails?.availableDays || [],
+        availableTimeSlots: docDetails?.availableTimeSlots || null,
         designation,
         date: formatToDDMMYYYY(apt.date || apt.appointmentDate),
         time: apt.time || apt.timeSlot,
         type: apt.type || "In-Person Consult",
+        status: apt.appointmentStatus === "approved" ? "Upcoming"
+          : apt.appointmentStatus === "pending" ? "Pending"
+            : apt.appointmentStatus === "awaiting_payment" ? "Waiting"
+              : apt.appointmentStatus === "rejected" ? "Rejected"
+                : apt.appointmentStatus === "cancelled" ? "Cancelled"
+                  : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
         image: docDetails?.photoURL || docDetails?.image || docDetails?.avatar || docDetails?.photoUrl || "",
       };
     })
     .sort((a, b) => parseDateTimeForSort(a.date, a.time) - parseDateTimeForSort(b.date, b.time))
     .slice(0, 3);
 
-  const [rescheduleForm, setRescheduleForm] = useState({ date: '', time: '' });
-  const [isRescheduleDateFocused, setIsRescheduleDateFocused] = useState(false);
-  const rescheduleDateInputRef = useRef(null);
+  const [isRescheduling, setIsRescheduling] = useState(false);
 
-  const handleRescheduleDateClick = (e) => {
-    e.preventDefault();
-    if (rescheduleDateInputRef.current) {
-      rescheduleDateInputRef.current.type = "date";
-      if (rescheduleDateInputRef.current.showPicker) {
-        try {
-          rescheduleDateInputRef.current.showPicker();
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      setIsRescheduleDateFocused(true);
-    }
-  };
-
-  const handleRescheduleSubmit = async (e) => {
-    e.preventDefault();
+  const handleRescheduleSubmit = async (formData) => {
     if (!rescheduleData) return;
+    setIsRescheduling(true);
     try {
       const res = await axiosInstance.patch(`/appointments/${rescheduleData.id}/reschedule`, {
-        date: formatToDDMMYYYY(rescheduleForm.date),
-        time: rescheduleForm.time
+        date: formatToDDMMYYYY(formData.date),
+        time: formData.time
       });
       if (res.data.success) {
         toast.success("Appointment rescheduled successfully!");
-        setAllAppointments(prev => prev.map(a => 
-          a._id === rescheduleData.id ? { ...a, date: formatToDDMMYYYY(rescheduleForm.date), time: rescheduleForm.time } : a
+        setAllAppointments(prev => prev.map(a =>
+          a._id === rescheduleData.id ? { ...a, date: formatToDDMMYYYY(formData.date), time: formData.time } : a
         ));
         setRescheduleData(null);
-        setRescheduleForm({ date: '', time: '' });
       }
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to reschedule appointment");
+    } finally {
+      setIsRescheduling(false);
     }
   };
 
@@ -134,11 +129,11 @@ const PatientDashboard = () => {
       doctorId: apt.doctorId,
       doctor: apt.doctorName,
       date: formatToDDMMYYYY(apt.date || apt.appointmentDate),
-      status: apt.appointmentStatus === "completed" ? "Completed" : "Cancelled"
+      status: apt.appointmentStatus === "completed" ? "Completed" : "Rejected"
     }))
     .slice(0, 5);
 
-  const totalUpcoming = allAppointments.filter(a => a.appointmentStatus === "pending" || a.appointmentStatus === "approved").length;
+  const totalUpcoming = allAppointments.filter(a => a.appointmentStatus === "approved").length;
   const totalCompleted = allAppointments.filter(a => a.appointmentStatus === "completed").length;
   const totalPaymentsAmount = allAppointments.reduce((sum, apt) => apt.paymentStatus === 'paid' ? sum + (Number(apt.fee) || 0) : sum, 0);
 
@@ -153,7 +148,7 @@ const PatientDashboard = () => {
   const dynamicActivities = [];
   allAppointments.forEach(apt => {
     const createdAt = apt._id ? new Date(parseInt(apt._id.substring(0, 8), 16) * 1000) : new Date();
-    
+
     // Booking activity
     dynamicActivities.push({
       id: `${apt._id}-booking`,
@@ -208,6 +203,10 @@ const PatientDashboard = () => {
       return { ...act, time: timeStr };
     });
 
+  const handleBookAppointment = (newAppointment) => {
+    setAllAppointments(prev => [newAppointment, ...prev]);
+  };
+
   return (
     <div className="space-y-8 pb-8">
 
@@ -225,11 +224,11 @@ const PatientDashboard = () => {
             Here's what's happening with your health profile today.
           </p>
         </div>
-        <button 
-          onClick={() => openModal()}
-          className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_4px_12px_rgba(13,148,136,0.3)] hover:shadow-[0_6px_16px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 transition-all"
+        <button
+          onClick={() => openModal(handleBookAppointment)}
+          className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_4px_12px_rgba(13,148,136,0.3)] hover:shadow-[0_6px_16px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center"
         >
-          + New Appointment
+          New Appointment
         </button>
       </motion.div>
 
@@ -278,7 +277,7 @@ const PatientDashboard = () => {
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-poppins font-bold text-gray-900">Upcoming Appointments</h3>
-              <button 
+              <button
                 onClick={() => setIsAllAppointmentsModalOpen(true)}
                 className="text-primary font-semibold text-sm hover:underline"
               >
@@ -313,22 +312,21 @@ const PatientDashboard = () => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 md:ml-auto w-full sm:w-auto">
-                  <div className={`flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg w-full ${
-                    apt.type === 'Video Consult' 
-                      ? 'bg-blue-100 text-blue-600' 
+                  <div className={`flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg w-full ${apt.type === 'Video Consult'
+                      ? 'bg-blue-100 text-blue-600'
                       : 'bg-red-100 text-red-600'
-                  }`}>
+                    }`}>
                     {apt.type === 'Video Consult' ? <FaVideo className="text-sm" /> : <FaMapMarkerAlt className="text-sm" />}
                     {apt.type}
                   </div>
                   <div className="grid grid-cols-2 gap-2 w-full">
-                    <button 
+                    <button
                       onClick={() => setRescheduleData(apt)}
                       className="btn btn-sm bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
                     >
                       Reschedule
                     </button>
-                    <button 
+                    <button
                       onClick={() => window.open('https://meet.google.com', '_blank')}
                       className="btn btn-sm btn-primary text-white hover:bg-primary-focus rounded-lg"
                     >
@@ -375,8 +373,8 @@ const PatientDashboard = () => {
                         </span>
                       </td>
                       <td className="py-4 text-center">
-                        <button 
-                          onClick={() => history.doctorId ? navigate(`/doctors/${history.doctorId}`) : navigate('/doctors')} 
+                        <button
+                          onClick={() => history.doctorId ? navigate(`/doctors/${history.doctorId}`) : navigate('/doctors')}
                           className="text-primary hover:text-[#095c55] font-bold text-sm transition-colors"
                         >
                           Rebook
@@ -404,9 +402,9 @@ const PatientDashboard = () => {
             <h3 className="text-lg font-poppins font-bold text-gray-900 mb-6">Favorite Doctors</h3>
             <div className="space-y-5">
               {favoriteDoctorsData.length > 0 ? favoriteDoctorsData.slice(0, 3).map(doc => (
-                <div 
-                  key={doc.id} 
-                  onClick={() => navigate(`/doctors/${doc.id}`)}
+                <div
+                  key={doc._id}
+                  onClick={() => navigate(`/doctors/${doc._id}`)}
                   className="flex items-center justify-between group cursor-pointer hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -423,11 +421,11 @@ const PatientDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      toggleFavorite(doc.id, doc.name);
+                      toggleFavorite(doc._id, doc.name);
                     }}
                     className="text-primary p-2 bg-teal-50 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors opacity-100">
                     <FaHeart className="text-red-500 group-hover:text-white" />
@@ -437,7 +435,7 @@ const PatientDashboard = () => {
                 <p className="text-sm text-gray-500 text-center py-4">No favorite doctors yet.</p>
               )}
             </div>
-            <button 
+            <button
               onClick={() => setIsFavoritesModalOpen(true)}
               className="w-full mt-6 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
             >
@@ -488,8 +486,8 @@ const PatientDashboard = () => {
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900 font-poppins">All Favorite Doctors</h3>
-                <button 
-                  onClick={() => setIsFavoritesModalOpen(false)} 
+                <button
+                  onClick={() => setIsFavoritesModalOpen(false)}
                   className="text-gray-400 p-2 rounded-full hover:bg-red-50 hover:text-red-500 transition-all duration-300"
                 >
                   <FaTimes className="w-5 h-5" />
@@ -497,7 +495,7 @@ const PatientDashboard = () => {
               </div>
               <div className="p-6 overflow-y-auto space-y-4 bg-gray-50/30 flex-1">
                 {favoriteDoctorsData.length > 0 ? favoriteDoctorsData.map(doc => (
-                  <div key={doc.id} onClick={() => navigate(`/doctors/${doc.id}`)} className="flex items-center justify-between group cursor-pointer hover:bg-white bg-transparent p-3 rounded-xl transition-all shadow-sm border border-transparent hover:border-gray-200">
+                  <div key={doc._id} onClick={() => navigate(`/doctors/${doc._id}`)} className="flex items-center justify-between group cursor-pointer hover:bg-white bg-transparent p-3 rounded-xl transition-all shadow-sm border border-transparent hover:border-gray-200">
                     <div className="flex items-center gap-3">
                       <img src={doc.image} alt={doc.name} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" />
                       <div>
@@ -506,8 +504,8 @@ const PatientDashboard = () => {
                         <p className="text-gray-500 text-xs font-medium flex items-center">{getSpecialtyIcon(doc.specialty)} {doc.specialty}</p>
                       </div>
                     </div>
-                    <button 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(doc.id, doc.name); }}
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(doc._id, doc.name); }}
                       className="text-primary p-2 bg-teal-50 rounded-lg hover:bg-primary hover:text-white transition-colors"
                     >
                       <FaHeart className="text-red-500 hover:text-white" />
@@ -533,8 +531,8 @@ const PatientDashboard = () => {
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900 font-poppins">All Upcoming Appointments</h3>
-                <button 
-                  onClick={() => setIsAllAppointmentsModalOpen(false)} 
+                <button
+                  onClick={() => setIsAllAppointmentsModalOpen(false)}
                   className="text-gray-400 p-2 rounded-full hover:bg-red-50 hover:text-red-500 transition-all duration-300"
                 >
                   <FaTimes className="w-5 h-5" />
@@ -550,8 +548,17 @@ const PatientDashboard = () => {
                     else if (exp >= 10) designation = "Associate Professor";
 
                     const mappedApt = {
-                      id: apt._id, doctorName: apt.doctorName, specialty: apt.specialty || "General", designation,
-                      date: apt.date || apt.appointmentDate, time: apt.time || apt.timeSlot, type: apt.type || "In-Person Consult",
+                      id: apt._id,
+                      doctorId: docDetails?._id || apt.doctorId,
+                      doctorName: apt.doctorName,
+                      specialty: docDetails?.specialization || docDetails?.specialty || apt.specialty || "General",
+                      designation,
+                      date: apt.date || apt.appointmentDate,
+                      time: apt.time || apt.timeSlot,
+                      type: apt.type || "In-Person Consult",
+                      fee: docDetails?.feeAmount || apt.fee || 500,
+                      availableDays: docDetails?.availableDays || [],
+                      availableTimeSlots: docDetails?.availableTimeSlots || null,
                       image: docDetails?.photoURL || docDetails?.image || docDetails?.avatar || docDetails?.photoUrl || "",
                     };
                     return mappedApt;
@@ -598,59 +605,39 @@ const PatientDashboard = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden"
+              className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900 font-poppins">Reschedule Appointment</h3>
-                <button onClick={() => setRescheduleData(null)} className="text-gray-400 hover:text-gray-600">
-                  <FaTimesCircle className="w-6 h-6" />
+              <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-100 bg-gray-50/50">
+                <div>
+                  <h2 className="text-2xl font-bold font-poppins text-gray-900">Reschedule Appointment</h2>
+                  <p className="text-sm text-gray-500 mt-1">Choose a new date and time for your existing appointment.</p>
+                </div>
+                <button
+                  onClick={() => setRescheduleData(null)}
+                  className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
+                >
+                  <FaTimes />
                 </button>
               </div>
-              <form onSubmit={handleRescheduleSubmit} className="p-6">
-                <p className="text-sm text-gray-600 mb-6">
-                  Select a new date and time for your appointment with <span className="font-bold text-gray-900">{rescheduleData.doctorName}</span>.
-                </p>
-                <div className="space-y-4 mb-8">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">New Date</label>
-                    <input 
-                      ref={rescheduleDateInputRef}
-                      type={isRescheduleDateFocused || !rescheduleForm.date ? "date" : "text"}
-                      onFocus={() => setIsRescheduleDateFocused(true)}
-                      onBlur={() => setIsRescheduleDateFocused(false)}
-                      onClick={handleRescheduleDateClick}
-                      required 
-                      min={new Date().toISOString().split('T')[0]}
-                      value={isRescheduleDateFocused || !rescheduleForm.date ? rescheduleForm.date : formatToDDMMYYYY(rescheduleForm.date)}
-                      onChange={(e) => {
-                        setRescheduleForm({...rescheduleForm, date: e.target.value});
-                        setIsRescheduleDateFocused(false);
-                        if (rescheduleDateInputRef.current) rescheduleDateInputRef.current.type = "text";
-                      }}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer text-gray-900" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">New Time</label>
-                    <select 
-                      name="time"
-                      required 
-                      value={rescheduleForm.time} 
-                      onChange={(e) => setRescheduleForm({...rescheduleForm, time: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer" 
-                    >
-                      <option value="" disabled hidden>{rescheduleForm.date ? "Choose a time slot..." : "Select date first"}</option>
-                      {generateAvailableTimeSlots(rescheduleForm.date).map(slot => (
-                        <option key={slot} value={slot}>{slot}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button type="button" onClick={() => setRescheduleData(null)} className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors">Cancel</button>
-                  <button type="submit" className="px-5 py-2.5 rounded-xl font-bold text-white bg-primary hover:bg-primary-focus transition-colors shadow-lg shadow-primary/30">Confirm Reschedule</button>
-                </div>
-              </form>
+              <div className="p-6 sm:p-8 overflow-y-auto overscroll-contain custom-scrollbar max-h-[80vh]">
+                <AppointmentForm
+                  mode="reschedule"
+                  initialData={{
+                    doctorId: rescheduleData.doctorId,
+                    specialty: rescheduleData.specialty,
+                    doctorName: rescheduleData.doctorName,
+                    type: rescheduleData.type,
+                    fee: rescheduleData.fee,
+                    availableDays: rescheduleData.availableDays,
+                    availableTimeSlots: rescheduleData.availableTimeSlots,
+                    symptoms: rescheduleData.symptoms || []
+                  }}
+                  lockedFields={['doctorId', 'specialty', 'type', 'symptoms']}
+                  onSubmit={handleRescheduleSubmit}
+                  isSubmitting={isRescheduling}
+                  onCancel={() => setRescheduleData(null)}
+                />
+              </div>
             </motion.div>
           </div>
         )}

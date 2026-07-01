@@ -67,7 +67,7 @@ const Footer = () => {
                   onClick={() => openModal()}
                   className="text-gray-300 text-sm hover:text-white transition-colors"
                 >
-                  Book Appointment
+                  New Appointment
                 </button>
               </li>
               <li><Link to="/doctors" className="text-gray-300 text-sm hover:text-white transition-colors">Find Doctors</Link></li>

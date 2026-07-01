@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FaPhoneAlt, FaArrowRight } from "react-icons/fa";
+import { FaPhoneAlt, FaPlus } from "react-icons/fa";
 import { useModal } from "../../context/ModalContext";
 
 const EmergencyCTA = () => {
@@ -53,7 +53,7 @@ const EmergencyCTA = () => {
                   onClick={() => openModal()}
                   className="bg-white hover:bg-gray-50 text-[#0b6e66] w-full sm:w-auto rounded-xl px-6 py-4 font-bold text-sm flex items-center justify-center transition-colors"
                 >
-                  Book Appointment <FaArrowRight className="ml-2" />
+                  New Appointment
                 </button>
               </motion.div>
             </div>

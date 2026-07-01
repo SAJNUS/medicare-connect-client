@@ -126,7 +126,7 @@ const AppointmentRequests = () => {
             onClick={() => setFilter(f)}
             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
               filter === f
-                ? "bg-primary text-white shadow-md shadow-primary/20"
+                ? "bg-gray-900 text-white shadow-md shadow-gray-900/20"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
             }`}
           >

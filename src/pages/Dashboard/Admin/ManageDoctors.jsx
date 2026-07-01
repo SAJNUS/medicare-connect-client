@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaCheckCircle, FaTimesCircle, FaBan, FaUserMd, FaEnvelope } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -52,10 +52,12 @@ const ManageDoctors = () => {
     fetchDoctors();
   }, []);
 
-  const filteredDoctors = doctors.filter(doc => 
-    doc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    doc.specialty.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredDoctors = useMemo(() => {
+    return doctors.filter(doc => 
+      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      doc.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [doctors, searchQuery]);
 
   const handleActionClick = (doctor, actionType) => {
     setSelectedDoctor(doctor);
@@ -151,8 +153,8 @@ const ManageDoctors = () => {
 
       {/* Main Container */}
       <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
       >
@@ -333,9 +335,9 @@ const ManageDoctors = () => {
         {isModalOpen && selectedDoctor && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
               className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden"
             >
               <div className="p-6 text-center">

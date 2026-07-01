@@ -46,7 +46,34 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 font-inter overflow-hidden relative">
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster 
+        position="top-center" 
+        reverseOrder={false} 
+        toastOptions={{
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            border: '1px solid #374151',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            padding: '12px 20px',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
@@ -84,17 +111,16 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-4">
             {user?.email === "sajnussaharearhojayfa@gmail.com" && (
               <div className="relative">
-                <button 
+                <button
                   onClick={() => setIsDevMenuOpen(!isDevMenuOpen)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    !previewRole 
-                      ? 'bg-[#6B7280]/10 text-[#6B7280]' 
+                  className={`p-2 rounded-lg transition-colors ${!previewRole
+                      ? 'bg-[#6B7280]/10 text-[#6B7280]'
                       : previewRole === 'patient'
                         ? 'bg-[#10B981]/10 text-[#10B981]'
                         : previewRole === 'doctor'
                           ? 'bg-[#3B82F6]/10 text-[#3B82F6]'
                           : 'bg-[#EF4444]/10 text-[#EF4444]'
-                  }`}
+                    }`}
                   title="Developer Tools"
                 >
                   <FaCode className="w-5 h-5" />

@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaCalendarCheck, FaVideo, FaMapMarkerAlt, FaTimesCircle, FaCheckCircle, FaClock, FaBan, FaRegCalendarAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
 import axiosInstance from "../../../api/axiosInstance";
-import { useEffect } from "react";
 
 const ManageAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -45,13 +44,15 @@ const ManageAppointments = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  const filteredAppointments = appointments.filter(apt => {
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter(apt => {
     const matchesSearch = 
       apt.patientName.toLowerCase().includes(searchQuery.toLowerCase()) || 
       apt.doctorName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "All" || apt.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+  }, [appointments, searchQuery, statusFilter]);
 
   const handleCancelClick = (appointment) => {
     setSelectedAppointment(appointment);
@@ -102,39 +103,43 @@ const ManageAppointments = () => {
           <p className="text-sm font-medium text-gray-500">Monitor all platform appointments.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
-          <div className="relative w-full sm:w-72">
-            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search patient or doctor..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-            />
-          </div>
-
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 w-full sm:w-auto pb-2 sm:pb-0">
-            {["All", "Pending", "Approved", "Completed", "Cancelled"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setStatusFilter(f)}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${statusFilter === f
-                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
-                  }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+        <div className="relative w-full sm:w-72">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search patient or doctor..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+          />
         </div>
+      </motion.div>
+
+      {/* Filter Pills */}
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex overflow-x-auto hide-scrollbar gap-2 pb-2 sm:pb-0"
+      >
+        {["All", "Pending", "Approved", "Completed", "Cancelled"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setStatusFilter(f)}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${statusFilter === f
+                ? "bg-gray-900 text-white shadow-md shadow-gray-900/20"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
+              }`}
+          >
+            {f}
+          </button>
+        ))}
       </motion.div>
 
       {/* Main Container */}
       <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
       >
@@ -273,9 +278,9 @@ const ManageAppointments = () => {
         {isModalOpen && selectedAppointment && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
               className="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden"
             >
               <div className="p-6 text-center">

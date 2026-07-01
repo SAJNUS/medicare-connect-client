@@ -60,7 +60,7 @@ const FindDoctors = () => {
               : "New";
 
             return {
-              id: doc._id,
+              _id: doc._id,
               name: doc.name,
               specialty: doc.specialization || doc.specialty || "General",
               designation: designation,
@@ -181,7 +181,7 @@ const FindDoctors = () => {
           ) : currentDoctors.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {currentDoctors.map((doctor, index) => (
-                <DoctorCard key={doctor.id} doctor={doctor} index={index} />
+                <DoctorCard key={doctor._id} doctor={doctor} index={index} />
               ))}
             </div>
           ) : (

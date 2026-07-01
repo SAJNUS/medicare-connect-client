@@ -31,16 +31,25 @@ export const formatToDDMMYYYY = (dateInput) => {
 
 // Generates time slots every 30 mins between 10:00 AM and 10:00 PM.
 // Disables slots that have already passed if the selected date is today.
-export const generateAvailableTimeSlots = (selectedDateStr) => {
+export const generateAvailableTimeSlots = (selectedDateStr, availableTimeSlots = null) => {
   if (!selectedDateStr) return [];
   
-  const allSlots = [
-    "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-    "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM",
-    "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM",
-    "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM",
-    "09:00 PM", "09:30 PM", "10:00 PM"
-  ];
+  const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const selectedDateObj = new Date(selectedDateStr);
+  const dayName = daysOfWeek[selectedDateObj.getDay()];
+
+  let allSlots = [];
+  if (availableTimeSlots && availableTimeSlots[dayName]) {
+    allSlots = availableTimeSlots[dayName];
+  } else if (!availableTimeSlots) {
+    // Fallback if no doctor is selected or passed
+    const defaultTimeSlots = {
+      Monday: ["10:00 AM", "12:00 PM"],
+      Wednesday: ["04:00 PM", "06:00 PM"],
+      Friday: ["10:00 AM", "04:00 PM"]
+    };
+    allSlots = defaultTimeSlots[dayName] || [];
+  }
 
   const today = new Date();
   const selectedDate = new Date(selectedDateStr);

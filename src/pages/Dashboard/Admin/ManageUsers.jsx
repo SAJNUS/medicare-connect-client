@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaTrash, FaBan, FaCheckCircle, FaUserShield, FaUser, FaUserMd } from "react-icons/fa";
 import { toast } from "react-hot-toast";
@@ -32,14 +32,17 @@ const ManageUsers = () => {
     fetchUsers();
   }, []);
 
-  const filteredUsers = users.filter(u => {
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => {
     const matchesSearch = (u.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (u.email || "").toLowerCase().includes(searchQuery.toLowerCase());
     const roleMatches = roleFilter === "All" || (u.role || "patient").toLowerCase() === roleFilter.toLowerCase();
     return matchesSearch && roleMatches;
   });
+  }, [users, searchQuery, roleFilter]);
 
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
     const emailA = (a.email || "").toLowerCase();
     const emailB = (b.email || "").toLowerCase();
     
@@ -63,6 +66,7 @@ const ManageUsers = () => {
     
     return dateB - dateA;
   });
+  }, [filteredUsers]);
 
   const confirmSuspend = (u) => {
     setSelectedUser(u);
@@ -177,7 +181,7 @@ const ManageUsers = () => {
             onClick={() => setRoleFilter(tab)}
             className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap ${
               roleFilter === tab 
-                ? 'bg-primary text-white' 
+                ? 'bg-gray-900 text-white' 
                 : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
             }`}
           >
@@ -339,9 +343,9 @@ const ManageUsers = () => {
               className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
               className="relative bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden p-6"
             >
               <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-2xl mb-4 mx-auto">
@@ -384,9 +388,9 @@ const ManageUsers = () => {
               className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
               className="relative bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden p-6"
             >
               <div className={`w-16 h-16 ${selectedUser.status === 'Suspended' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} rounded-full flex items-center justify-center text-2xl mb-4 mx-auto`}>

@@ -166,7 +166,9 @@ const DoctorDashboard = () => {
             
             <div className="space-y-4">
               {loading ? (
-                <div className="text-center py-8 text-gray-500 font-medium">Loading schedule...</div>
+                <div className="py-8 flex justify-center items-center">
+                  <span className="loading loading-spinner loading-lg text-primary"></span>
+                </div>
               ) : todaysSchedule.length > 0 ? (
                 todaysSchedule.map((slot) => (
                   <div key={slot._id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-primary/30 transition-colors bg-gray-50/30">

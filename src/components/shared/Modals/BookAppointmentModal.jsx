@@ -4,70 +4,13 @@ import { FaTimes, FaCalendarAlt, FaClock, FaUserMd, FaVideo, FaMapMarkerAlt, FaS
 import toast from "react-hot-toast";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
-import { formatToDDMMYYYY, generateAvailableTimeSlots } from "../../../utils/dateUtils";
+import { formatToDDMMYYYY } from "../../../utils/dateUtils";
+import AppointmentForm from "../../appointments/AppointmentForm";
 
-const specialties = ["Cardiologist", "Neurologist", "Dermatologist", "Orthopedic", "Pediatrician"];
-
-const symptomMap = {
-  "Cardiologist": ["Chest Pain", "Shortness of Breath", "High Blood Pressure", "Palpitations", "Dizziness"],
-  "Neurologist": ["Headaches", "Seizures", "Numbness", "Memory Loss", "Muscle Weakness"],
-  "Dermatologist": ["Rash", "Itching", "Acne", "Moles", "Skin Discoloration"],
-  "Orthopedic": ["Joint Pain", "Back Pain", "Fracture", "Swelling", "Stiffness"],
-  "Pediatrician": ["Fever", "Cough", "Vomiting", "Vaccination", "Growth Check"],
-};
-
-const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
+const BookAppointmentModal = ({ isOpen, onClose, onSubmit, config = {} }) => {
   const { user } = useAuth();
-  const [doctors, setDoctors] = useState([]);
-  const [formData, setFormData] = useState({
-    specialty: "",
-    doctorId: "",
-    type: "In-Person Consult",
-    date: "",
-    time: "",
-    symptoms: [],
-    customSymptom: ""
-  });
-  const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDateFocused, setIsDateFocused] = useState(false);
-  const dateInputRef = useRef(null);
-
-  const handleDateClick = (e) => {
-    e.preventDefault();
-    if (dateInputRef.current) {
-      dateInputRef.current.type = "date";
-      if (dateInputRef.current.showPicker) {
-        try {
-          dateInputRef.current.showPicker();
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      setIsDateFocused(true);
-    }
-  };
-
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const response = await axiosInstance.get('/doctors');
-        if (response.data.success) {
-          // Keep frontend structure intact
-          setDoctors(response.data.data.map(doc => ({
-            id: doc._id,
-            name: doc.name,
-            specialty: doc.specialization || doc.specialty || "General",
-            email: doc.email,
-            image: doc.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-          })));
-        }
-      } catch (err) {
-        console.error("Error fetching doctors for modal:", err);
-      }
-    };
-    if (isOpen) fetchDoctors();
-  }, [isOpen]);
+  const { mode = "book", initialData = {}, lockedFields = [] } = config;
 
   useEffect(() => {
     if (isOpen) {
@@ -80,45 +23,7 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
     };
   }, [isOpen]);
 
-  const handleInputChange = (e) => {
-    const name = e.target.name;
-    const value = e.target.value;
-
-    if (name === "specialty") {
-      setFormData(prev => ({
-        ...prev,
-        specialty: String(value),
-        doctorId: "",
-        symptoms: [],
-        customSymptom: ""
-      }));
-      setIsOtherSelected(false);
-    } else {
-      setFormData(prev => ({ ...prev, [name]: String(value) }));
-      if (name === "date") {
-        setIsDateFocused(false);
-        if (dateInputRef.current) dateInputRef.current.type = "text";
-      }
-    }
-  };
-
-  const handleTypeSelect = (type) => {
-    setFormData(prev => ({ ...prev, type }));
-  };
-
-  const toggleSymptom = (symptom) => {
-    setFormData(prev => {
-      const current = prev.symptoms;
-      if (current.includes(symptom)) {
-        return { ...prev, symptoms: current.filter(s => s !== symptom) };
-      } else {
-        return { ...prev, symptoms: [...current, symptom] };
-      }
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (formData, selectedDoctor) => {
     if (!formData.specialty || !formData.doctorId || !formData.date || !formData.time) {
       toast.error("Please fill in all required fields.");
       return;
@@ -127,13 +32,12 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
     setIsSubmitting(true);
 
     try {
-      const selectedDoctor = doctors.find(d => String(d.id) === String(formData.doctorId));
-
       const payload = {
         patientEmail: user?.email,
         patientName: user?.name || "Patient",
         patientImage: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
         doctorEmail: selectedDoctor?.email,
+        doctorId: selectedDoctor?._id || selectedDoctor?.id,
         doctorName: selectedDoctor?.name || "Unknown Doctor",
         specialty: selectedDoctor?.specialty || formData.specialty,
         doctorImage: selectedDoctor?.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
@@ -171,18 +75,13 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
           });
         }
 
-        // Reset and close
-        setFormData({
-          specialty: "",
-          doctorId: "",
-          type: "In-Person Consult",
-          date: "",
-          time: "",
-          symptoms: [],
-          customSymptom: ""
-        });
-        setIsOtherSelected(false);
+        // Close
         onClose();
+
+        // Navigate only for New Appointment mode
+        if (mode === "book" || mode === "new" || !mode) {
+          window.location.href = '/dashboard/patient/appointments';
+        }
       }
     } catch (error) {
       console.error("Booking error:", error);
@@ -191,10 +90,6 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
       setIsSubmitting(false);
     }
   };
-
-  const filteredDoctors = doctors.filter(d => d.specialty === formData.specialty);
-  const availableSymptoms = formData.specialty ? (symptomMap[formData.specialty] || ["General Symptoms"]) : [];
-  const dynamicSpecialties = Array.from(new Set(doctors.map(d => d.specialty)));
 
   return (
     <AnimatePresence>
@@ -219,8 +114,14 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
             {/* Header */}
             <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-100 bg-gray-50/50">
               <div>
-                <h2 className="text-2xl font-bold font-poppins text-gray-900">Book Appointment</h2>
-                <p className="text-sm text-gray-500 mt-1">Schedule a new consultation with our experts.</p>
+                <h2 className="text-2xl font-bold font-poppins text-gray-900">
+                  {mode === "doctor" ? "Book Appointment" : "New Appointment"}
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {mode === "doctor" 
+                    ? "Schedule a consultation with this specialist." 
+                    : "Schedule a consultation with any specialist in our network."}
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -232,219 +133,15 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit }) => {
 
             {/* Body */}
             <div className="p-6 sm:p-8 overflow-y-auto overscroll-contain custom-scrollbar">
-              <form id="appointment-form" onSubmit={handleSubmit} className="space-y-6">
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Specialty Selection */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <FaStethoscope className="text-teal-500" /> Select Specialty *
-                    </label>
-                    <select
-                      name="specialty"
-                      value={formData.specialty}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900"
-                    >
-                      <option value="" disabled hidden>Choose specialty...</option>
-                      {dynamicSpecialties.map(spec => (
-                        <option key={spec} value={spec}>{spec}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Doctor Selection */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <FaUserMd className="text-teal-500" /> Select Doctor *
-                    </label>
-                    <select
-                      name="doctorId"
-                      value={formData.doctorId}
-                      onChange={handleInputChange}
-                      disabled={!formData.specialty}
-                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value="" disabled hidden>
-                        {!formData.specialty ? "Select specialty first" : "Choose a doctor..."}
-                      </option>
-                      {filteredDoctors.map(doc => (
-                        <option key={doc.id} value={String(doc.id)}>{doc.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Appointment Type */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Consultation Type</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div
-                      onClick={() => handleTypeSelect("In-Person Consult")}
-                      className={`cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 transition-all ${formData.type === "In-Person Consult"
-                        ? "border-red-500 bg-red-50 shadow-sm"
-                        : "border-gray-100 hover:border-gray-300 bg-white"
-                        }`}
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "In-Person Consult" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500"}`}>
-                        <FaMapMarkerAlt />
-                      </div>
-                      <div>
-                        <p className={`font-bold transition-colors ${formData.type === "In-Person Consult" ? "text-gray-900" : "text-gray-700"}`}>In-Person</p>
-                        <p className="text-xs text-gray-500">Visit the clinic</p>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => handleTypeSelect("Video Consult")}
-                      className={`cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 transition-all ${formData.type === "Video Consult"
-                        ? "border-blue-500 bg-blue-50 shadow-sm"
-                        : "border-gray-100 hover:border-gray-300 bg-white"
-                        }`}
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${formData.type === "Video Consult" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-500"}`}>
-                        <FaVideo />
-                      </div>
-                      <div>
-                        <p className={`font-bold transition-colors ${formData.type === "Video Consult" ? "text-gray-900" : "text-gray-700"}`}>Video Consult</p>
-                        <p className="text-xs text-gray-500">Online consultation</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Date & Time */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <FaCalendarAlt className="text-blue-500" /> Date *
-                    </label>
-                    <input
-                      ref={dateInputRef}
-                      type={isDateFocused || !formData.date ? "date" : "text"}
-                      onFocus={() => setIsDateFocused(true)}
-                      onBlur={() => setIsDateFocused(false)}
-                      onClick={handleDateClick}
-                      name="date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={isDateFocused || !formData.date ? formData.date : formatToDDMMYYYY(formData.date)}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer text-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <FaClock className="text-orange-500" /> Time Slot *
-                    </label>
-                    <select
-                      name="time"
-                      value={formData.time}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none cursor-pointer appearance-none text-gray-900"
-                    >
-                      <option value="" disabled hidden>{formData.date ? "Choose a time slot..." : "Select date first"}</option>
-                      {generateAvailableTimeSlots(formData.date).map(slot => (
-                        <option key={slot} value={slot}>{slot}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Dynamic Symptoms Tags */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Symptoms or Reason for Visit (Optional)</label>
-
-                  {!formData.specialty ? (
-                    <div className="p-4 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center text-sm text-gray-500">
-                      Select a specialty first to see common symptoms.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        {availableSymptoms.map(symptom => {
-                          const isSelected = formData.symptoms.includes(symptom);
-                          return (
-                            <button
-                              key={symptom}
-                              type="button"
-                              onClick={() => toggleSymptom(symptom)}
-                              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all flex items-center gap-2 ${isSelected
-                                ? "bg-teal-50 border-primary text-primary"
-                                : "bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:bg-gray-50"
-                                }`}
-                            >
-                              {isSelected && <FaCheck className="text-xs" />}
-                              {symptom}
-                            </button>
-                          );
-                        })}
-                        <button
-                          type="button"
-                          onClick={() => setIsOtherSelected(!isOtherSelected)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${isOtherSelected
-                            ? "bg-teal-50 border-primary text-primary"
-                            : "bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:bg-gray-50"
-                            }`}
-                        >
-                          Other
-                        </button>
-                      </div>
-
-                      {/* Custom Input for 'Other' */}
-                      <AnimatePresence>
-                        {isOtherSelected && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden pt-2"
-                          >
-                            <input
-                              type="text"
-                              name="customSymptom"
-                              value={formData.customSymptom}
-                              onChange={handleInputChange}
-                              placeholder="Type your specific reason or symptoms..."
-                              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-colors outline-none text-sm"
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )}
-                </div>
-              </form>
+              <AppointmentForm 
+                mode={mode}
+                initialData={initialData}
+                lockedFields={lockedFields}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                onCancel={onClose}
+              />
             </div>
-
-            {/* Footer / Actions */}
-            <div className="p-6 sm:p-8 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row gap-4 sm:justify-end shrink-0">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3.5 rounded-xl font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:text-gray-900 transition-colors w-full sm:w-auto text-center"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                form="appointment-form"
-                disabled={isSubmitting || !formData.specialty || !formData.doctorId || !formData.date || !formData.time}
-                className="px-8 py-3.5 rounded-xl font-bold text-white bg-primary hover:bg-[#095c55] transition-colors shadow-lg shadow-primary/30 w-full sm:w-auto text-center flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  "Confirm Booking"
-                )}
-              </button>
-            </div>
-
           </motion.div>
         </div>
       )}

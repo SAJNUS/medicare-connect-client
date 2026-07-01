@@ -87,45 +87,57 @@ const PaymentHistory = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header & Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+      >
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Payment History</h1>
           <p className="text-sm font-medium text-gray-500">Track and manage your consultation payments.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by Doctor or TXN ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-            />
-          </div>
-
-          {/* Filter Pills */}
-          <div className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2">
-            {["All", "Completed", "Pending", "Failed"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === f
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
-                  }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+        {/* Search Bar */}
+        <div className="relative">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by Doctor or TXN ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+          />
         </div>
-      </div>
+      </motion.div>
+
+      {/* Filter Pills */}
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2"
+      >
+        {["All", "Completed", "Pending", "Failed"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filter === f
+              ? "bg-gray-900 text-white shadow-md shadow-gray-900/20"
+              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 shadow-sm"
+              }`}
+          >
+            {f}
+          </button>
+        ))}
+      </motion.div>
 
       {/* Transactions Container */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+      >
 
         {/* Desktop Table View (Hidden on mobile) */}
         <div className="hidden md:block overflow-x-auto">
@@ -260,7 +272,7 @@ const PaymentHistory = () => {
           </div>
         </div>
 
-      </div>
+      </motion.div>
     </div>
   );
 };

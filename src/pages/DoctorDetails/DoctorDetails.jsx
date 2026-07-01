@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaStar, FaGraduationCap, FaCalendarAlt, FaClock, FaCheckCircle, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaStar, FaGraduationCap, FaCalendarAlt, FaCheckCircle, FaHeartbeat, FaBrain, FaBaby, FaBone, FaUserMd, FaVenus, FaTooth, FaHeadSideVirus, FaHeart, FaRegHeart, FaClock } from "react-icons/fa";
 import { useFavorites } from "../../contexts/FavoritesContext";
 import axiosInstance from "../../api/axiosInstance";
 import { useAuth } from "../../hooks/useAuth";
+import { useModal } from "../../context/ModalContext";
 import toast from "react-hot-toast";
 
 const getSpecialtyIcon = (specialty) => {
@@ -27,13 +28,13 @@ const DoctorDetails = () => {
   const { isFavorited, toggleFavorite } = useFavorites();
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isBooking, setIsBooking] = useState(false);
+  const { openModal } = useModal();
 
-  const favorited = doctor ? isFavorited(doctor.id) : false;
+  const favorited = doctor ? isFavorited(doctor._id) : false;
 
   const handleFavoriteClick = () => {
     if (doctor) {
-      toggleFavorite(doctor.id, doctor.name);
+      toggleFavorite(doctor._id, doctor.name);
     }
   };
 
@@ -52,12 +53,13 @@ const DoctorDetails = () => {
 
           const doctorReviews = allReviews.filter(r => r.doctorEmail === doc.email);
           const reviewCount = doctorReviews.length;
-          const avgRating = reviewCount > 0 
-            ? (doctorReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1) 
+          const avgRating = reviewCount > 0
+            ? (doctorReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1)
             : "New";
 
           setDoctor({
-            id: doc._id,
+            _id: doc._id,
+            email: doc.email,
             name: doc.name,
             designation: designation,
             specialty: doc.specialization || doc.specialty || "General",
@@ -70,11 +72,15 @@ const DoctorDetails = () => {
             reviews: reviewCount,
             image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
             about: doc.about || "Experienced and dedicated doctor committed to providing excellent patient care.",
+            bio: doc.bio || "Experienced and dedicated doctor committed to providing excellent patient care.",
+            experienceYears: exp,
             availability: doc.availability || [],
+            availableDays: doc.availableDays || [],
+            availableTimeSlots: doc.availableTimeSlots || null,
             qualifications: doc.qualifications || [],
             reviewsList: doc.reviewsList || []
           });
-          
+
           // Auto select first day if available
           if (doc.availability?.[0]?.day) {
             setSelectedDay(doc.availability[0].day);
@@ -113,43 +119,26 @@ const DoctorDetails = () => {
     );
   }
 
-  const handleBooking = async () => {
-    if (!selectedDay || !selectedTime) {
-      toast.error("Please select a day and time slot first.");
-      return;
-    }
-
-    setIsBooking(true);
-    try {
-      const payload = {
-        patientEmail: user?.email,
-        patientName: user?.name || "Patient",
-        patientImage: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-        doctorEmail: doctor.email,
-        doctorName: doctor.name || "Unknown Doctor",
-        specialty: doctor.specialty || "General",
-        doctorImage: doctor.image || "",
-        date: selectedDay,
-        time: selectedTime,
-        type: "In-Person Consult",
-        symptoms: [],
-        fee: doctor?.feeAmount || 500,
-        aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
-      };
-
-      const response = await axiosInstance.post('/appointments', payload);
-
-      if (response.data.success) {
-        toast.success(`Appointment booked with ${doctor.name} for ${selectedDay} at ${selectedTime}!`);
-        // Navigate back to the find doctors or dashboard after short delay
+  const handleBookClick = () => {
+    openModal(
+      (newAppointment) => {
+        // Navigate back to the dashboard after a short delay
         setTimeout(() => navigate('/dashboard/patient/appointments'), 1500);
+      },
+      {
+        mode: "doctor",
+        initialData: {
+          doctorId: doctor._id,
+          specialty: doctor.specialty,
+          doctorName: doctor.name,
+          doctorEmail: doctor.email,
+          fee: doctor.feeAmount || doctor.fee || 500,
+          availableDays: doctor.availableDays || [],
+          availableTimeSlots: doctor.availableTimeSlots || null
+        },
+        lockedFields: ['doctorId', 'specialty']
       }
-    } catch (error) {
-      console.error("Booking error:", error);
-      toast.error("Failed to book appointment.");
-    } finally {
-      setIsBooking(false);
-    }
+    );
   };
 
   return (
@@ -165,7 +154,7 @@ const DoctorDetails = () => {
           <div className="w-full md:w-1/4 flex-shrink-0">
             <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[3/4] w-full relative group/img">
               <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
-              <button 
+              <button
                 onClick={handleFavoriteClick}
                 className="absolute top-4 right-4 p-2.5 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors z-10"
               >
@@ -183,7 +172,10 @@ const DoctorDetails = () => {
               </div>
             </div>
             {doctor.designation && <p className="text-[#0b6e66] font-medium text-sm mb-1">{doctor.designation}</p>}
-            <p className="text-primary font-medium text-lg mb-4 flex items-center">{getSpecialtyIcon(doctor.specialty)} {doctor.specialty}</p>
+            <p className="text-primary font-medium text-lg mb-2 flex items-center">{getSpecialtyIcon(doctor.specialty)} {doctor.specialty}</p>
+            <p className="text-gray-600 font-inter text-sm leading-relaxed max-w-3xl mb-4">
+              {doctor.bio}
+            </p>
 
             <div className="flex flex-wrap gap-4 mb-6">
               <div className="flex items-center bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
@@ -202,9 +194,7 @@ const DoctorDetails = () => {
               </div>
             </div>
 
-            <p className="text-gray-600 font-inter leading-relaxed max-w-3xl">
-              {doctor.bio}
-            </p>
+
           </div>
         </motion.div>
 
@@ -225,17 +215,17 @@ const DoctorDetails = () => {
                 <FaGraduationCap className="mr-3 text-primary" /> Qualifications & Education
               </h2>
               <ul className="space-y-4">
-                {Array.isArray(doctor.qualifications) 
+                {Array.isArray(doctor.qualifications)
                   ? doctor.qualifications.map((qual, index) => (
-                      <li key={index} className="flex items-start">
-                        <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-3 flex-shrink-0"></div>
-                        <p className="text-gray-700 font-inter">{qual}</p>
-                      </li>
-                    ))
-                  : <li className="flex items-start">
+                    <li key={index} className="flex items-start">
                       <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-3 flex-shrink-0"></div>
-                      <p className="text-gray-700 font-inter">{doctor.qualifications}</p>
+                      <p className="text-gray-700 font-inter">{qual}</p>
                     </li>
+                  ))
+                  : <li className="flex items-start">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-3 flex-shrink-0"></div>
+                    <p className="text-gray-700 font-inter">{doctor.qualifications}</p>
+                  </li>
                 }
               </ul>
             </motion.div>
@@ -283,53 +273,34 @@ const DoctorDetails = () => {
                 <p className="text-3xl font-bold text-[#0b6e66]">{doctor.fee}</p>
               </div>
 
-              <h3 className="font-bold text-gray-900 mb-4 flex items-center">
-                <FaCalendarAlt className="mr-2 text-gray-400" /> Select Day
-              </h3>
-              <div className="grid grid-cols-3 gap-2 mb-6">
-                {doctor.availability.map((avail) => (
-                  <button
-                    key={avail.day}
-                    onClick={() => { setSelectedDay(avail.day); setSelectedTime(""); }}
-                    className={`py-2 px-2 text-xs font-medium rounded-lg border transition-all ${selectedDay === avail.day
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-primary/50"
-                      }`}
-                  >
-                    {avail.day.slice(0, 3)}
-                  </button>
-                ))}
+              <div className="mb-6 space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 font-medium mb-1 flex items-center gap-2">
+                    <FaCalendarAlt className="text-blue-500" /> Available Days
+                  </p>
+                  <p className="font-bold text-gray-900">
+                    {doctor.availableDays && doctor.availableDays.length > 0 ? doctor.availableDays.join(", ") : "Not specified"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium mb-1 flex items-center gap-2">
+                    <FaClock className="text-orange-500" /> Available Hours
+                  </p>
+                  <p className="font-bold text-gray-900">
+                    {doctor.availableTimeSlots ?
+                      Array.from(new Set(Object.values(doctor.availableTimeSlots).flat())).join(", ") :
+                      "Not specified"
+                    }
+                  </p>
+                </div>
               </div>
 
-              {selectedDay && (
-                <>
-                  <h3 className="font-bold text-gray-900 mb-4 flex items-center">
-                    <FaClock className="mr-2 text-gray-400" /> Select Time
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 mb-8">
-                    {doctor.availability.find(a => a.day === selectedDay)?.slots.map((slot) => (
-                      <button
-                        key={slot}
-                        onClick={() => setSelectedTime(slot)}
-                        className={`py-2 px-3 text-sm font-medium rounded-lg border transition-all ${selectedTime === slot
-                          ? "bg-primary text-white border-primary"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-primary/50"
-                          }`}
-                      >
-                        {slot}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <button 
-                    onClick={handleBooking}
-                    disabled={isBooking}
-                    className={`w-full font-bold py-4 rounded-xl shadow-md transition-all duration-300 font-inter text-[15px] ${isBooking ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-primary hover:bg-primary-focus text-white hover:shadow-lg transform hover:-translate-y-0.5'}`}
-                  >
-                    {isBooking ? 'Booking...' : 'Book Appointment'}
-                  </button>
+              <button
+                onClick={handleBookClick}
+                className="w-full font-bold py-4 rounded-xl shadow-md transition-all duration-300 font-inter text-[15px] bg-primary hover:bg-[#095c55] text-white hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                Book Appointment
+              </button>
             </motion.div>
           </div>
 
