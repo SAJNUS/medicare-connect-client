@@ -10,6 +10,7 @@ const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("All");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -31,20 +32,32 @@ const ManageUsers = () => {
     fetchUsers();
   }, []);
 
-  const filteredUsers = users.filter(u => 
-    (u.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (u.email || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = (u.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (u.email || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const roleMatches = roleFilter === "All" || (u.role || "patient").toLowerCase() === roleFilter.toLowerCase();
+    return matchesSearch && roleMatches;
+  });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
-    const aIsAdmin = (a.role || "").toLowerCase() === 'admin';
-    const bIsAdmin = (b.role || "").toLowerCase() === 'admin';
+    const emailA = (a.email || "").toLowerCase();
+    const emailB = (b.email || "").toLowerCase();
     
-    // Pin admin users to the bottom
-    if (aIsAdmin && !bIsAdmin) return 1;
-    if (!aIsAdmin && bIsAdmin) return -1;
+    const isDevA = emailA === "sajnussaharearhojayfa@gmail.com";
+    const isDevB = emailB === "sajnussaharearhojayfa@gmail.com";
     
-    // For non-admin (and among admins), sort by createdAt descending (newest first)
+    // Pin dev to the absolute bottom
+    if (isDevA && !isDevB) return 1;
+    if (!isDevA && isDevB) return -1;
+    
+    const isAdminA = emailA === "medicare@gmail.com";
+    const isAdminB = emailB === "medicare@gmail.com";
+    
+    // Pin admin to second from the bottom
+    if (isAdminA && !isAdminB) return 1;
+    if (!isAdminA && isAdminB) return -1;
+    
+    // For all other users, sort by createdAt descending (newest first)
     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
     
@@ -100,6 +113,7 @@ const ManageUsers = () => {
     if (!role) return "bg-green-100 text-green-700"; // Default patient
     const lowerRole = role.toLowerCase();
     switch(lowerRole) {
+      case "developer": return "bg-purple-100 text-purple-700";
       case "admin": return "bg-red-100 text-red-700";
       case "doctor": return "bg-blue-100 text-blue-700";
       default: return "bg-green-100 text-green-700";
@@ -110,6 +124,7 @@ const ManageUsers = () => {
     if (!role) return <FaUser className="text-green-500" />;
     const lowerRole = role.toLowerCase();
     switch(lowerRole) {
+      case "developer": return <FaUserShield className="text-purple-500" />;
       case "admin": return <FaUserShield className="text-red-500" />;
       case "doctor": return <FaUserMd className="text-blue-500" />;
       default: return <FaUser className="text-green-500" />;
@@ -154,6 +169,23 @@ const ManageUsers = () => {
         </div>
       </motion.div>
 
+      {/* Role Filters */}
+      <div className="flex gap-2 pb-2 overflow-x-auto">
+        {['All', 'Patient', 'Doctor', 'Admin'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setRoleFilter(tab)}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap ${
+              roleFilter === tab 
+                ? 'bg-primary text-white' 
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
       {/* Responsive Users List */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -186,8 +218,8 @@ const ManageUsers = () => {
                 <tbody className="divide-y divide-gray-100">
                   {sortedUsers.map((user) => {
                     const isSelf = authUser?.email === user.email;
-                    const isAdmin = (user.role || "").toLowerCase() === 'admin';
-                    const isDisabled = isSelf || isAdmin;
+                    const isProtected = user.email === 'medicare@gmail.com' || user.email === 'sajnussaharearhojayfa@gmail.com';
+                    const isDisabled = isSelf || isProtected;
                     
                     return (
                     <tr key={user._id || user.email} className="hover:bg-gray-50/50 transition-colors">
@@ -241,8 +273,8 @@ const ManageUsers = () => {
             <div className="block lg:hidden divide-y divide-gray-100">
               {sortedUsers.map((user) => {
                 const isSelf = authUser?.email === user.email;
-                const isAdmin = (user.role || "").toLowerCase() === 'admin';
-                const isDisabled = isSelf || isAdmin;
+                const isProtected = user.email === 'medicare@gmail.com' || user.email === 'sajnussaharearhojayfa@gmail.com';
+                const isDisabled = isSelf || isProtected;
                 
                 return (
                 <div key={user._id || user.email} className="p-5 flex flex-col gap-4 hover:bg-gray-50/50 transition-colors">
