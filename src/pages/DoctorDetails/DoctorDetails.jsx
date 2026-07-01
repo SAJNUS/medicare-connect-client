@@ -225,12 +225,18 @@ const DoctorDetails = () => {
                 <FaGraduationCap className="mr-3 text-primary" /> Qualifications & Education
               </h2>
               <ul className="space-y-4">
-                {doctor.qualifications.map((qual, index) => (
-                  <li key={index} className="flex items-start">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-3 flex-shrink-0"></div>
-                    <p className="text-gray-700 font-inter">{qual}</p>
-                  </li>
-                ))}
+                {Array.isArray(doctor.qualifications) 
+                  ? doctor.qualifications.map((qual, index) => (
+                      <li key={index} className="flex items-start">
+                        <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-3 flex-shrink-0"></div>
+                        <p className="text-gray-700 font-inter">{qual}</p>
+                      </li>
+                    ))
+                  : <li className="flex items-start">
+                      <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-gray-700 font-inter">{doctor.qualifications}</p>
+                    </li>
+                }
               </ul>
             </motion.div>
 
