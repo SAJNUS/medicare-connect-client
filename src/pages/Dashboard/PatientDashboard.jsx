@@ -140,7 +140,7 @@ const PatientDashboard = () => {
 
   const totalUpcoming = allAppointments.filter(a => a.appointmentStatus === "pending" || a.appointmentStatus === "approved").length;
   const totalCompleted = allAppointments.filter(a => a.appointmentStatus === "completed").length;
-  const totalPaymentsAmount = allAppointments.reduce((sum, apt) => sum + (Number(apt.fee) || 0), 0);
+  const totalPaymentsAmount = allAppointments.reduce((sum, apt) => apt.paymentStatus === 'paid' ? sum + (Number(apt.fee) || 0) : sum, 0);
 
   const stats = [
     { title: "My Appointments", value: totalUpcoming.toString(), icon: <FaCalendarCheck className="text-blue-600" />, bg: "bg-blue-100/50" },

@@ -152,49 +152,59 @@ const ManageAppointments = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredAppointments.map((apt) => (
-                <tr key={apt.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <img src={apt.avatar} alt={apt.patientName} className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
-                      <div>
-                        <p className="font-bold text-gray-900">{apt.patientName}</p>
-                        <p className="text-xs font-medium text-gray-500">{apt.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <p className="font-bold text-gray-900 text-sm">{apt.doctorName}</p>
-                  </td>
-                  <td className="p-4 text-center">
-                    <p className="font-bold text-gray-900 text-sm">{apt.date}</p>
-                    <p className="text-xs font-medium text-gray-500">{apt.time}</p>
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className="inline-flex items-center justify-center gap-1.5 bg-gray-50 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-md text-xs font-bold">
-                      {apt.type === 'Video Consult' ? <FaVideo className="text-teal-500" /> : <FaMapMarkerAlt className="text-blue-500" />}
-                      {apt.type}
-                    </span>
-                  </td>
-                  <td className="p-4 text-center">
-                    {getStatusBadge(apt.status)}
-                  </td>
-                  <td className="p-4 text-center">
-                    <button 
-                      onClick={() => handleCancelClick(apt)} 
-                      disabled={apt.status === "Completed" || apt.status === "Cancelled"}
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-                        (apt.status === "Completed" || apt.status === "Cancelled")
-                          ? "text-gray-300 cursor-not-allowed" 
-                          : "text-red-500 hover:bg-red-50"
-                      }`} 
-                      title="Cancel Appointment"
-                    >
-                      <FaBan className="text-lg" />
-                    </button>
+              {filteredAppointments.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="p-12 text-center text-gray-500">
+                    <FaRegCalendarAlt className="text-5xl text-gray-300 mx-auto mb-4" />
+                    <p className="font-semibold text-gray-900 text-lg">No appointments found</p>
+                    <p className="text-sm mt-1">There are no appointments to display.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredAppointments.map((apt) => (
+                  <tr key={apt.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <img src={apt.avatar} alt={apt.patientName} className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
+                        <div>
+                          <p className="font-bold text-gray-900">{apt.patientName}</p>
+                          <p className="text-xs font-medium text-gray-500">{apt.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <p className="font-bold text-gray-900 text-sm">{apt.doctorName}</p>
+                    </td>
+                    <td className="p-4 text-center">
+                      <p className="font-bold text-gray-900 text-sm">{apt.date}</p>
+                      <p className="text-xs font-medium text-gray-500">{apt.time}</p>
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className="inline-flex items-center justify-center gap-1.5 bg-gray-50 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-md text-xs font-bold">
+                        {apt.type === 'Video Consult' ? <FaVideo className="text-teal-500" /> : <FaMapMarkerAlt className="text-blue-500" />}
+                        {apt.type}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      {getStatusBadge(apt.status)}
+                    </td>
+                    <td className="p-4 text-center">
+                      <button 
+                        onClick={() => handleCancelClick(apt)} 
+                        disabled={apt.status === "Completed" || apt.status === "Cancelled"}
+                        className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                          (apt.status === "Completed" || apt.status === "Cancelled")
+                            ? "text-gray-300 cursor-not-allowed" 
+                            : "text-red-500 hover:bg-red-50"
+                        }`} 
+                        title="Cancel Appointment"
+                      >
+                        <FaBan className="text-lg" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
