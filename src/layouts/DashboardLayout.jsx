@@ -19,7 +19,7 @@ const DashboardLayout = () => {
     setPreviewRole(role);
     setIsDevMenuOpen(false);
     if (location.pathname.startsWith('/dashboard')) {
-      navigate(`/dashboard/${role}-overview`);
+      navigate('/dashboard');
     }
   };
 

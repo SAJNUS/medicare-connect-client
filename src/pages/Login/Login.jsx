@@ -64,10 +64,10 @@ const Login = () => {
           const dbUser = dbRes.data.data;
           const dbRole = dbUser?.role?.toLowerCase() || 'patient';
           
-          if (dbRole === 'admin') {
+          if (dbRole === 'admin' || dbRole === 'developer') {
             // Issue JWT cookie
             await axiosInstance.post('/auth/jwt', { email: fbUser.email, role: dbUser.role });
-            toast.success(`Successfully logged in as Admin!`);
+            toast.success(dbRole === 'admin' ? `Successfully logged in as Admin!` : `Successfully logged in as Developer!`);
             navigate("/dashboard");
           } else if (dbRole !== role.toLowerCase()) {
             await logoutUser();
@@ -116,10 +116,10 @@ const Login = () => {
         const dbUser = dbRes.data.data;
         const dbRole = dbUser?.role?.toLowerCase() || 'patient';
         
-        if (dbRole === 'admin') {
+        if (dbRole === 'admin' || dbRole === 'developer') {
             // Issue JWT cookie
             await axiosInstance.post('/auth/jwt', { email: fbUser.email, role: dbUser.role });
-            toast.success(`Successfully logged in as Admin!`);
+            toast.success(dbRole === 'admin' ? `Successfully logged in as Admin!` : `Successfully logged in as Developer!`);
             navigate("/dashboard");
           } else if (dbRole !== role.toLowerCase()) {
             await logoutUser();

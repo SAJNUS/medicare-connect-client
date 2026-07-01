@@ -22,6 +22,10 @@ const RoleRoute = ({ children, allowedRoles }) => {
   }
 
   // User is logged in but doesn't have the required role
+  if (location.pathname.startsWith('/dashboard')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
   return <Navigate to="/" replace />;
 };
 
