@@ -75,26 +75,9 @@ const AppointmentRequests = () => {
   };
 
   const handleMarkCompleted = async (req) => {
-    try {
-      await axiosInstance.patch(`/appointments/${req.id}/status`, { status: 'completed' });
-      setRequests(requests.map(r => r.id === req.id ? { ...r, status: "Completed", rawStatus: "completed" } : r));
-
-    
-    // 2. Show toast
-    toast.success("Appointment marked as completed!", {
-      style: {
-        borderRadius: '10px',
-        background: '#333',
-        color: '#fff',
-      }
-    });
-
-    // 3. Navigate with state
+    // Navigate with state to write the prescription. 
+    // The status will be marked 'completed' ONLY after the prescription is saved.
     navigate("/dashboard/doctor/prescriptions", { state: { appointmentData: req } });
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to mark as completed");
-    }
   };
 
   const getStatusBadge = (status) => {
@@ -243,11 +226,11 @@ const AppointmentRequests = () => {
 
                     {req.status === "Approved" && (
                       <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                        <button 
+                        <button
                           onClick={() => handleMarkCompleted(req)}
-                          className="flex-1 py-2.5 px-4 bg-teal-500 text-white hover:bg-teal-600 font-bold rounded-xl transition-colors shadow-sm shadow-teal-500/20 text-sm"
+                          className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors font-bold text-sm shadow-sm"
                         >
-                          Mark Completed
+                          <FaCheckCircle /> Complete Appointment
                         </button>
                         <button className="flex-1 py-2.5 px-4 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 font-bold rounded-xl transition-colors text-sm">
                           View Profile

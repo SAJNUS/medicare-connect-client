@@ -95,8 +95,8 @@ const Login = () => {
           }
         }
       } catch (error) {
-        console.error("Login error:", error);
-        toast.error(error.message === "Invalid email or password." ? error.message : "An error occurred during login.");
+        console.error("[FIREBASE AUTH ERROR]", error.code, error.message, error);
+        toast.error(error.code === "auth/invalid-credential" || error.message === "Invalid email or password." ? "Invalid email or password." : "An error occurred during login: " + error.code);
       } finally {
         setIsLoading(false);
       }

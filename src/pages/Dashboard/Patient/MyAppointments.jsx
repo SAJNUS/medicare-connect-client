@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheckCircle, FaTimesCircle, FaUserMd, FaPlus, FaHashtag, FaHeartbeat, FaBrain, FaBaby, FaBone, FaVenus, FaTooth, FaHeadSideVirus } from "react-icons/fa";
 import { useModal } from "../../../context/ModalContext";
 import { useAuth } from "../../../hooks/useAuth";
@@ -25,6 +26,7 @@ const getSpecialtyIcon = (specialty) => {
 const MyAppointments = () => {
   const [filter, setFilter] = useState("All");
   const { openModal } = useModal();
+  const navigate = useNavigate();
 
   const { user, loading: authLoading } = useAuth();
   const [appointments, setAppointments] = useState([]);
@@ -97,8 +99,8 @@ const MyAppointments = () => {
     const apt = appointments.find(a => a.id === id);
     if (!apt) return;
 
-    if (apt.rawStatus === 'rejected' || apt.rawStatus === 'cancelled' || apt.rawStatus === 'completed') {
-      toast.error("This appointment cannot be cancelled.");
+    if (apt.rawStatus !== 'pending') {
+      toast.error("Only pending appointments can be cancelled.");
       return;
     }
     setCancelData(apt);
@@ -160,6 +162,10 @@ const MyAppointments = () => {
   const handleReschedule = (id) => {
     const apt = appointments.find(a => a.id === id);
     if (apt) {
+      if (apt.rawStatus !== 'pending') {
+        toast.error("Only pending appointments can be rescheduled.");
+        return;
+      }
       setRescheduleData(apt);
       setRescheduleForm({ date: '', time: '' });
     }
@@ -309,6 +315,15 @@ const MyAppointments = () => {
                             Cancel
                           </button>
                         </>
+                      )}
+
+                      {apt.status === "Completed" && (
+                        <button
+                          onClick={() => navigate('/dashboard/patient/prescriptions')}
+                          className="w-full py-2.5 px-4 bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold rounded-xl transition-colors text-sm"
+                        >
+                          View Prescription
+                        </button>
                       )}
 
                       {apt.status === "Upcoming" && apt.paymentStatus === "unpaid" && (

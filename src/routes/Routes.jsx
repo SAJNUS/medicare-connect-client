@@ -17,6 +17,7 @@ import MyProfile from "../pages/Dashboard/Patient/MyProfile";
 import MyAppointments from "../pages/Dashboard/Patient/MyAppointments";
 import PaymentHistory from "../pages/Dashboard/Patient/PaymentHistory";
 import MyReviews from "../pages/Dashboard/Patient/MyReviews";
+import MyPrescriptions from "../pages/Dashboard/Patient/MyPrescriptions";
 
 // Doctor Pages
 import ManageSchedule from "../pages/Dashboard/Doctor/ManageSchedule";
@@ -93,6 +94,10 @@ export const router = createBrowserRouter([
       {
         path: "patient/reviews",
         element: <RoleRoute allowedRoles={['patient', 'admin']}><MyReviews /></RoleRoute>,
+      },
+      {
+        path: "patient/prescriptions",
+        element: <RoleRoute allowedRoles={['patient', 'admin']}><MyPrescriptions /></RoleRoute>,
       },
       // Doctor Routes
       {

@@ -119,6 +119,19 @@ const PrescriptionManagement = () => {
           toast.success("Prescription created successfully!");
         }
       }
+
+      // Automatically mark the linked appointment as completed
+      if (formData.appointmentId) {
+        try {
+          await axiosInstance.patch(`/appointments/${formData.appointmentId}/status`, { status: 'completed' });
+          // Optionally, show a second toast or integrate into one
+          toast.success("Appointment marked as completed!", {
+            style: { borderRadius: '10px', background: '#333', color: '#fff' }
+          });
+        } catch (aptErr) {
+          console.error("Failed to mark appointment as completed:", aptErr);
+        }
+      }
       
       setIsModalOpen(false);
       resetForm();
