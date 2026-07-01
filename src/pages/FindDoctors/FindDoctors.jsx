@@ -77,7 +77,7 @@ const FindDoctors = () => {
           setTotalPages(response.data.totalPages || 1);
         }
       } catch (error) {
-        console.error("Error fetching doctors:", error);
+        console.error("Error fetching doctors:", error?.response?.data || error.message);
       } finally {
         setIsLoading(false);
       }

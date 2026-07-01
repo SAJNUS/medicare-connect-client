@@ -49,7 +49,7 @@ const FeaturedDoctors = () => {
           setDoctors(mappedDocs);
         }
       } catch (error) {
-        console.error("Error fetching featured doctors:", error);
+        console.error("Error fetching featured doctors:", error?.response?.data || error.message);
       } finally {
         setLoading(false);
       }
