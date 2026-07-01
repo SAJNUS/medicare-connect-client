@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { FaBell, FaCode } from "react-icons/fa";
 import { Toaster } from "react-hot-toast";
@@ -12,7 +12,16 @@ const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDevMenuOpen, setIsDevMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const mainRef = useRef(null);
+
+  const handleRoleSwitch = (role) => {
+    setPreviewRole(role);
+    setIsDevMenuOpen(false);
+    if (location.pathname.startsWith('/dashboard')) {
+      navigate(`/dashboard/${role}-overview`);
+    }
+  };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -97,10 +106,9 @@ const DashboardLayout = () => {
                       <div className="px-4 py-2 border-b border-gray-50 mb-1">
                         <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Dev Preview Mode</p>
                       </div>
-                      <button onClick={() => { setPreviewRole(null); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${!previewRole ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Off (Real Role)</button>
-                      <button onClick={() => { setPreviewRole('patient'); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'patient' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Patient</button>
-                      <button onClick={() => { setPreviewRole('doctor'); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'doctor' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Doctor</button>
-                      <button onClick={() => { setPreviewRole('admin'); setIsDevMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'admin' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Admin</button>
+                      <button onClick={() => handleRoleSwitch('patient')} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'patient' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Patient</button>
+                      <button onClick={() => handleRoleSwitch('doctor')} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'doctor' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Doctor</button>
+                      <button onClick={() => handleRoleSwitch('admin')} className={`w-full text-left px-4 py-2 text-sm ${previewRole === 'admin' ? 'bg-teal-50 text-primary font-medium border-l-2 border-primary' : 'text-gray-600 hover:bg-gray-50'}`}>Preview Admin</button>
                     </div>
                   </>
                 )}

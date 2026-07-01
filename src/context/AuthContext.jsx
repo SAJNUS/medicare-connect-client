@@ -15,7 +15,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [previewRole, setPreviewRole] = useState(null);
+  const [previewRole, setPreviewRoleState] = useState(localStorage.getItem('devPreviewRole') || null);
 
   // Create User
   const createUser = (email, password) => {
@@ -100,10 +100,27 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  const isDeveloper = user?.email?.toLowerCase() === 'sajnussaharearhojayfa@gmail.com' && user?.role === 'developer';
+
+  useEffect(() => {
+    if (isDeveloper && !previewRole) {
+      setPreviewRole('patient');
+    }
+  }, [isDeveloper, previewRole]);
+
+  const setPreviewRole = (role) => {
+    setPreviewRoleState(role);
+    if (role) {
+      localStorage.setItem('devPreviewRole', role);
+    } else {
+      localStorage.removeItem('devPreviewRole');
+    }
+  };
+
   // The user object, with role overridden by previewRole if active, else sourced from MongoDB
   const enhancedUser = user ? {
     ...user,
-    role: previewRole || user.role || 'patient'
+    role: isDeveloper ? (previewRole || 'patient') : (user.role || 'patient')
   } : null;
 
   const authInfo = {
