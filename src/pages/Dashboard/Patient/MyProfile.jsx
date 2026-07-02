@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaUserEdit, FaCamera, FaSave, FaTimes, FaUser, FaBirthdayCake, FaTint, FaVenusMars, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHeartbeat, FaAllergies, FaPills, FaBriefcase } from "react-icons/fa";
+import { FaUserEdit, FaCamera, FaSave, FaTimes, FaUser, FaBirthdayCake, FaTint, FaVenusMars, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHeartbeat, FaBriefcase, FaLock } from "react-icons/fa";
+import { FaCircleInfo } from "react-icons/fa6";
 import { useAuth } from "../../../hooks/useAuth";
+import axiosInstance from "../../../api/axiosInstance";
+import { toast } from "react-hot-toast";
+import { updateProfile, updatePassword } from "firebase/auth";
+import auth from "../../../firebase/firebase.config";
 
 const initialProfileData = {
   // Personal
@@ -15,13 +20,11 @@ const initialProfileData = {
   email: "",
   phone: "",
   address: "",
+  password: "",
   // Emergency
   emergencyName: "",
   emergencyRelation: "",
   emergencyPhone: "",
-  // Medical
-  allergies: "",
-  medications: "",
   image: ""
 };
 
@@ -33,16 +36,33 @@ const MyProfile = () => {
 
   useEffect(() => {
     if (user) {
-      const parts = (user.name || "").split(" ");
-      const newFirstName = parts[0] || "";
-      const newLastName = parts.slice(1).join(" ") || "";
+      const parts = (user.name || "").trim().split(/\s+/);
+      let newFirstName = "";
+      let newLastName = "";
+      
+      if (parts.length <= 2) {
+        newFirstName = parts[0] || "";
+        newLastName = parts[1] || "";
+      } else {
+        newLastName = parts.pop() || "";
+        newFirstName = parts.join(" ");
+      }
       
       const updatedData = {
         ...initialProfileData,
         firstName: newFirstName,
         lastName: newLastName,
         email: user.email || "",
-        image: user.avatar || user.photoURL || ""
+        image: user.avatar || user.photoURL || "",
+        dateOfBirth: user.dateOfBirth || "",
+        gender: user.gender || "",
+        bloodGroup: user.bloodGroup || "",
+        occupation: user.occupation || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        emergencyName: user.emergencyName || "",
+        emergencyRelation: user.emergencyRelation || "",
+        emergencyPhone: user.emergencyPhone || "",
       };
       setProfileData(updatedData);
       setFormData(updatedData);
@@ -62,24 +82,74 @@ const MyProfile = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const isGoogleSignIn = user?.providerData?.some(p => p.providerId === 'google.com');
+
+  let creationDateText = "recently";
+  const creationTimeSource = user?.metadata?.creationTime || user?.createdAt;
+  if (creationTimeSource) {
+    const d = new Date(creationTimeSource);
+    if (!isNaN(d)) {
+      creationDateText = `on ${d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+    }
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setProfileData(formData);
-    setIsEditing(false);
+    try {
+      const updateData = { ...formData };
+      delete updateData.password; // Don't store password in MongoDB profile schema
+
+      const res = await axiosInstance.patch(`/users/${user.email}/profile`, updateData);
+      
+      if (res.data.success) {
+        if (!isGoogleSignIn && auth.currentUser) {
+          const newName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim();
+          
+          if (newName !== auth.currentUser.displayName) {
+            await updateProfile(auth.currentUser, { displayName: newName });
+          }
+          if (formData.password && formData.password.trim() !== '') {
+            await updatePassword(auth.currentUser, formData.password);
+          }
+        }
+        
+        // Ensure the password isn't visible in the view state
+        const savedData = { ...formData, password: "" };
+        setProfileData(savedData);
+        setFormData(savedData);
+        setIsEditing(false);
+        toast.success("Profile updated successfully!");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || error.message || "Failed to update profile");
+    }
   };
 
   const handleImageUpload = () => {
     alert("Mock image upload triggered. In a real app, this would open a file picker.");
   };
 
-  const renderField = (icon, label, name, type = "text", options = null, isTextArea = false) => {
+  const renderField = (icon, label, name, type = "text", options = null, isTextArea = false, disabled = false, isRequired = false) => {
     if (!isEditing) {
+      let displayValue = profileData[name] || "N/A";
+      if (type === 'date' && profileData[name]) {
+        const parts = profileData[name].split('-');
+        if (parts.length === 3) {
+          displayValue = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+
       return (
         <div className="flex items-start gap-3 p-4 bg-gray-50/50 rounded-xl border border-gray-100 h-full">
           <div className="mt-0.5 text-primary">{icon}</div>
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{label}</p>
-            <p className="text-sm font-semibold text-gray-900">{profileData[name] || "Not provided"}</p>
+            {type === 'password' ? (
+              <p className="text-sm font-semibold text-gray-900">********</p>
+            ) : (
+              <p className="text-sm font-semibold text-gray-900">{displayValue}</p>
+            )}
           </div>
         </div>
       );
@@ -96,14 +166,16 @@ const MyProfile = () => {
             value={formData[name]}
             onChange={handleInputChange}
             rows={2}
-            className="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none font-medium"
+            disabled={disabled}
+            className={`w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none font-medium ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'}`}
           />
         ) : options ? (
           <select
             name={name}
             value={formData[name]}
             onChange={handleInputChange}
-            className="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
+            disabled={disabled}
+            className={`w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'}`}
           >
             {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
           </select>
@@ -111,10 +183,12 @@ const MyProfile = () => {
           <input
             type={type}
             name={name}
-            value={formData[name]}
+            value={formData[name] || ""}
             onChange={handleInputChange}
-            required
-            className="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
+            required={isRequired && type !== 'password'} // Password is not required if they don't want to change it
+            disabled={disabled}
+            placeholder={type === 'password' ? '******** (Leave empty to keep current)' : ''}
+            className={`w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-900'}`}
           />
         )}
       </div>
@@ -167,6 +241,17 @@ const MyProfile = () => {
         </div>
       </motion.div>
 
+      {isEditing && isGoogleSignIn && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700 font-medium flex items-center gap-3"
+        >
+          <FaCircleInfo className="text-lg shrink-0" />
+          <span>This account was created using Google. Name, email, and password cannot be changed.</span>
+        </motion.div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Photo & Quick Info */}
@@ -192,13 +277,13 @@ const MyProfile = () => {
                 </button>
               )}
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">{profileData.firstName} {profileData.lastName}</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-1 leading-tight">{profileData.firstName} {profileData.lastName}</h2>
             <p className="text-sm font-semibold text-primary mb-4">
-              Patient ID: {user?.uid ? `PAT-${user.uid.substring(0, 5).toUpperCase()}` : "PAT-NEW"}
+              {profileData.email}
             </p>
             <div className="w-full pt-4 border-t border-gray-100">
               <p className="text-xs text-gray-500 font-medium">
-                Account created {user?.metadata?.creationTime ? `on ${new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : "recently"}
+                Joined {creationDateText}
               </p>
             </div>
           </motion.div>
@@ -233,12 +318,12 @@ const MyProfile = () => {
           >
             <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-50 pb-4">Personal Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderField(<FaUser />, "First Name", "firstName")}
-              {renderField(<FaUser />, "Last Name", "lastName")}
-              {renderField(<FaBirthdayCake />, "Date of Birth", "dateOfBirth", "date")}
-              {renderField(<FaVenusMars />, "Gender", "gender", "text", ["Male", "Female", "Other", "Prefer not to say"])}
-              {renderField(<FaTint />, "Blood Group", "bloodGroup", "text", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"])}
-              {renderField(<FaBriefcase />, "Occupation", "occupation")}
+              {renderField(<FaUser />, "First Name", "firstName", "text", null, false, isGoogleSignIn, true)}
+              {renderField(<FaUser />, "Last Name", "lastName", "text", null, false, isGoogleSignIn, false)}
+              {renderField(<FaBirthdayCake />, "Date of Birth", "dateOfBirth", "date", null, false, false, false)}
+              {renderField(<FaVenusMars />, "Gender", "gender", "text", ["Male", "Female", "Other", "Prefer not to say"], false, false, false)}
+              {renderField(<FaTint />, "Blood Group", "bloodGroup", "text", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"], false, false, false)}
+              {renderField(<FaBriefcase />, "Occupation", "occupation", "text", null, false, false, false)}
             </div>
           </motion.div>
 
@@ -251,25 +336,25 @@ const MyProfile = () => {
           >
             <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-50 pb-4">Contact Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderField(<FaEnvelope />, "Email Address", "email", "email")}
-              {renderField(<FaPhone />, "Phone Number", "phone", "tel")}
+              {renderField(<FaEnvelope />, "Email Address", "email", "email", null, false, true, true)}
+              {renderField(<FaPhone />, "Phone Number", "phone", "tel", null, false, false, false)}
               <div className="md:col-span-2">
-                {renderField(<FaMapMarkerAlt />, "Home Address", "address", "text", null, true)}
+                {renderField(<FaMapMarkerAlt />, "Home Address", "address", "text", null, true, false, false)}
               </div>
             </div>
           </motion.div>
 
-          {/* Medical Information */}
+          {/* Security Information */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100"
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-50 pb-4">Basic Medical Info</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-6 border-b border-gray-50 pb-4">Security Information</h3>
+            
             <div className="grid grid-cols-1 gap-6">
-              {renderField(<FaAllergies />, "Known Allergies", "allergies", "text", null, true)}
-              {renderField(<FaPills />, "Current Medications", "medications", "text", null, true)}
+              {renderField(<FaLock />, "Password", "password", "password", null, false, isGoogleSignIn, true)}
             </div>
           </motion.div>
 

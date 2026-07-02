@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaUsers, FaUserMd, FaCalendarCheck, FaStar, FaDownload } from "react-icons/fa";
+import { FaUsers, FaUserMd, FaCalendarCheck, FaStar, FaDownload, FaWallet } from "react-icons/fa";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, BarChart, Bar } from "recharts";
 import axiosInstance from "../../api/axiosInstance";
+import { formatCompactNumber } from "../../utils/formatUtils";
 
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState({
     totalPatients: 0,
     totalDoctors: 0,
     totalAppointments: 0,
+    totalRevenue: 0,
     averageRating: 0,
     appointmentTrendData: [],
     specialtyRevenueData: [],

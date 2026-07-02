@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import axiosInstance from "../../api/axiosInstance";
 import { formatToDDMMYYYY } from "../../utils/dateUtils";
+import { formatCompactNumber } from "../../utils/formatUtils";
 
 const DoctorDashboard = () => {
   const { user } = useAuth();
@@ -66,7 +67,7 @@ const DoctorDashboard = () => {
   const stats = [
     { title: "Total Patients", value: totalPatients.toString(), fullValue: totalPatients.toString(), icon: <FaUserInjured className="text-teal-600" />, bg: "bg-teal-100/50" },
     { title: "Today's Appointments", value: todaysAppointmentsCount.toString(), icon: <FaCalendarDay className="text-blue-600" />, bg: "bg-blue-100/50" },
-    { title: "Total Earnings", value: `BDT ${totalEarnings.toLocaleString()}`, fullValue: `BDT ${totalEarnings.toFixed(2)}`, icon: <FaWallet className="text-orange-500" />, bg: "bg-orange-100/50" },
+    { title: "Total Earnings", value: `BDT ${formatCompactNumber(totalEarnings)}`, fullValue: `BDT ${totalEarnings.toFixed(2)}`, icon: <FaWallet className="text-orange-500" />, bg: "bg-orange-100/50" },
     { title: "Reviews Received", value: averageRating, fullValue: `${reviews.length} total reviews`, icon: <FaStar className="text-yellow-500" />, bg: "bg-yellow-100/50" },
   ];
 

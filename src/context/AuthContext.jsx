@@ -63,7 +63,8 @@ export const AuthProvider = ({ children }) => {
               role: normalizedRole,
               uid: dbUser._id,
               firebaseUid: currentUser.uid,
-              avatar: dbUser.photoURL || currentUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+              providerData: currentUser.providerData,
+              avatar: dbUser.profileImage || dbUser.image || dbUser.avatar || dbUser.photoURL || currentUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
               designation: normalizedRole === 'doctor' ? 'Doctor' : normalizedRole === 'admin' ? 'Admin' : 'Patient'
             });
             // Keep localStorage sync just in case other parts of the app rely on it temporarily
@@ -73,6 +74,7 @@ export const AuthProvider = ({ children }) => {
             setUser({
               email: currentUser.email,
               firebaseUid: currentUser.uid,
+              providerData: currentUser.providerData,
               role: "patient",
               avatar: currentUser.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
             });
@@ -87,6 +89,7 @@ export const AuthProvider = ({ children }) => {
             setUser({
               email: currentUser.email,
               firebaseUid: currentUser.uid,
+              providerData: currentUser.providerData,
               role: "patient"
             });
           }

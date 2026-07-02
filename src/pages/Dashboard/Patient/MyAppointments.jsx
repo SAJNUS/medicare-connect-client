@@ -52,7 +52,7 @@ const MyAppointments = () => {
           axiosInstance.get(`/appointments?patientEmail=${user.email}`),
           axiosInstance.get('/doctors').catch(() => ({ data: { data: [] } }))
         ]);
-        
+
         const doctorsList = docRes.data?.data || [];
 
         if (aptRes.data.success) {
@@ -72,9 +72,9 @@ const MyAppointments = () => {
               date: apt.date || apt.appointmentDate,
               time: apt.time || apt.timeSlot,
               type: apt.type || "In-Person Consult",
-              status: apt.appointmentStatus === "approved" || apt.appointmentStatus === "pending" ? "Upcoming" 
-                      : apt.appointmentStatus === "rejected" || apt.appointmentStatus === "cancelled" ? "Cancelled"
-                      : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
+              status: apt.appointmentStatus === "approved" || apt.appointmentStatus === "pending" ? "Upcoming"
+                : apt.appointmentStatus === "rejected" || apt.appointmentStatus === "cancelled" ? "Cancelled"
+                  : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
               image: docDetails?.photoURL || docDetails?.image || docDetails?.avatar || docDetails?.photoUrl || "",
               rawStatus: apt.appointmentStatus,
               paymentStatus: apt.paymentStatus || 'unpaid',
@@ -147,7 +147,7 @@ const MyAppointments = () => {
       });
       if (res.data.success) {
         toast.success("Appointment rescheduled successfully!");
-        setAppointments(appointments.map(a => 
+        setAppointments(appointments.map(a =>
           a.id === rescheduleData.id ? { ...a, date: formatToDDMMYYYY(rescheduleForm.date), time: rescheduleForm.time } : a
         ));
         setRescheduleData(null);
@@ -213,7 +213,7 @@ const MyAppointments = () => {
           <p className="text-sm font-medium text-gray-500">Manage your consultations, payments, and appointment history.</p>
         </div>
 
-        <button 
+        <button
           onClick={() => openModal(handleBookAppointment)}
           className="w-full md:w-auto mt-4 md:mt-0 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-[#095c55] transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
         >
@@ -357,9 +357,9 @@ const MyAppointments = () => {
         </AnimatePresence>
       </div>
 
-      <PaymentModal 
-        isOpen={!!paymentModalData} 
-        onClose={() => setPaymentModalData(null)} 
+      <PaymentModal
+        isOpen={!!paymentModalData}
+        onClose={() => setPaymentModalData(null)}
         appointment={paymentModalData}
         onPaymentSuccess={handlePaymentSuccess}
       />
@@ -438,7 +438,7 @@ const MyAppointments = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">New Date</label>
-                    <input 
+                    <input
                       ref={rescheduleDateInputRef}
                       type={isRescheduleDateFocused || !rescheduleForm.date ? "date" : "text"}
                       onFocus={() => setIsRescheduleDateFocused(true)}
@@ -446,9 +446,9 @@ const MyAppointments = () => {
                       onClick={handleRescheduleDateClick}
                       min={new Date().toISOString().split('T')[0]}
                       required
-                      value={isRescheduleDateFocused || !rescheduleForm.date ? rescheduleForm.date : formatToDDMMYYYY(rescheduleForm.date)} 
+                      value={isRescheduleDateFocused || !rescheduleForm.date ? rescheduleForm.date : formatToDDMMYYYY(rescheduleForm.date)}
                       onChange={(e) => {
-                        setRescheduleForm({...rescheduleForm, date: e.target.value});
+                        setRescheduleForm({ ...rescheduleForm, date: e.target.value });
                         setIsRescheduleDateFocused(false);
                         if (rescheduleDateInputRef.current) rescheduleDateInputRef.current.type = "text";
                       }}
@@ -458,10 +458,10 @@ const MyAppointments = () => {
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">New Time</label>
-                    <select 
+                    <select
                       required
-                      value={rescheduleForm.time} 
-                      onChange={(e) => setRescheduleForm({...rescheduleForm, time: e.target.value})}
+                      value={rescheduleForm.time}
+                      onChange={(e) => setRescheduleForm({ ...rescheduleForm, time: e.target.value })}
                       className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none font-medium"
                     >
                       <option value="" disabled hidden>{rescheduleForm.date ? "Choose a time slot..." : "Select date first"}</option>

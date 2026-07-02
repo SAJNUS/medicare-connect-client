@@ -8,6 +8,7 @@ import { useFavorites } from "../../contexts/FavoritesContext";
 import axiosInstance from "../../api/axiosInstance";
 import toast from "react-hot-toast";
 import { formatToDDMMYYYY, parseDateTimeForSort } from "../../utils/dateUtils";
+import { formatCompactNumber } from "../../utils/formatUtils";
 import AppointmentForm from "../../components/appointments/AppointmentForm";
 
 const getSpecialtyIcon = (specialty) => {
@@ -36,7 +37,9 @@ const PatientDashboard = () => {
   // Modals state
   const [isFavoritesModalOpen, setIsFavoritesModalOpen] = useState(false);
   const [isAllAppointmentsModalOpen, setIsAllAppointmentsModalOpen] = useState(false);
-  const [rescheduleData, setRescheduleData] = useState(null); // stores the appointment being rescheduled
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
+  const [rescheduleData, setRescheduleData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,7 +143,7 @@ const PatientDashboard = () => {
   const stats = [
     { title: "My Appointments", value: totalUpcoming.toString(), icon: <FaCalendarCheck className="text-blue-600" />, bg: "bg-blue-100/50" },
     { title: "Completed Visits", value: totalCompleted.toString(), icon: <FaCheckCircle className="text-teal-600" />, bg: "bg-teal-100/50" },
-    { title: "Total Payments", value: `BDT ${totalPaymentsAmount}`, fullValue: `BDT ${totalPaymentsAmount}.00`, icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
+    { title: "Total Payments", value: `BDT ${formatCompactNumber(totalPaymentsAmount)}`, fullValue: `BDT ${totalPaymentsAmount.toLocaleString()}`, icon: <FaWallet className="text-purple-600" />, bg: "bg-purple-100/50" },
     { title: "Favorite Doctors", value: favorites.length.toString(), icon: <FaHeart className="text-red-500" />, bg: "bg-red-100/50" },
   ];
 
@@ -189,7 +192,7 @@ const PatientDashboard = () => {
 
   const recentActivities = dynamicActivities
     .sort((a, b) => b.dateObj - a.dateObj)
-    .slice(0, 4)
+    .slice(0, 5)
     .map(act => {
       const diffMs = new Date() - act.dateObj;
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -224,12 +227,20 @@ const PatientDashboard = () => {
             Here's what's happening with your health profile today.
           </p>
         </div>
-        <button
-          onClick={() => openModal(handleBookAppointment)}
-          className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_4px_12px_rgba(13,148,136,0.3)] hover:shadow-[0_6px_16px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center"
-        >
-          New Appointment
-        </button>
+        <div className="flex items-center gap-3 mt-4 sm:mt-0">
+          <button
+            onClick={() => navigate('/dashboard/patient/prescriptions')}
+            className="px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.12)] hover:-translate-y-0.5"
+          >
+            My Prescriptions
+          </button>
+          <button
+            onClick={() => openModal(handleBookAppointment)}
+            className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-[0_4px_12px_rgba(13,148,136,0.3)] hover:shadow-[0_6px_16px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center"
+          >
+            New Appointment
+          </button>
+        </div>
       </motion.div>
 
       {/* Stats Grid */}
@@ -285,7 +296,7 @@ const PatientDashboard = () => {
               </button>
             </div>
 
-            {upcomingAppointments.map(apt => (
+            {upcomingAppointments.length > 0 ? upcomingAppointments.map(apt => (
               <div key={apt.id} className="border border-gray-100 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 hover:border-primary/30 transition-colors bg-gray-50/50">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-xl overflow-hidden shadow-sm flex-shrink-0">
@@ -312,30 +323,38 @@ const PatientDashboard = () => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 md:ml-auto w-full sm:w-auto">
-                  <div className={`flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg w-full ${apt.type === 'Video Consult'
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-red-100 text-red-600'
-                    }`}>
-                    {apt.type === 'Video Consult' ? <FaVideo className="text-sm" /> : <FaMapMarkerAlt className="text-sm" />}
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg w-full border bg-[#f8f9fa] border-gray-200 text-slate-700 shadow-sm">
+                    {apt.type === 'Video Consult' ? <FaVideo className="text-blue-500 text-sm" /> : <FaMapMarkerAlt className="text-red-500 text-sm" />}
                     {apt.type}
                   </div>
                   <div className="grid grid-cols-2 gap-2 w-full">
                     <button
                       onClick={() => setRescheduleData(apt)}
-                      className="btn btn-sm bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+                      className="btn btn-sm bg-blue-500 text-white hover:bg-blue-600 border-none rounded-lg"
                     >
                       Reschedule
                     </button>
-                    <button
-                      onClick={() => window.open('https://meet.google.com', '_blank')}
-                      className="btn btn-sm btn-primary text-white hover:bg-primary-focus rounded-lg"
-                    >
-                      Join Call
-                    </button>
+                    {apt.type === 'Video Consult' ? (
+                      <button
+                        onClick={() => window.open('https://meet.google.com', '_blank')}
+                        className="btn btn-sm btn-primary text-white hover:bg-primary-focus rounded-lg"
+                      >
+                        Join Call
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate(`/doctors/${apt.doctorId}`)}
+                        className="btn btn-sm btn-primary text-white hover:bg-primary-focus rounded-lg"
+                      >
+                        View Details
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-gray-500 text-center py-4">No upcoming appointments yet.</p>
+            )}
           </motion.div>
 
           {/* Appointment History */}
@@ -347,7 +366,7 @@ const PatientDashboard = () => {
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-poppins font-bold text-gray-900">Appointment History</h3>
-              <button className="text-primary font-semibold text-sm hover:underline">View Full History</button>
+              <button onClick={() => setIsHistoryModalOpen(true)} className="text-primary font-semibold text-sm hover:underline">View All</button>
             </div>
 
             <div className="overflow-x-auto">
@@ -361,12 +380,12 @@ const PatientDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {appointmentHistory.map((history, idx) => (
+                  {appointmentHistory.length > 0 ? appointmentHistory.map((history, idx) => (
                     <tr key={history.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors whitespace-nowrap ${idx === appointmentHistory.length - 1 ? 'border-b-0' : ''}`}>
                       <td className="py-4 pl-4 font-bold text-gray-900">{history.doctor}</td>
                       <td className="py-4 text-gray-600 text-sm font-medium text-center">{history.date}</td>
                       <td className="py-4 text-center">
-                        <span className={`inline-flex items-center justify-center w-28 gap-1.5 py-1 rounded-full text-xs font-bold ${history.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        <span className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${history.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                           }`}>
                           {history.status === 'Completed' ? <FaCheckCircle /> : <FaTimesCircle />}
                           {history.status}
@@ -381,7 +400,11 @@ const PatientDashboard = () => {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan="4" className="py-8 text-center text-sm text-gray-500">No appointment history found.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -452,22 +475,33 @@ const PatientDashboard = () => {
           >
             <h3 className="text-lg font-poppins font-bold text-gray-900 mb-6">Recent Activities</h3>
 
-            <div className="relative pl-3 border-l-2 border-gray-100 space-y-6">
-              {recentActivities.map((activity, idx) => (
-                <div key={activity.id} className="relative">
-                  {/* Timeline Dot */}
-                  <div className={`absolute -left-[17px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm ${activity.type === 'booking' ? 'bg-primary' :
-                    activity.type === 'payment' ? 'bg-purple-500' : 'bg-blue-500'
-                    }`}></div>
+            {recentActivities.length > 0 ? (
+              <div className="relative pl-3 border-l-2 border-gray-100 space-y-6">
+                {recentActivities.map((activity, idx) => (
+                  <div key={activity.id} className="relative">
+                    {/* Timeline Dot */}
+                    <div className={`absolute -left-[17px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm ${activity.type === 'booking' ? 'bg-blue-500' :
+                      activity.type === 'payment' ? 'bg-purple-500' : 'bg-primary'
+                      }`}></div>
 
-                  <div>
-                    <p className="font-bold text-gray-900 text-sm leading-none mb-1">{activity.action}</p>
-                    <p className="text-xs font-medium text-gray-500">{activity.target}</p>
-                    <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">{activity.time}</p>
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm leading-none mb-1">{activity.action}</p>
+                      <p className="text-xs font-medium text-gray-500">{activity.target}</p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">{activity.time}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">No recent activities found.</p>
+            )}
+            
+            <button
+              onClick={() => setIsActivitiesModalOpen(true)}
+              className="w-full mt-6 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              View More
+            </button>
           </motion.div>
 
         </div>
@@ -578,12 +612,16 @@ const PatientDashboard = () => {
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 md:ml-auto w-full sm:w-auto">
-                          <div className={`flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg w-full ${mappedApt.type === 'Video Consult' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
-                            {mappedApt.type === 'Video Consult' ? <FaVideo className="text-sm" /> : <FaMapMarkerAlt className="text-sm" />} {mappedApt.type}
+                          <div className="flex items-center justify-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg w-full border bg-[#f8f9fa] border-gray-200 text-slate-700 shadow-sm">
+                            {mappedApt.type === 'Video Consult' ? <FaVideo className="text-blue-500 text-sm" /> : <FaMapMarkerAlt className="text-red-500 text-sm" />} {mappedApt.type}
                           </div>
                           <div className="grid grid-cols-2 gap-2 w-full">
-                            <button onClick={() => setRescheduleData(mappedApt)} className="btn btn-sm bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg">Reschedule</button>
-                            <button onClick={() => window.open('https://meet.google.com', '_blank')} className="btn btn-sm btn-primary text-white hover:bg-primary-focus rounded-lg">Join Call</button>
+                            <button onClick={() => setRescheduleData(mappedApt)} className="btn btn-sm bg-blue-500 text-white hover:bg-blue-600 border-none rounded-lg">Reschedule</button>
+                            {mappedApt.type === 'Video Consult' ? (
+                              <button onClick={() => window.open('https://meet.google.com', '_blank')} className="btn btn-sm btn-primary text-white hover:bg-primary-focus rounded-lg">Join Call</button>
+                            ) : (
+                              <button onClick={() => navigate(`/doctors/${mappedApt.doctorId}`)} className="btn btn-sm btn-primary text-white hover:bg-primary-focus rounded-lg">View Details</button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -637,6 +675,121 @@ const PatientDashboard = () => {
                   isSubmitting={isRescheduling}
                   onCancel={() => setRescheduleData(null)}
                 />
+              </div>
+            </motion.div>
+          </div>
+        )}
+        {/* Appointment History Modal */}
+        {isHistoryModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm" onClick={() => setIsHistoryModalOpen(false)}>
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900 font-poppins">All Appointment History</h3>
+                <button
+                  onClick={() => setIsHistoryModalOpen(false)}
+                  className="text-gray-400 p-2 rounded-full hover:bg-red-50 hover:text-red-500 transition-all duration-300"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 bg-gray-50/30 flex-1">
+                <div className="overflow-x-auto bg-white rounded-2xl border border-gray-100">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-100 text-gray-500 text-sm font-semibold whitespace-nowrap bg-gray-50/50">
+                        <th className="py-4 pl-4 min-w-[150px]">Doctor Name</th>
+                        <th className="py-4 text-center min-w-[120px]">Date</th>
+                        <th className="py-4 text-center min-w-[120px]">Status</th>
+                        <th className="py-4 text-center min-w-[100px]">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allAppointments.filter(a => a.appointmentStatus === "completed" || a.appointmentStatus === "rejected").length > 0 ? (
+                        allAppointments.filter(a => a.appointmentStatus === "completed" || a.appointmentStatus === "rejected").map((apt, idx, arr) => (
+                          <tr key={apt._id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors whitespace-nowrap ${idx === arr.length - 1 ? 'border-b-0' : ''}`}>
+                            <td className="py-4 pl-4 font-bold text-gray-900">{apt.doctorName}</td>
+                            <td className="py-4 text-gray-600 text-sm font-medium text-center">{formatToDDMMYYYY(apt.date || apt.appointmentDate)}</td>
+                            <td className="py-4 text-center">
+                              <span className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${apt.appointmentStatus === 'completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {apt.appointmentStatus === 'completed' ? <FaCheckCircle /> : <FaTimesCircle />}
+                                {apt.appointmentStatus === 'completed' ? 'Completed' : 'Rejected'}
+                              </span>
+                            </td>
+                            <td className="py-4 text-center">
+                              <button
+                                onClick={() => apt.doctorId ? navigate(`/doctors/${apt.doctorId}`) : navigate('/doctors')}
+                                className="text-primary hover:text-[#095c55] font-bold text-sm transition-colors"
+                              >
+                                Rebook
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="py-8 text-center text-gray-500">No appointment history found.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* All Recent Activities Modal */}
+        {isActivitiesModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm" onClick={() => setIsActivitiesModalOpen(false)}>
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900 font-poppins">All Recent Activities</h3>
+                <button
+                  onClick={() => setIsActivitiesModalOpen(false)}
+                  className="text-gray-400 p-2 rounded-full hover:bg-red-50 hover:text-red-500 transition-all duration-300"
+                >
+                  <FaTimes className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 bg-gray-50/30 flex-1">
+                <div className="relative pl-3 border-l-2 border-gray-100 space-y-6">
+                  {dynamicActivities.sort((a, b) => b.dateObj - a.dateObj).map((activity) => {
+                    const diffMs = new Date() - activity.dateObj;
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffMins = Math.floor(diffMs / (1000 * 60));
+                    let timeStr = "Just now";
+                    if (diffDays > 0) timeStr = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+                    else if (diffHours > 0) timeStr = `${diffHours} hr${diffHours > 1 ? 's' : ''} ago`;
+                    else if (diffMins > 0) timeStr = `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+                    
+                    return (
+                      <div key={activity.id} className="relative">
+                        <div className={`absolute -left-[17px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm ${activity.type === 'booking' ? 'bg-blue-500' : activity.type === 'payment' ? 'bg-purple-500' : 'bg-primary'}`}></div>
+                        <div>
+                          <p className="font-bold text-gray-900 text-sm leading-none mb-1">{activity.action}</p>
+                          <p className="text-xs font-medium text-gray-500">{activity.target}</p>
+                          <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">{timeStr}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {dynamicActivities.length === 0 && (
+                  <p className="text-center text-gray-500 text-sm py-4">No activities found.</p>
+                )}
               </div>
             </motion.div>
           </div>

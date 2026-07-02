@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { formatToDDMMYYYY } from "../../../utils/dateUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaCheckCircle, FaTimesCircle, FaBan, FaUserMd, FaEnvelope } from "react-icons/fa";
 import toast from "react-hot-toast";
@@ -117,20 +118,15 @@ const ManageDoctors = () => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "Unknown";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return formatToDDMMYYYY(dateString);
   };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header & Search */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+      <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
       >
@@ -152,8 +148,9 @@ const ManageDoctors = () => {
       </motion.div>
 
       {/* Main Container */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+      <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
@@ -333,8 +330,9 @@ const ManageDoctors = () => {
       {/* Confirmation Modal */}
       <AnimatePresence>
         {isModalOpen && selectedDoctor && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}>
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatToDDMMYYYY } from "../../../utils/dateUtils";
 import { FaFilePrescription, FaTimes, FaDownload, FaPills, FaStethoscope } from "react-icons/fa";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
@@ -46,7 +47,8 @@ const MyPrescriptions = () => {
   return (
     <div className="p-4 md:p-8">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
@@ -83,7 +85,7 @@ const MyPrescriptions = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 font-poppins">{pres.doctorName}</h3>
-                    <p className="text-sm text-gray-500 font-inter">{new Date(pres.createdAt || pres.updatedAt).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500 font-inter">{formatToDDMMYYYY(pres.createdAt || pres.updatedAt)}</p>
                   </div>
                 </div>
                 <div className="space-y-2 mb-4">
@@ -112,8 +114,9 @@ const MyPrescriptions = () => {
       {/* Prescription Modal */}
       <AnimatePresence>
         {selectedPrescription && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm" onClick={() => setSelectedPrescription(null)}>
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -136,7 +139,7 @@ const MyPrescriptions = () => {
                 <div className="flex justify-between items-start mb-8 pb-6 border-b border-gray-100">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 font-poppins">{selectedPrescription.doctorName}</h2>
-                    <p className="text-gray-500 text-sm mt-1">Prescribed on {new Date(selectedPrescription.createdAt || selectedPrescription.updatedAt).toLocaleDateString()}</p>
+                    <p className="text-gray-500 text-sm mt-1">Prescribed on {formatToDDMMYYYY(selectedPrescription.createdAt || selectedPrescription.updatedAt)}</p>
                   </div>
                 </div>
 
@@ -187,7 +190,7 @@ const MyPrescriptions = () => {
                     <div>
                       <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Follow-up Visit</h4>
                       <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 inline-block">
-                        <p className="text-gray-700 font-medium">{new Date(selectedPrescription.nextVisit).toLocaleDateString()}</p>
+                        <p className="text-gray-700 font-medium">{formatToDDMMYYYY(selectedPrescription.nextVisit)}</p>
                       </div>
                     </div>
                   )}

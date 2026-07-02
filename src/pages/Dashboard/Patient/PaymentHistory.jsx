@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
+import { formatToDDMMYYYY } from "../../../utils/dateUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaFileInvoiceDollar, FaCheckCircle, FaClock, FaTimesCircle, FaDownload, FaCreditCard, FaCcVisa, FaCcMastercard, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
 
@@ -15,31 +16,39 @@ const PaymentHistory = () => {
   useEffect(() => {
     const fetchPayments = async () => {
       if (!user?.email) return;
+      console.log('[PaymentHistory] Fetching for email:', user.email);
       try {
         setLoading(true);
-        // Force local URL to hit the updated server
-        const response = await axiosInstance.get(`/payments?patientEmail=${user.email}`);
-        if (response.data.success) {
+        const apiUrl = `/payments?patientEmail=${user.email}`;
+        console.log('[PaymentHistory] API URL:', apiUrl);
+        
+        const response = await axiosInstance.get(apiUrl);
+        console.log('[PaymentHistory] Raw API response:', response.data);
+        console.log('[PaymentHistory] Documents returned by query:', response.data?.data?.length ?? 'N/A');
 
+        if (response.data.success) {
           const mappedTxns = response.data.data.map(txn => {
             return {
-              id: txn.displayTransactionId || txn.friendlyTxnId || (txn.transactionId?.startsWith('pi_') ? `TXN-2026-${txn.transactionId.slice(-4).toUpperCase()}` : txn.transactionId),
+              id: String(txn.displayTransactionId || txn.friendlyTxnId || (txn.transactionId?.startsWith('pi_') ? `TXN-2026-${txn.transactionId.slice(-4).toUpperCase()}` : txn.transactionId) || txn._id),
               realId: txn.transactionId || txn._id,
-              doctorName: txn.doctorName || "Doctor",
-              date: new Date(txn.paymentDate || txn.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-              time: txn.time || new Date(txn.paymentDate || txn.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-              amount: txn.amount || 0,
+              doctorName: String(txn.doctorName || "Doctor"),
+              date: formatToDDMMYYYY(txn.paymentDate || txn.date),
+              time: String(txn.time || new Date(txn.paymentDate || txn.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })),
+              amount: Number(txn.amount || 0),
               method: "Stripe",
               cardType: "stripe",
-              status: "Completed",
-              type: txn.type || "Consultation",
+              status: txn.paymentStatus === 'refunded' ? 'Failed' : 'Completed',
+              type: String(txn.type || "Consultation"),
               original: txn
             };
           });
+          console.log('[PaymentHistory] Mapped transactions count:', mappedTxns.length);
           setTransactions(mappedTxns);
+        } else {
+          console.warn('[PaymentHistory] API returned success=false:', response.data.message);
         }
       } catch (error) {
-        console.error("Failed to fetch payments:", error);
+        console.error('[PaymentHistory] FETCH ERROR (this is why transactions are empty):', error);
       } finally {
         setLoading(false);
       }
@@ -55,13 +64,15 @@ const PaymentHistory = () => {
 
   const filteredTransactions = transactions.filter(txn => {
     const matchesFilter = filter === "All" || txn.status === filter;
-    const searchLower = searchQuery.toLowerCase();
+    const searchLower = String(searchQuery || "").toLowerCase();
     const matchesSearch =
-      txn.doctorName.toLowerCase().includes(searchLower) ||
-      txn.id.toLowerCase().includes(searchLower);
+      String(txn.doctorName || "").toLowerCase().includes(searchLower) ||
+      String(txn.id || "").toLowerCase().includes(searchLower);
 
     return matchesFilter && matchesSearch;
   });
+  console.log('[PaymentHistory] Final filteredTransactions length before render:', filteredTransactions.length, '| filter:', filter, '| search:', searchQuery);
+
 
   const getStatusBadge = (status) => {
     switch (status) {

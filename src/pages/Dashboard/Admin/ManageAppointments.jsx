@@ -93,8 +93,9 @@ const ManageAppointments = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       {/* Header & Controls */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+      <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col xl:flex-row xl:items-center justify-between gap-6"
       >
@@ -116,8 +117,9 @@ const ManageAppointments = () => {
       </motion.div>
 
       {/* Filter Pills */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+      <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="flex overflow-x-auto hide-scrollbar gap-2 pb-2 sm:pb-0"
@@ -137,8 +139,9 @@ const ManageAppointments = () => {
       </motion.div>
 
       {/* Main Container */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+      <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
@@ -276,8 +279,9 @@ const ManageAppointments = () => {
       {/* Confirmation Modal */}
       <AnimatePresence>
         {isModalOpen && selectedAppointment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}>
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}

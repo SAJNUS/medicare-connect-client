@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { formatToDDMMYYYY } from "../../../utils/dateUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaTrash, FaBan, FaCheckCircle, FaUserShield, FaUser, FaUserMd } from "react-icons/fa";
 import { toast } from "react-hot-toast";
@@ -136,13 +137,7 @@ const ManageUsers = () => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "Unknown";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return formatToDDMMYYYY(dateString);
   };
 
   return (
