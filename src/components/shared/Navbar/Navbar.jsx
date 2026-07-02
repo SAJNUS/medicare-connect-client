@@ -4,6 +4,7 @@ import { HiMenu, HiX, HiOutlineUser, HiOutlineCalendar, HiOutlineStar, HiOutline
 import logo from "../../../assets/logo2.png";
 import { useAuth } from "../../../hooks/useAuth";
 import { getRoleColors } from "../../../utils/roleColors";
+import UserAvatar from "../../UserAvatar";
 
 const Navbar = () => {
   const { user, loading, logoutUser } = useAuth();
@@ -82,7 +83,7 @@ const Navbar = () => {
                   className={`btn btn-ghost btn-circle avatar border-2 transition-colors ${roleColors.ringBorder} ${roleColors.ringHover}`}
                 >
                   <div className="w-10 h-10 rounded-full">
-                    <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} alt="Profile" className="object-cover w-full h-full" />
+                    <UserAvatar user={user} className="object-cover w-full h-full" />
                   </div>
                 </div>
                 {isProfileDropdownOpen && (
@@ -90,7 +91,7 @@ const Navbar = () => {
                     <li className="pointer-events-none mb-3 px-1 pt-4 pb-2">
                       <div className="flex flex-col items-center justify-center gap-3 bg-transparent hover:bg-transparent cursor-default opacity-100 w-full">
                         <div className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 shadow-sm border-2 border-gray-100">
-                          <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} alt="Profile" className="object-cover w-full h-full" />
+                          <UserAvatar user={user} className="object-cover w-full h-full" />
                         </div>
                         <div className="flex flex-col items-center justify-center gap-0.5 text-center">
                           <span className="text-[17px] font-bold text-gray-900 whitespace-nowrap leading-tight">{user.name || "User"}</span>
@@ -190,7 +191,7 @@ const Navbar = () => {
                 <div className="border-t border-gray-100 pt-4 pb-2">
                   <div className="flex flex-col items-center justify-center gap-3 px-4 mb-6 mt-2 text-center">
                     <div className="flex-shrink-0">
-                      <img src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"} alt="Profile" className={`w-20 h-20 rounded-full border-2 object-cover shadow-sm ${roleColors.ringBorder}`} />
+                      <UserAvatar user={user} className={`w-20 h-20 rounded-full border-2 object-cover shadow-sm ${roleColors.ringBorder}`} />
                     </div>
                     <div className="flex flex-col min-w-0 flex-1 items-center">
                       <span className="text-[17px] font-bold text-gray-900 break-words leading-tight">{user.name || "User"}</span>

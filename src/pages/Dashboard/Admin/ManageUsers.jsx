@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaSearch, FaTrash, FaBan, FaCheckCircle, FaUserShield, FaUser, FaUserMd } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../../../api/axiosInstance";
+import UserAvatar from "../../../components/UserAvatar";
 import { useAuth } from "../../../hooks/useAuth";
 
 const ManageUsers = () => {
@@ -224,7 +225,7 @@ const ManageUsers = () => {
                     <tr key={user._id || user.email} className="hover:bg-gray-50/50 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <img src={user.avatar || user.photoURL || "https://ui-avatars.com/api/?name="+user.name+"&background=random"} alt={user.name} className="w-10 h-10 rounded-full object-cover shadow-sm" />
+                          <UserAvatar user={user} className="w-10 h-10 rounded-full" />
                           <div>
                             <p className="font-bold text-gray-900">{user.name}</p>
                             <p className="text-xs font-medium text-gray-500">{user.email}</p>
@@ -279,7 +280,7 @@ const ManageUsers = () => {
                 <div key={user._id || user.email} className="p-5 flex flex-col gap-4 hover:bg-gray-50/50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                      <img src={user.avatar || user.photoURL || "https://ui-avatars.com/api/?name="+user.name+"&background=random"} alt={user.name} className="w-12 h-12 rounded-full object-cover shadow-sm" />
+                      <UserAvatar user={user} className="w-12 h-12 rounded-full" />
                       <div>
                         <p className="font-bold text-gray-900 text-base">{user.name}</p>
                         <p className="text-sm font-medium text-gray-500">{user.email}</p>

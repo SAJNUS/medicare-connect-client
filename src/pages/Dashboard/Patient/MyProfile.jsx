@@ -4,6 +4,7 @@ import { FaUserEdit, FaCamera, FaSave, FaTimes, FaUser, FaBirthdayCake, FaTint, 
 import { FaCircleInfo } from "react-icons/fa6";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
+import UserAvatar from "../../../components/UserAvatar";
 import { toast } from "react-hot-toast";
 import { updateProfile, updatePassword } from "firebase/auth";
 import auth from "../../../firebase/firebase.config";
@@ -265,7 +266,7 @@ const MyProfile = () => {
           >
             <div className="relative group mb-6">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-50 shadow-sm">
-                <img src={profileData.image} alt="Profile" className="w-full h-full object-cover" />
+                <UserAvatar user={user} className="w-full h-full object-cover" />
               </div>
               {isEditing && (
                 <button

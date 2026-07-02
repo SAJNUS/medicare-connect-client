@@ -3,6 +3,7 @@ import { FaHome, FaCalendarAlt, FaFileMedical, FaCog, FaSignOutAlt, FaUserMd, Fa
 import logo from "../../assets/logo2.png";
 import { useAuth } from "../../hooks/useAuth";
 import { getRoleColors } from "../../utils/roleColors";
+import UserAvatar from "../UserAvatar";
 
 const Sidebar = ({ closeSidebar }) => {
   const userAuthContext = useAuth();
@@ -51,11 +52,7 @@ const Sidebar = ({ closeSidebar }) => {
       {/* User Profile Summary */}
       <div className="px-6 py-5 border-b border-gray-50 flex flex-col items-center flex-shrink-0 text-center">
         <div className="w-16 h-16 rounded-full bg-teal-100 border-4 border-white shadow-md overflow-hidden mb-2">
-          <img
-            src={user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"}
-            alt="User Profile"
-            className="w-full h-full object-cover"
-          />
+          <UserAvatar user={user} className="w-full h-full" />
         </div>
         <h3 className="font-poppins font-bold text-gray-900 text-base leading-tight">{user?.name || "John Doe"}</h3>
         <p className={`text-sm font-bold mt-1 capitalize ${roleColors.text}`}>{userRole || "Patient"}</p>
