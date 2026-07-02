@@ -35,11 +35,6 @@ const MyAppointments = () => {
 
   const [cancelData, setCancelData] = useState(null);
 
-  const [rescheduleData, setRescheduleData] = useState(null);
-  const [rescheduleForm, setRescheduleForm] = useState({ date: '', time: '' });
-  const [isRescheduleDateFocused, setIsRescheduleDateFocused] = useState(false);
-  const rescheduleDateInputRef = useRef(null);
-
   useEffect(() => {
     const fetchAppointments = async () => {
       if (authLoading) return;
@@ -84,7 +79,9 @@ const MyAppointments = () => {
               fee: apt.fee,
               patientEmail: apt.patientEmail,
               doctorEmail: apt.doctorEmail,
-              patientName: apt.patientName
+              patientName: apt.patientName,
+              availableDays: docDetails?.availableDays || null,
+              availableTimeSlots: docDetails?.availableTimeSlots || null
             };
           });
           setAppointments(mappedApts);
@@ -124,43 +121,6 @@ const MyAppointments = () => {
     }
   };
 
-  const handleRescheduleDateClick = (e) => {
-    e.preventDefault();
-    if (rescheduleDateInputRef.current) {
-      rescheduleDateInputRef.current.type = "date";
-      if (rescheduleDateInputRef.current.showPicker) {
-        try {
-          rescheduleDateInputRef.current.showPicker();
-        } catch (err) {
-          console.error(err);
-        }
-      }
-      setIsRescheduleDateFocused(true);
-    }
-  };
-
-  const handleRescheduleSubmit = async (e) => {
-    e.preventDefault();
-    if (!rescheduleData) return;
-    try {
-      const res = await axiosInstance.patch(`/appointments/${rescheduleData.id}/reschedule`, {
-        date: formatToDDMMYYYY(rescheduleForm.date),
-        time: rescheduleForm.time
-      });
-      if (res.data.success) {
-        toast.success("Appointment rescheduled successfully!");
-        setAppointments(appointments.map(a =>
-          a.id === rescheduleData.id ? { ...a, date: formatToDDMMYYYY(rescheduleForm.date), time: rescheduleForm.time } : a
-        ));
-        setRescheduleData(null);
-        setRescheduleForm({ date: '', time: '' });
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Failed to reschedule appointment");
-    }
-  };
-
   const handleReschedule = (id) => {
     const apt = appointments.find(a => a.id === id);
     if (apt) {
@@ -168,8 +128,33 @@ const MyAppointments = () => {
         toast.error("Only Waiting or Pending appointments can be rescheduled.");
         return;
       }
-      setRescheduleData(apt);
-      setRescheduleForm({ date: '', time: '' });
+      
+      openModal(
+        (updatedData) => {
+          setAppointments(appointments.map(a =>
+            a.id === updatedData.id 
+              ? { ...a, date: updatedData.date, time: updatedData.time } 
+              : a
+          ));
+        },
+        {
+          mode: "reschedule",
+          initialData: {
+            id: apt.id,
+            rawStatus: apt.rawStatus,
+            specialty: apt.specialty,
+            doctorId: apt.doctorId || "locked-doc", // Ensures the disabled select renders the doctor name correctly
+            doctorName: apt.doctorName,
+            fee: apt.fee, // Pass fee to display correctly
+            type: apt.type,
+            date: apt.date,
+            time: apt.time,
+            availableDays: apt.availableDays,
+            availableTimeSlots: apt.availableTimeSlots
+          },
+          lockedFields: ["specialty", "doctorId", "type"]
+        }
+      );
     }
   };
 
@@ -479,82 +464,6 @@ const MyAppointments = () => {
         )}
       </AnimatePresence>
 
-      {/* Reschedule Modal */}
-      <AnimatePresence>
-        {rescheduleData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setRescheduleData(null)}
-              className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md relative z-10 overflow-hidden"
-            >
-              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Reschedule Appointment</h3>
-                <button onClick={() => setRescheduleData(null)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <form onSubmit={handleRescheduleSubmit} className="p-6">
-                <p className="text-gray-600 text-sm mb-6">
-                  Select a new date and time for your appointment with <span className="font-bold text-gray-900">{rescheduleData.doctorName}</span>.
-                </p>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">New Date</label>
-                    <input
-                      ref={rescheduleDateInputRef}
-                      type={isRescheduleDateFocused || !rescheduleForm.date ? "date" : "text"}
-                      onFocus={() => setIsRescheduleDateFocused(true)}
-                      onBlur={() => setIsRescheduleDateFocused(false)}
-                      onClick={handleRescheduleDateClick}
-                      min={new Date().toISOString().split('T')[0]}
-                      required
-                      value={isRescheduleDateFocused || !rescheduleForm.date ? rescheduleForm.date : formatToDDMMYYYY(rescheduleForm.date)}
-                      onChange={(e) => {
-                        setRescheduleForm({ ...rescheduleForm, date: e.target.value });
-                        setIsRescheduleDateFocused(false);
-                        if (rescheduleDateInputRef.current) rescheduleDateInputRef.current.type = "text";
-                      }}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">New Time</label>
-                    <select
-                      required
-                      value={rescheduleForm.time}
-                      onChange={(e) => setRescheduleForm({ ...rescheduleForm, time: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary appearance-none font-medium"
-                    >
-                      <option value="" disabled hidden>{rescheduleForm.date ? "Choose a time slot..." : "Select date first"}</option>
-                      {generateAvailableTimeSlots(rescheduleForm.date).map(slot => (
-                        <option key={slot} value={slot}>{slot}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="mt-8 flex items-center justify-end gap-3">
-                  <button type="button" onClick={() => setRescheduleData(null)} className="px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors text-sm">Cancel</button>
-                  <button type="submit" className="px-5 py-2.5 rounded-xl font-bold text-white bg-primary hover:bg-[#0b6e66] transition-colors shadow-lg shadow-primary/30 text-sm">Confirm Reschedule</button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

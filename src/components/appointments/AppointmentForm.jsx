@@ -39,6 +39,21 @@ const AppointmentForm = ({
   const [isDateFocused, setIsDateFocused] = useState(false);
   const dateInputRef = useRef(null);
 
+  const parseDateString = (dateStr) => {
+    if (!dateStr) return null;
+    // If it's already YYYY-MM-DD
+    if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+      return new Date(dateStr);
+    }
+    // If it's DD-MM-YYYY
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   const submitText = mode === "reschedule" ? "Confirm Reschedule" : "Confirm Booking";
 
   const handleDateClick = (e) => {
@@ -93,7 +108,11 @@ const AppointmentForm = ({
       }));
       setIsOtherSelected(false);
     } else {
-      setFormData(prev => ({ ...prev, [name]: String(value) }));
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: String(value),
+        ...(name === "date" ? { time: "" } : {}) 
+      }));
       if (name === "date") {
         setIsDateFocused(false);
         if (dateInputRef.current) dateInputRef.current.type = "text";
@@ -247,7 +266,7 @@ const AppointmentForm = ({
             <FaCalendarAlt className="text-blue-500" /> Date *
           </label>
             <DatePicker
-              selected={formData.date ? new Date(formData.date) : null}
+              selected={parseDateString(formData.date)}
               onChange={(date) => {
                 if (date) {
                   const offsetDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
@@ -314,7 +333,7 @@ const AppointmentForm = ({
         </div>
 
       {/* Dynamic Symptoms Tags */}
-      {!isSymptomsLocked && mode !== "book" && mode !== "new" && mode !== undefined && mode !== "doctor" && (
+      {!isSymptomsLocked && mode !== "reschedule" && (
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-3">Symptoms or Reason for Visit (Optional)</label>
 

@@ -32,60 +32,77 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit, config = {} }) => {
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        patientEmail: user?.email,
-        patientName: user?.name || "Patient",
-        patientImage: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
-        doctorEmail: selectedDoctor?.email,
-        doctorId: selectedDoctor?._id || selectedDoctor?.id,
-        doctorName: selectedDoctor?.name || "Unknown Doctor",
-        specialty: selectedDoctor?.specialty || formData.specialty,
-        doctorImage: selectedDoctor?.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-        date: formatToDDMMYYYY(formData.date),
-        time: formData.time,
-        type: formData.type,
-        symptoms: formData.symptoms.length > 0 ? formData.symptoms : (formData.customSymptom ? [formData.customSymptom] : []),
-        fee: selectedDoctor?.feeAmount || 500,
-        aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
-      };
+      if (mode === "reschedule" && initialData.id) {
+        const payload = {
+          date: formatToDDMMYYYY(formData.date),
+          time: formData.time,
+          status: initialData.rawStatus // preserve status, just update date/time
+        };
 
-      const response = await axiosInstance.post('/appointments', payload);
+        const response = await axiosInstance.patch(`/appointments/${initialData.id}/reschedule`, payload);
 
-      if (response.data.success) {
-        toast.success("Appointment booked successfully!");
-
-        if (onSubmit && selectedDoctor) {
-          // Pass the new fully-formed appointment back to parent to update local state immediately
-          onSubmit({
-            id: response.data.data.insertedId || Date.now(),
-            aptId: payload.aptId,
-            doctorName: payload.doctorName,
-            specialty: payload.specialty,
-            date: payload.date,
-            time: payload.time,
-            type: payload.type,
-            status: "Upcoming",
-            rawStatus: "pending",
-            image: payload.doctorImage,
-            fee: payload.fee,
-            paymentStatus: "unpaid",
-            patientEmail: payload.patientEmail,
-            doctorEmail: payload.doctorEmail,
-            patientName: payload.patientName
-          });
+        if (response.data.success) {
+          toast.success("Appointment rescheduled successfully!");
+          
+          if (onSubmit) {
+            // Update local state by returning only the changed fields
+            onSubmit({ id: initialData.id, date: payload.date, time: payload.time });
+          }
+          onClose();
         }
+      } else {
+        const payload = {
+          patientEmail: user?.email,
+          patientName: user?.name || "Patient",
+          patientImage: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+          doctorEmail: selectedDoctor?.email,
+          doctorId: selectedDoctor?._id || selectedDoctor?.id,
+          doctorName: selectedDoctor?.name || "Unknown Doctor",
+          specialty: selectedDoctor?.specialty || formData.specialty,
+          doctorImage: selectedDoctor?.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
+          date: formatToDDMMYYYY(formData.date),
+          time: formData.time,
+          type: formData.type,
+          symptoms: formData.symptoms.length > 0 ? formData.symptoms : (formData.customSymptom ? [formData.customSymptom] : []),
+          fee: selectedDoctor?.feeAmount || 500,
+          aptId: `MC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`
+        };
 
-        // Close
-        onClose();
+        const response = await axiosInstance.post('/appointments', payload);
 
-        // Navigate only for New Appointment mode
-        if (mode === "book" || mode === "new" || !mode) {
-          window.location.href = '/dashboard/patient/appointments';
+        if (response.data.success) {
+          toast.success("Appointment booked successfully!");
+
+          if (onSubmit && selectedDoctor) {
+            onSubmit({
+              id: response.data.data.insertedId || Date.now(),
+              aptId: payload.aptId,
+              doctorName: payload.doctorName,
+              specialty: payload.specialty,
+              date: payload.date,
+              time: payload.time,
+              type: payload.type,
+              status: "Upcoming",
+              rawStatus: "pending",
+              image: payload.doctorImage,
+              fee: payload.fee,
+              paymentStatus: "unpaid",
+              patientEmail: payload.patientEmail,
+              doctorEmail: payload.doctorEmail,
+              patientName: payload.patientName
+            });
+          }
+
+          onClose();
+
+          if (mode === "book" || mode === "new" || !mode) {
+            window.location.href = '/dashboard/patient/appointments';
+          }
         }
       }
     } catch (error) {
       console.error("Booking error:", error);
-      toast.error("Failed to book appointment.");
+      toast.error(`Failed to ${mode === 'reschedule' ? 'reschedule' : 'book'} appointment.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -116,10 +133,13 @@ const BookAppointmentModal = ({ isOpen, onClose, onSubmit, config = {} }) => {
             <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-100 bg-gray-50/50">
               <div>
                 <h2 className="text-2xl font-bold font-poppins text-gray-900">
-                  {mode === "doctor" ? "Book Appointment" : "New Appointment"}
+                  {mode === "reschedule" ? "Reschedule Appointment" 
+                    : mode === "doctor" ? "Book Appointment" : "New Appointment"}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  {mode === "doctor" 
+                  {mode === "reschedule" 
+                    ? "Choose a new date and time for your existing appointment."
+                    : mode === "doctor" 
                     ? "Schedule a consultation with this specialist." 
                     : "Schedule a consultation with any specialist in our network."}
                 </p>
