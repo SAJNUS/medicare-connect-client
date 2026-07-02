@@ -21,7 +21,9 @@ const MyPrescriptions = () => {
         const appointments = aptRes.data?.data || [];
         
         // Fetch all prescriptions
+        console.log(`[MyPrescriptions Debug] Fetching prescriptions for patientEmail=${user.email}`);
         const presRes = await axiosInstance.get(`/prescriptions?patientEmail=${user.email}`);
+        console.log(`[MyPrescriptions Debug] Response from /prescriptions:`, presRes.data);
         const fetchedPrescriptions = presRes.data?.data || [];
 
         // Map doctor names from appointments to prescriptions
@@ -96,7 +98,7 @@ const MyPrescriptions = () => {
                   <div className="flex items-start gap-2 text-sm">
                     <FaPills className="text-gray-400 mt-1" />
                     <span className="text-gray-600 line-clamp-2">
-                      {pres.medications?.length} Medication(s) Prescribed
+                      {pres.medications ? pres.medications.length : (pres.medication ? 1 : 0)} Medication(s) Prescribed
                     </span>
                   </div>
                 </div>
@@ -160,7 +162,7 @@ const MyPrescriptions = () => {
                       <FaPills className="text-primary" /> Medications
                     </h4>
                     <div className="space-y-3">
-                      {selectedPrescription.medications?.map((med, index) => (
+                      {selectedPrescription.medications ? selectedPrescription.medications.map((med, index) => (
                         <div key={index} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <p className="font-bold text-gray-900 text-lg">{med.name}</p>
@@ -171,16 +173,25 @@ const MyPrescriptions = () => {
                             <p className="text-xs text-gray-500 mt-0.5">{med.duration}</p>
                           </div>
                         </div>
-                      ))}
+                      )) : selectedPrescription.medication ? (
+                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div>
+                            <p className="font-bold text-gray-900 text-lg">{selectedPrescription.medication}</p>
+                            <p className="text-gray-500 text-sm">{selectedPrescription.dosage}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">No medications specified.</p>
+                      )}
                     </div>
                   </div>
 
                   {/* Advice / Notes */}
-                  {selectedPrescription.advice && (
+                  {(selectedPrescription.advice || selectedPrescription.instructions) && (
                     <div>
                       <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3">Advice & Notes</h4>
                       <div className="bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
-                        <p className="text-gray-700 whitespace-pre-line">{selectedPrescription.advice}</p>
+                        <p className="text-gray-700 whitespace-pre-line">{selectedPrescription.advice || selectedPrescription.instructions}</p>
                       </div>
                     </div>
                   )}

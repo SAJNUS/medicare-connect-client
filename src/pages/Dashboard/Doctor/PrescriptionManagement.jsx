@@ -28,7 +28,9 @@ const PrescriptionManagement = () => {
     diagnosis: "",
     medication: "",
     dosage: "",
-    instructions: ""
+    instructions: "",
+    patientEmail: "",
+    doctorName: user?.displayName || user?.name || "Doctor"
   });
 
   // Fetch real prescriptions and completed appointments
@@ -83,7 +85,9 @@ const PrescriptionManagement = () => {
         date: new Date().toISOString().split('T')[0],
         medication: "",
         dosage: "",
-        instructions: ""
+        instructions: "",
+        patientEmail: apt.patientEmail || "",
+        doctorName: user?.displayName || user?.name || "Doctor"
       });
       setEditingId(null);
       setIsPrefilled(true);
@@ -160,7 +164,9 @@ const PrescriptionManagement = () => {
       diagnosis: prev.diagnosis || demoPatient.issue || "Viral Fever, Body Ache",
       medication: "Paracetamol 500mg",
       dosage: "1 tablet, twice daily for 5 days",
-      instructions: "Take after meals and drink plenty of water."
+      instructions: "Take after meals and drink plenty of water.",
+      patientEmail: prev.patientEmail || demoPatient.patientEmail || "jane@example.com",
+      doctorName: prev.doctorName || user?.displayName || "Doctor"
     }));
   };
 
@@ -171,9 +177,11 @@ const PrescriptionManagement = () => {
       appointmentId: rx.appointmentId || "",
       date: rx.date,
       diagnosis: rx.diagnosis,
-      medication: rx.medication,
-      dosage: rx.dosage,
-      instructions: rx.instructions
+      medication: rx.medication || "",
+      dosage: rx.dosage || "",
+      instructions: rx.instructions || "",
+      patientEmail: rx.patientEmail || "",
+      doctorName: rx.doctorName || user?.displayName || "Doctor"
     });
     setEditingId(rx.id);
     setIsModalOpen(true);
@@ -363,7 +371,9 @@ const PrescriptionManagement = () => {
                             patientId: apt.patientId || "",
                             patientName: apt.patientName || "",
                             diagnosis: apt.issue || apt.symptoms?.[0] || formData.diagnosis,
-                            date: formData.date
+                            date: formData.date,
+                            patientEmail: apt.patientEmail || "",
+                            doctorName: apt.doctorName || user?.displayName || "Doctor"
                           });
                         }
                       }}
