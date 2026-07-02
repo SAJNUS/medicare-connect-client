@@ -122,7 +122,7 @@ const AdminDashboard = () => {
       {/* Analytics Charts - Top Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Monthly Appointments Trend */}
+        {/* This Month Appointments Trend */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -130,11 +130,7 @@ const AdminDashboard = () => {
           className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-2"
         >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-poppins font-bold text-gray-900">Monthly Appointments Trend</h3>
-            <select className="select select-sm select-bordered border-gray-200 text-xs focus:outline-none">
-              <option>Last 6 Months</option>
-              <option>This Year</option>
-            </select>
+            <h3 className="text-lg font-poppins font-bold text-gray-900">This Month Appointments Trend</h3>
           </div>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
