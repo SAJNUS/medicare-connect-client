@@ -75,7 +75,9 @@ const CheckoutForm = ({ appointment, clientSecret, onPaymentSuccess }) => {
           time: appointment.time,
           amount: appointment.fee,
           transactionId: paymentIntent.id,
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          paymentMethod: "Stripe",
+          status: "paid"
         };
 
         await axiosInstance.post("/payments", paymentPayload);
