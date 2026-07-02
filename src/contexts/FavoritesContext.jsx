@@ -35,13 +35,14 @@ export const FavoritesProvider = ({ children }) => {
             else if (exp >= 10) designation = "Associate Professor";
 
             return {
+              _id: doc._id,
               id: doc._id,
               name: doc.name,
               specialty: doc.specialization || doc.specialty || "General",
               designation,
               experience: `${exp}+ Years Exp.`,
               image: doc.photoURL || doc.image || doc.avatar || doc.photoUrl || "",
-              rating: doc.rating || 4.5, // We don't have review calculation here, but we can just use 4.5 or "New"
+              rating: doc.rating || 4.5,
             };
           });
           

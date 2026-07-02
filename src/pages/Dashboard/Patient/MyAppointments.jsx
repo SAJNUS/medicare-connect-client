@@ -72,9 +72,12 @@ const MyAppointments = () => {
               date: apt.date || apt.appointmentDate,
               time: apt.time || apt.timeSlot,
               type: apt.type || "In-Person Consult",
-              status: apt.appointmentStatus === "approved" || apt.appointmentStatus === "pending" ? "Upcoming"
-                : apt.appointmentStatus === "rejected" || apt.appointmentStatus === "cancelled" ? "Cancelled"
-                  : apt.appointmentStatus === "completed" ? "Completed" : "Upcoming",
+              status: apt.appointmentStatus === "awaiting_payment" ? "Waiting"
+                : apt.appointmentStatus === "pending" ? "Pending"
+                  : apt.appointmentStatus === "approved" ? "Upcoming"
+                    : apt.appointmentStatus === "completed" ? "Completed"
+                      : apt.appointmentStatus === "rejected" ? "Rejected"
+                        : apt.appointmentStatus === "cancelled" ? "Cancelled" : "Waiting",
               image: docDetails?.photoURL || docDetails?.image || docDetails?.avatar || docDetails?.photoUrl || "",
               rawStatus: apt.appointmentStatus,
               paymentStatus: apt.paymentStatus || 'unpaid',
@@ -98,9 +101,8 @@ const MyAppointments = () => {
   const handleCancel = (id) => {
     const apt = appointments.find(a => a.id === id);
     if (!apt) return;
-
-    if (apt.rawStatus !== 'pending') {
-      toast.error("Only pending appointments can be cancelled.");
+    if (apt.rawStatus !== 'pending' && apt.rawStatus !== 'awaiting_payment') {
+      toast.error("Only Waiting or Pending appointments can be cancelled.");
       return;
     }
     setCancelData(apt);
@@ -162,8 +164,8 @@ const MyAppointments = () => {
   const handleReschedule = (id) => {
     const apt = appointments.find(a => a.id === id);
     if (apt) {
-      if (apt.rawStatus !== 'pending') {
-        toast.error("Only pending appointments can be rescheduled.");
+      if (apt.rawStatus !== 'pending' && apt.rawStatus !== 'awaiting_payment') {
+        toast.error("Only Waiting or Pending appointments can be rescheduled.");
         return;
       }
       setRescheduleData(apt);
@@ -189,12 +191,18 @@ const MyAppointments = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case "Waiting":
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-600 text-xs font-bold"><FaClock /> Waiting</span>;
+      case "Pending":
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-bold"><FaClock /> Pending</span>;
       case "Upcoming":
-        return <span className="flex items-center justify-center w-28 gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold"><FaClock /> Upcoming</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold"><FaClock /> Upcoming</span>;
       case "Completed":
-        return <span className="flex items-center justify-center w-28 gap-1.5 px-3 py-1 rounded-full bg-green-50 text-green-600 text-xs font-bold"><FaCheckCircle /> Completed</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-xs font-bold"><FaCheckCircle /> Completed</span>;
+      case "Rejected":
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold"><FaTimesCircle /> Rejected</span>;
       case "Cancelled":
-        return <span className="flex items-center justify-center w-28 gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold"><FaTimesCircle /> Cancelled</span>;
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-bold"><FaTimesCircle /> Cancelled</span>;
       default:
         return null;
     }
@@ -226,9 +234,9 @@ const MyAppointments = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2"
+        className="flex flex-wrap gap-2"
       >
-        {["All", "Upcoming", "Completed", "Cancelled"].map((f) => (
+        {["All", "Waiting", "Pending", "Upcoming", "Completed", "Rejected", "Cancelled"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -307,25 +315,78 @@ const MyAppointments = () => {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="pt-2 flex flex-col sm:flex-row gap-3">
-                      {apt.status === "Upcoming" && (
+                    {/* Action Buttons — per status */}
+                    <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-3">
+
+                      {/* WAITING: booked but unpaid */}
+                      {apt.status === "Waiting" && (
                         <>
                           <button
+                            onClick={() => setPaymentModalData(apt)}
+                            className="flex-1 py-2.5 px-4 bg-primary text-white hover:bg-[#0b6e66] font-bold rounded-xl transition-colors shadow-sm text-sm"
+                          >
+                            Pay Now
+                          </button>
+                          <button
                             onClick={() => handleReschedule(apt.id)}
-                            className="flex-1 py-2.5 px-4 bg-green-100 text-green-700 hover:bg-green-200 font-bold rounded-xl transition-colors text-sm"
+                            className="flex-1 py-2.5 px-4 bg-blue-500 text-white hover:bg-blue-600 font-bold rounded-xl transition-colors shadow-sm text-sm"
                           >
                             Reschedule
                           </button>
                           <button
                             onClick={() => handleCancel(apt.id)}
-                            className="flex-1 py-2.5 px-4 bg-red-100 text-red-600 hover:bg-red-200 font-bold rounded-xl transition-colors text-sm"
+                            className="flex-1 py-2.5 px-4 bg-red-500 text-white hover:bg-red-600 font-bold rounded-xl transition-colors shadow-sm text-sm"
                           >
                             Cancel
                           </button>
                         </>
                       )}
 
+                      {/* PENDING: paid, awaiting doctor approval */}
+                      {apt.status === "Pending" && (
+                        <>
+                          <button
+                            onClick={() => handleReschedule(apt.id)}
+                            className="flex-1 py-2.5 px-4 bg-blue-500 text-white hover:bg-blue-600 font-bold rounded-xl transition-colors shadow-sm text-sm"
+                          >
+                            Reschedule
+                          </button>
+                          <button
+                            onClick={() => handleCancel(apt.id)}
+                            className="flex-1 py-2.5 px-4 bg-red-500 text-white hover:bg-red-600 font-bold rounded-xl transition-colors shadow-sm text-sm"
+                            title="Cancelling a paid appointment will trigger an automatic refund."
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+
+                      {/* UPCOMING: doctor approved */}
+                      {apt.status === "Upcoming" && (
+                        <>
+                          <button
+                            onClick={() => handleReschedule(apt.id)}
+                            className="flex-1 py-2.5 px-4 bg-blue-500 text-white hover:bg-blue-600 font-bold rounded-xl transition-colors shadow-sm text-sm"
+                          >
+                            Reschedule
+                          </button>
+                          {apt.type === "Video Consult" ? (
+                            <button
+                              className="flex-1 py-2.5 px-4 bg-primary text-white hover:bg-[#0b6e66] font-bold rounded-xl transition-colors shadow-sm text-sm flex items-center justify-center gap-2"
+                            >
+                              <FaVideo /> Join Call
+                            </button>
+                          ) : (
+                            <button
+                              className="flex-1 py-2.5 px-4 bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold rounded-xl transition-colors text-sm"
+                            >
+                              View Details
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* COMPLETED */}
                       {apt.status === "Completed" && (
                         <button
                           onClick={() => navigate('/dashboard/patient/prescriptions')}
@@ -335,19 +396,26 @@ const MyAppointments = () => {
                         </button>
                       )}
 
-                      {apt.status === "Upcoming" && apt.paymentStatus === "unpaid" && (
+                      {/* REJECTED */}
+                      {apt.status === "Rejected" && (
                         <button
-                          onClick={() => setPaymentModalData(apt)}
-                          className="w-full py-2.5 px-4 bg-primary text-white hover:bg-[#0b6e66] font-bold rounded-xl transition-colors shadow-sm text-sm mt-2 sm:mt-0 sm:ml-auto sm:w-auto"
+                          onClick={() => openModal(handleBookAppointment)}
+                          className="w-full py-2.5 px-4 bg-primary text-white hover:bg-[#0b6e66] font-bold rounded-xl transition-colors shadow-sm text-sm"
                         >
-                          Pay Now
+                          Book Again
                         </button>
                       )}
-                      {apt.status === "Upcoming" && apt.paymentStatus === "paid" && (
-                        <div className="flex items-center justify-center sm:justify-end gap-1.5 w-full sm:w-auto mt-2 sm:mt-0 py-2.5 px-4 text-green-600 font-bold text-sm bg-green-50 rounded-xl sm:ml-auto">
-                          <FaCheckCircle /> Paid
-                        </div>
+
+                      {/* CANCELLED */}
+                      {apt.status === "Cancelled" && (
+                        <button
+                          onClick={() => openModal(handleBookAppointment)}
+                          className="w-full py-2.5 px-4 bg-primary text-white hover:bg-[#0b6e66] font-bold rounded-xl transition-colors shadow-sm text-sm"
+                        >
+                          Rebook
+                        </button>
                       )}
+
                     </div>
                   </div>
                 </div>
@@ -385,7 +453,13 @@ const MyAppointments = () => {
                 <FaTimesCircle />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Cancel Appointment?</h3>
-              <p className="text-gray-500 text-sm mb-6 font-medium">Are you sure you want to cancel your appointment with {cancelData.doctorName} on {cancelData.date}? This action cannot be undone.</p>
+              <p className="text-gray-500 text-sm mb-2 font-medium">Are you sure you want to cancel your appointment with {cancelData.doctorName} on {cancelData.date}? This action cannot be undone.</p>
+              {cancelData.status === "Pending" && (
+                <p className="text-blue-600 text-xs font-semibold bg-blue-50 rounded-lg px-3 py-2 mb-4">
+                  💳 Since this appointment was paid, a refund will be processed automatically.
+                </p>
+              )}
+              {cancelData.status !== "Pending" && <div className="mb-4" />}
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setCancelData(null)}

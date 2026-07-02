@@ -16,16 +16,10 @@ const PaymentHistory = () => {
   useEffect(() => {
     const fetchPayments = async () => {
       if (!user?.email) return;
-      console.log('[PaymentHistory] Fetching for email:', user.email);
       try {
         setLoading(true);
         const apiUrl = `/payments?patientEmail=${user.email}`;
-        console.log('[PaymentHistory] API URL:', apiUrl);
-        
         const response = await axiosInstance.get(apiUrl);
-        console.log('[PaymentHistory] Raw API response:', response.data);
-        console.log('[PaymentHistory] Documents returned by query:', response.data?.data?.length ?? 'N/A');
-
         if (response.data.success) {
           const mappedTxns = response.data.data.map(txn => {
             return {
@@ -37,18 +31,15 @@ const PaymentHistory = () => {
               amount: Number(txn.amount || 0),
               method: "Stripe",
               cardType: "stripe",
-              status: txn.paymentStatus === 'refunded' ? 'Failed' : 'Completed',
+              status: txn.paymentStatus === 'refunded' ? 'Refunded' : 'Completed',
               type: String(txn.type || "Consultation"),
               original: txn
             };
           });
-          console.log('[PaymentHistory] Mapped transactions count:', mappedTxns.length);
           setTransactions(mappedTxns);
-        } else {
-          console.warn('[PaymentHistory] API returned success=false:', response.data.message);
         }
       } catch (error) {
-        console.error('[PaymentHistory] FETCH ERROR (this is why transactions are empty):', error);
+        console.error("Failed to fetch payments:", error);
       } finally {
         setLoading(false);
       }
@@ -71,7 +62,6 @@ const PaymentHistory = () => {
 
     return matchesFilter && matchesSearch;
   });
-  console.log('[PaymentHistory] Final filteredTransactions length before render:', filteredTransactions.length, '| filter:', filter, '| search:', searchQuery);
 
 
   const getStatusBadge = (status) => {
@@ -80,6 +70,8 @@ const PaymentHistory = () => {
         return <span className="inline-flex items-center justify-center w-28 gap-1.5 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-100"><FaCheckCircle /> Completed</span>;
       case "Pending":
         return <span className="inline-flex items-center justify-center w-28 gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-bold border border-orange-100"><FaClock /> Pending</span>;
+      case "Refunded":
+        return <span className="inline-flex items-center justify-center w-28 gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100"><FaTimesCircle /> Refunded</span>;
       case "Failed":
         return <span className="inline-flex items-center justify-center w-28 gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-700 text-xs font-bold border border-red-100"><FaTimesCircle /> Failed</span>;
       default:
@@ -128,7 +120,7 @@ const PaymentHistory = () => {
         transition={{ delay: 0.1 }}
         className="flex overflow-x-auto pb-2 sm:pb-0 hide-scrollbar gap-2"
       >
-        {["All", "Completed", "Pending", "Failed"].map((f) => (
+        {["All", "Completed", "Pending", "Refunded", "Failed"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
