@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaCalendarAlt, FaClock, FaVideo, FaMapMarkerAlt, FaCheck, FaTimes, FaInbox, FaUserInjured, FaNotesMedical, FaCheckCircle, FaBan, FaClock as FaClockReg, FaHashtag } from "react-icons/fa";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
+import UserAvatar from "../../../components/UserAvatar";
 const AppointmentRequests = () => {
   const { user, loading: authLoading } = useAuth();
   const [requests, setRequests] = useState([]);
@@ -169,13 +170,10 @@ const AppointmentRequests = () => {
 
                 <div className="flex flex-col sm:flex-row gap-6">
                   {/* Patient Image */}
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center">
-                    {req.image ? (
-                      <img src={req.image} alt={req.patientName} className="w-full h-full object-cover" />
-                    ) : (
-                      <FaUserInjured className="text-3xl text-gray-300" />
-                    )}
-                  </div>
+                  <UserAvatar 
+                    user={{ name: req.patientName, avatar: req.image }} 
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex-shrink-0 shadow-sm border border-gray-100" 
+                  />
 
                   {/* Details */}
                   <div className="flex-1 space-y-4">
@@ -199,10 +197,6 @@ const AppointmentRequests = () => {
                       <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
                         {req.type === 'Video Consult' ? <FaVideo className="text-blue-500" /> : <FaMapMarkerAlt className="text-red-500" />}
                         {req.type}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 whitespace-nowrap">
-                        <FaHashtag className="text-purple-500" />
-                        {req.aptId}
                       </div>
                     </div>
 

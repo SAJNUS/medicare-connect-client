@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaFilePrescription, FaPlus, FaTimes, FaSearch, FaPrint, FaDownload, FaEye } from "react-icons/fa";
+import { FaFilePrescription, FaPlus, FaTimes, FaSearch, FaPrint, FaDownload, FaEye, FaMagic } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../hooks/useAuth";
 import axiosInstance from "../../../api/axiosInstance";
@@ -18,6 +18,7 @@ const PrescriptionManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isPrefilled, setIsPrefilled] = useState(false);
 
   const [formData, setFormData] = useState({
     patientName: "",
@@ -79,12 +80,13 @@ const PrescriptionManagement = () => {
         patientId: apt.patientId || "",
         appointmentId: apt.id || apt._id || "",
         diagnosis: apt.issue || apt.symptoms?.[0] || "",
-        date: apt.date || new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split('T')[0],
         medication: "",
         dosage: "",
         instructions: ""
       });
       setEditingId(null);
+      setIsPrefilled(true);
       setIsModalOpen(true);
       window.history.replaceState({}, document.title);
     }
@@ -141,6 +143,27 @@ const PrescriptionManagement = () => {
     }
   };
 
+  const handleAutoFill = () => {
+    const demoPatient = completedAppointments[0] || { 
+      patientName: "John Doe", 
+      patientId: "P-12345", 
+      _id: "A-54321",
+      issue: "Viral Fever" 
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      patientName: prev.patientName || demoPatient.patientName || "Jane Doe",
+      patientId: prev.patientId || demoPatient.patientId || "P-001",
+      appointmentId: prev.appointmentId || demoPatient.id || demoPatient._id || "A-001",
+      date: new Date().toISOString().split('T')[0],
+      diagnosis: prev.diagnosis || demoPatient.issue || "Viral Fever, Body Ache",
+      medication: "Paracetamol 500mg",
+      dosage: "1 tablet, twice daily for 5 days",
+      instructions: "Take after meals and drink plenty of water."
+    }));
+  };
+
   const handleEdit = (rx) => {
     setFormData({
       patientName: rx.patientName,
@@ -158,6 +181,7 @@ const PrescriptionManagement = () => {
 
   const openNewModal = () => {
     resetForm();
+    setIsPrefilled(false);
     setIsModalOpen(true);
   };
 
@@ -328,6 +352,7 @@ const PrescriptionManagement = () => {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Patient Name</label>
                     <select
                       required
+                      disabled={isPrefilled || !!editingId}
                       value={formData.appointmentId}
                       onChange={(e) => {
                         const apt = completedAppointments.find(a => a._id === e.target.value);
@@ -338,11 +363,11 @@ const PrescriptionManagement = () => {
                             patientId: apt.patientId || "",
                             patientName: apt.patientName || "",
                             diagnosis: apt.issue || apt.symptoms?.[0] || formData.diagnosis,
-                            date: apt.date || formData.date
+                            date: formData.date
                           });
                         }
                       }}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-gray-900 appearance-none"
+                      className={`w-full px-4 py-2.5 rounded-xl text-sm transition-all font-medium appearance-none ${isPrefilled || !!editingId ? 'bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed opacity-70' : 'bg-gray-50 border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500'}`}
                     >
                       <option value="" disabled>Select a completed appointment</option>
                       {completedAppointments.map(apt => (
@@ -350,7 +375,7 @@ const PrescriptionManagement = () => {
                           {apt.patientName} - {apt.date}
                         </option>
                       ))}
-                      {editingId && formData.appointmentId && !completedAppointments.some(a => a._id === formData.appointmentId) && (
+                      {(isPrefilled || editingId) && formData.appointmentId && !completedAppointments.some(a => a._id === formData.appointmentId) && (
                         <option value={formData.appointmentId}>{formData.patientName}</option>
                       )}
                     </select>
@@ -360,9 +385,9 @@ const PrescriptionManagement = () => {
                     <input
                       type="date"
                       required
+                      disabled={true}
                       value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-gray-900"
+                      className="w-full px-4 py-2.5 bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed opacity-70 rounded-xl text-sm transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -420,20 +445,29 @@ const PrescriptionManagement = () => {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
+                <div className="pt-4 border-t border-gray-100 flex justify-between gap-3 items-center">
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+                    onClick={handleAutoFill}
+                    className="px-4 py-2.5 rounded-xl text-sm font-bold text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors flex items-center gap-2"
                   >
-                    Cancel
+                    <FaMagic /> Auto Fill
                   </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-500 text-white hover:bg-teal-600 shadow-sm shadow-teal-500/20 transition-colors flex items-center gap-2"
-                  >
-                    {editingId ? <FaEye /> : <FaPlus />} {editingId ? "Update Prescription" : "Generate Prescription"}
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl text-sm font-bold bg-teal-500 text-white hover:bg-teal-600 shadow-sm shadow-teal-500/20 transition-colors flex items-center gap-2"
+                    >
+                      {editingId ? <FaEye /> : <FaPlus />} {editingId ? "Update Prescription" : "Generate Prescription"}
+                    </button>
+                  </div>
                 </div>
               </form>
             </motion.div>
