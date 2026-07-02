@@ -103,7 +103,9 @@ const Navbar = () => {
 
                     <div className="h-px bg-gray-100 w-full mb-2"></div>
 
-                    <li><Link to={`/dashboard/${user.role || 'patient'}/profile`} onClick={() => setIsProfileDropdownOpen(false)} className={`py-3 px-3 text-[15px] text-gray-700 font-medium flex items-center gap-4 rounded-xl transition-colors ${roleColors.menuHover}`}><HiOutlineUser className="text-[#0b6e66] text-xl" /> My Profile</Link></li>
+                    {user.role !== 'admin' && (
+                      <li><Link to={`/dashboard/${user.role || 'patient'}/profile`} onClick={() => setIsProfileDropdownOpen(false)} className={`py-3 px-3 text-[15px] text-gray-700 font-medium flex items-center gap-4 rounded-xl transition-colors ${roleColors.menuHover}`}><HiOutlineUser className="text-[#0b6e66] text-xl" /> My Profile</Link></li>
+                    )}
 
                     {user.role === 'patient' && (
                       <>
@@ -203,7 +205,9 @@ const Navbar = () => {
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <Link to={`/dashboard/${user.role || 'patient'}/profile`} onClick={() => setIsOpen(false)} className="px-4 py-2.5 text-gray-700 hover:bg-teal-50 hover:text-[#0b6e66] rounded-lg font-medium text-[15px] flex items-center gap-3"><HiOutlineUser className="text-gray-400 text-lg" /> My Profile</Link>
+                    {user.role !== 'admin' && (
+                      <Link to={`/dashboard/${user.role || 'patient'}/profile`} onClick={() => setIsOpen(false)} className="px-4 py-2.5 text-gray-700 hover:bg-teal-50 hover:text-[#0b6e66] rounded-lg font-medium text-[15px] flex items-center gap-3"><HiOutlineUser className="text-gray-400 text-lg" /> My Profile</Link>
+                    )}
 
                     {user.role === 'patient' && (
                       <>
